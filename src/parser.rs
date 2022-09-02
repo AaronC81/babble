@@ -2,8 +2,8 @@ use crate::{source::Location, tokenizer::{Token, TokenKind, Tokenizer}};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Node {
-    kind: NodeKind,
-    location: Location,
+    pub kind: NodeKind,
+    pub location: Location,
 }
 
 impl Node {
@@ -16,6 +16,21 @@ impl Node {
 pub enum SendMessageComponents {
     Unary(String),
     Parameterised(Vec<(String, Box<Node>)>),
+}
+
+impl SendMessageComponents {
+    pub fn to_method_name(&self) -> String {
+        match self {
+            SendMessageComponents::Unary(s) => s.clone(),
+            SendMessageComponents::Parameterised(params) => {
+                params
+                    .iter()
+                    .map(|(p, _)| format!("{p}:"))
+                    .collect::<Vec<_>>()
+                    .concat()
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -43,6 +58,8 @@ pub struct Parser<'a> {
     current_index: usize,
 }
 
+// TODO: shift . if found after a message
+// TODO: complain if leftover tokens
 impl<'a> Parser<'a> {
     pub fn new(tokens: &'a [Token]) -> Self {
         Self {
