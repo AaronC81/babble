@@ -2,8 +2,8 @@ use crate::source::Location;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Token {
-    kind: TokenKind,
-    location: Location,
+    pub kind: TokenKind,
+    pub location: Location,
 }
 
 impl Token {
@@ -34,7 +34,7 @@ impl TokenKind {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TokenizerError {
-    UnexpectedToken(char, Location),
+    UnexpectedCharacter(char, Location),
     IntegerLiteralOverflow(Location),
 }
 
@@ -109,7 +109,7 @@ impl<'a> Tokenizer<'a> {
                     '[' => self.tokens.push(TokenKind::BlockStart.at(self.here_loc())),
                     ']' => self.tokens.push(TokenKind::BlockEnd.at(self.here_loc())),
 
-                    _ => return Err(TokenizerError::UnexpectedToken(here, self.here_loc())),
+                    _ => return Err(TokenizerError::UnexpectedCharacter(here, self.here_loc())),
                 }
             },
 
@@ -182,7 +182,7 @@ impl<'a> Tokenizer<'a> {
         Ok(())
     }
 
-    fn tokenize(input: &str) -> Result<Vec<Token>, TokenizerError> {
+    pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenizerError> {
         let chars = input.chars().collect::<Vec<_>>();
         let mut tokenizer = Tokenizer::new(&chars[..]);
 
