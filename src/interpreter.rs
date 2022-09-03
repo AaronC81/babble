@@ -1,18 +1,19 @@
 use std::{rc::Rc, fmt::Debug, cell::RefCell};
-
-use crate::{parser::{Node, NodeKind, Parser}, source::Location, stdlib::StandardLibrary, tokenizer::Tokenizer};
+use crate::{parser::{Node, NodeKind}, source::Location, stdlib::StandardLibrary};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Value {
     pub type_instance: TypeInstance,
 }
 
+pub type ValueRef = Rc<RefCell<Value>>;
+
 impl Value {
     pub fn new_integer(value: i64) -> Self {
         Self { type_instance: TypeInstance::PrimitiveInteger(value) }
     }
 
-    pub fn rc(self) -> Rc<RefCell<Self>> {
+    pub fn rc(self) -> ValueRef {
         Rc::new(RefCell::new(self))
     }
 }
@@ -52,7 +53,7 @@ impl Type {
 
 pub struct InternalMethod {
     pub name: String,
-    pub function: Box<dyn Fn(Rc<RefCell<Value>>, Vec<Rc<RefCell<Value>>>) -> Result<Rc<RefCell<Value>>, InterpreterError>>,
+    function: Box<dyn Fn(ValueRef, Vec<ValueRef>) -> InterpreterResult>,
 }
 impl Debug for InternalMethod {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -60,16 +61,50 @@ impl Debug for InternalMethod {
     }
 }
 
+impl InternalMethod {
+    pub fn new<F>(name: &str, function: F) -> Self
+    where F: Fn(ValueRef, Vec<ValueRef>) -> InterpreterResult + 'static {
+        Self {
+            name: name.into(),
+            function: Box::new(function),
+        }
+    }
+
+    pub fn arity(&self) -> usize {
+        self.name.matches(":").count()
+    }
+
+    pub fn call(&self, receiver: ValueRef, parameters: Vec<ValueRef>) -> InterpreterResult {
+        if self.arity() != parameters.len() {
+            return Err(InterpreterError::IncorrectArity {
+                name: self.name.clone(),
+                expected: self.arity(),
+                got: parameters.len(),
+            })
+        }
+
+        (self.function)(receiver, parameters)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InterpreterError {
     MissingMethod(String, Location),
     IntegerOverflow(Location),
+    IncorrectArity {
+        name: String,
+        expected: usize,
+        got: usize,
+        // TODO: location
+    }
 }
 
 pub struct Interpreter {
     stdlib: StandardLibrary,
     types: Vec<Rc<Type>>,
 }
+
+pub type InterpreterResult = Result<ValueRef, InterpreterError>;
 
 impl Interpreter {
     pub fn new() -> Self {
@@ -79,7 +114,7 @@ impl Interpreter {
         }
     }
 
-    pub fn evaluate(&mut self, node: &Node) -> Result<Rc<RefCell<Value>>, InterpreterError> {
+    pub fn evaluate(&mut self, node: &Node) -> InterpreterResult {
         match &node.kind {
             NodeKind::IntegerLiteral(i) => (*i).try_into()
                 .map(|i| Value::new_integer(i).rc())
@@ -110,7 +145,9 @@ mod tests {
     use std::{cell::RefCell, rc::Rc};
     use crate::{parser::Parser, tokenizer::Tokenizer, interpreter::{TypeInstance, Interpreter, InterpreterError, Value}};
 
-    fn evaluate(input: &str) -> Result<Rc<RefCell<Value>>, InterpreterError> {
+    use super::ValueRef;
+
+    fn evaluate(input: &str) -> Result<ValueRef, InterpreterError> {
         let node = Parser::parse(&Tokenizer::tokenize(input).unwrap()[..]).unwrap();
         Interpreter::new().evaluate(&node)
     }

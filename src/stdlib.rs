@@ -16,24 +16,19 @@ impl StandardLibrary {
             id: "Integer".into(),
             fields: vec![],
             methods: vec![
-                InternalMethod {
-                    name: "add:".into(),
-                    function: Box::new(|recv, params| {
-                        // TODO: function for this
-                        if params.len() != 1 { panic!("incorrect number of parameters") }
-                        if let TypeInstance::PrimitiveInteger(a) = recv.borrow().type_instance {
-                            if let TypeInstance::PrimitiveInteger(b) = params[0].borrow().type_instance {
-                                Ok(Value::new_integer(a + b).rc())
-                            } else {
-                                // TODO: soft Err
-                                panic!("parameter type incorrect")
-                            }
+                InternalMethod::new("add:", |recv, params| {
+                    if let TypeInstance::PrimitiveInteger(a) = recv.borrow().type_instance {
+                        if let TypeInstance::PrimitiveInteger(b) = params[0].borrow().type_instance {
+                            Ok(Value::new_integer(a + b).rc())
                         } else {
-                            // TODO: function for this
-                            panic!("receiver has incorrect type")   
+                            // TODO: soft Err
+                            panic!("parameter type incorrect")
                         }
-                    })
-                }
+                    } else {
+                        // TODO: function for this
+                        panic!("receiver has incorrect type")   
+                    }
+                })
             ],
         }
     }
