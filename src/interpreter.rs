@@ -16,6 +16,14 @@ impl Value {
     pub fn rc(self) -> ValueRef {
         Rc::new(RefCell::new(self))
     }
+
+    pub fn to_integer(&self) -> Result<i64, InterpreterError> {
+        if let TypeInstance::PrimitiveInteger(i) = self.type_instance {
+            Ok(i)
+        } else {
+            Err(InterpreterError::IncorrectType)
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -91,12 +99,14 @@ impl InternalMethod {
 pub enum InterpreterError {
     MissingMethod(String, Location),
     IntegerOverflow(Location),
+
+    // TODO: location for these
     IncorrectArity {
         name: String,
         expected: usize,
         got: usize,
-        // TODO: location
-    }
+    },
+    IncorrectType, // TODO more details
 }
 
 pub struct Interpreter {
