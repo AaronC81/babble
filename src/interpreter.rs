@@ -48,14 +48,14 @@ impl TypeInstance {
 pub struct Type {
     pub id: String,
     pub fields: Vec<String>,
-    pub methods: Vec<InternalMethod>,
+    pub methods: Vec<InternalMethodRef>,
 }
 impl PartialEq for Type { fn eq(&self, other: &Self) -> bool { self.id == other.id } }
 impl Eq for Type {}
 
 impl Type {
-    pub fn resolve_method(&self, name: &str) -> Option<&InternalMethod> {
-        self.methods.iter().find(|m| m.name == name)
+    pub fn resolve_method(&self, name: &str) -> Option<InternalMethodRef> {
+        self.methods.iter().find(|m| m.name == name).cloned()
     }   
 }
 
@@ -69,6 +69,8 @@ impl Debug for InternalMethod {
     }
 }
 
+type InternalMethodRef = Rc<InternalMethod>;
+
 impl InternalMethod {
     pub fn new<F>(name: &str, function: F) -> Self
     where F: Fn(ValueRef, Vec<ValueRef>) -> InterpreterResult + 'static {
@@ -76,6 +78,10 @@ impl InternalMethod {
             name: name.into(),
             function: Box::new(function),
         }
+    }
+    
+    pub fn rc(self) -> InternalMethodRef {
+        Rc::new(self)
     }
 
     pub fn arity(&self) -> usize {
@@ -109,9 +115,36 @@ pub enum InterpreterError {
     IncorrectType, // TODO more details
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LexicalContext {
+    parent: Option<LexicalContextRef>,
+    locals: Vec<(String, ValueRef)>,
+}
+
+impl LexicalContext {
+    pub fn new_top_level() -> Self {
+        LexicalContext { parent: None, locals: vec![] }
+    }
+
+    pub fn new_with_parent(parent: LexicalContextRef) -> Self {
+        LexicalContext { parent: Some(parent), locals: vec![] }
+    }
+
+    pub fn rc(self) -> LexicalContextRef {
+        Rc::new(RefCell::new(self))
+    }
+}
+
+pub type LexicalContextRef = Rc<RefCell<LexicalContext>>;
+
+pub struct StackFrame {
+    context: InternalMethodRef,
+}
+
 pub struct Interpreter {
     stdlib: StandardLibrary,
     types: Vec<Rc<Type>>,
+    stack: Vec<StackFrame>,
 }
 
 pub type InterpreterResult = Result<ValueRef, InterpreterError>;
@@ -121,6 +154,7 @@ impl Interpreter {
         Self {
             stdlib: StandardLibrary::new(),
             types: vec![],
+            stack: vec![],
         }
     }
 
@@ -131,18 +165,29 @@ impl Interpreter {
                 .map_err(|_| InterpreterError::IntegerOverflow(node.location)),
 
             NodeKind::SendMessage { receiver, components } => {
+                // Evaluate the receiver
                 let receiver = self.evaluate(&receiver)?;
                 let receiver_ref = receiver.borrow();
 
                 let method_name = components.to_method_name();
                 if let Some(method) = receiver_ref.type_instance.get_type(&self.stdlib).resolve_method(&method_name) {
+                    drop(receiver_ref);
+
+                    // Evaluate parameters
                     let parameters = match components {
                         crate::parser::SendMessageComponents::Unary(_) => vec![],
                         crate::parser::SendMessageComponents::Parameterised(params) =>
                             params.iter().map(|(_, p)| self.evaluate(p)).collect::<Result<Vec<_>, _>>()?,
                     };
-                    drop(receiver_ref);
-                    (method.function)(receiver, parameters)
+
+                    // Create a new stack frame, call the method within it, and pop the frame
+                    self.stack.push(StackFrame {
+                        context: method.clone(),
+                    });
+                    let result = (method.function)(receiver, parameters);
+                    self.stack.pop();
+
+                    result
                 } else {
                     Err(InterpreterError::MissingMethod(method_name, node.location))
                 }
@@ -152,7 +197,6 @@ impl Interpreter {
 }
 
 mod tests {
-    use std::{cell::RefCell, rc::Rc};
     use crate::{parser::Parser, tokenizer::Tokenizer, interpreter::{TypeInstance, Interpreter, InterpreterError, Value}};
 
     use super::ValueRef;

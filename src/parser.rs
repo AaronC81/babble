@@ -1,14 +1,15 @@
-use crate::{source::Location, tokenizer::{Token, TokenKind, Tokenizer}};
+use crate::{source::Location, tokenizer::{Token, TokenKind, Tokenizer}, interpreter::{LexicalContext, LexicalContextRef}};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Node {
     pub kind: NodeKind,
     pub location: Location,
+    pub context: LexicalContextRef,
 }
 
 impl Node {
-    pub fn new(kind: NodeKind, location: Location) -> Self {
-        Node { kind, location }
+    pub fn new(kind: NodeKind, location: Location, context: LexicalContextRef) -> Self {
+        Node { kind, location, context }
     }
 }
 
@@ -42,12 +43,6 @@ pub enum NodeKind {
     }
 }
 
-impl NodeKind {
-    pub fn at(self, location: Location) -> Node {
-        Node::new(self, location)
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ParserError {
     UnexpectedToken(Token),
@@ -76,12 +71,12 @@ impl<'a> Parser<'a> {
         self.current_index += 1;
     }
 
-    fn parse_top_level(&mut self) -> Result<Node, ParserError> {
-        self.parse_parameterised_send()
+    fn parse_top_level(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
+        self.parse_parameterised_send(context)
     }
 
-    fn parse_parameterised_send(&mut self) -> Result<Node, ParserError> {
-        let mut result = self.parse_unary_send()?;
+    fn parse_parameterised_send(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
+        let mut result = self.parse_unary_send(context.clone())?;
         if let Token { kind: TokenKind::LabelIdentifier(_), location } = self.here() {
             let location = *location;
 
@@ -90,44 +85,54 @@ impl<'a> Parser<'a> {
             while let Token { kind: TokenKind::LabelIdentifier(id), .. } = self.here() {
                 let id = id.clone();
                 self.advance();
-                let value = self.parse_unary_send()?;
+                let value = self.parse_unary_send(context.clone())?;
                 parameters.push((id, Box::new(value)));
             }
 
-            result = NodeKind::SendMessage {
-                receiver: Box::new(result),
-                components: SendMessageComponents::Parameterised(parameters),
-            }.at(location);
+            result = Node {
+                kind: NodeKind::SendMessage {
+                    receiver: Box::new(result),
+                    components: SendMessageComponents::Parameterised(parameters),
+                },
+                location,
+                context: LexicalContext::new_with_parent(context).rc(),
+            }
         }
 
         Ok(result)
     }
 
-    fn parse_unary_send(&mut self) -> Result<Node, ParserError> {
-        let mut result = self.parse_literal()?;
+    fn parse_unary_send(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
+        let mut result = self.parse_literal(context.clone())?;
         while let Token { kind: TokenKind::Identifier(id), location } = self.here() {
-            result = NodeKind::SendMessage {
-                receiver: Box::new(result),
-                components: SendMessageComponents::Unary(id.clone()),
-            }.at(*location);
+            result = Node {
+                kind: NodeKind::SendMessage {
+                    receiver: Box::new(result),
+                    components: SendMessageComponents::Unary(id.clone()),
+                },
+                location: *location,
+                context: context.clone(),
+            };
             self.advance();
         }
 
         Ok(result)
     }
 
-    fn parse_literal(&mut self) -> Result<Node, ParserError> {
+    fn parse_literal(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
         if let Token { kind: TokenKind::IntegerLiteral(value), location } = self.here() {
-            let node = NodeKind::IntegerLiteral(*value).at(*location);
-            self.advance();
-            Ok(node)
+            Ok(Node {
+                kind: NodeKind::IntegerLiteral(*value),
+                location: *location,
+                context: context,
+            })
         } else {
             Err(ParserError::UnexpectedToken(self.here().clone()))
         }
     }
 
     pub fn parse(tokens: &'a [Token]) -> Result<Node, ParserError> {
-        Self::new(tokens).parse_top_level()
+        Self::new(tokens).parse_top_level(LexicalContext::new_top_level().rc())
     }
 }
 
