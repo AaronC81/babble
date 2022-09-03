@@ -78,6 +78,7 @@ impl<'a> Parser<'a> {
 
     fn all_tokens_consumed(&self) -> bool {
         self.current_index >= self.tokens.len()
+        || self.tokens.get(self.current_index).map(|t| t.kind.clone()) == Some(TokenKind::EndOfFile)
     }
 
     pub fn try_or_revert<F>(&mut self, mut func: F) -> Option<Node>

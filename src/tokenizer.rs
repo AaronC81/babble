@@ -25,6 +25,8 @@ pub enum TokenKind {
     LabelIdentifier(String),
 
     IntegerLiteral(u64),
+
+    EndOfFile,
 }
 
 impl TokenKind {
@@ -191,6 +193,13 @@ impl<'a> Tokenizer<'a> {
         while tokenizer.current_index < chars.len() {
             tokenizer.step()?;
         }
+
+        // If the tokenizer was parsing an arbitrary-length token, shift it now
+        if let TokenizerState::CollectingWhitespaceSeparated(t) = &tokenizer.state {
+            tokenizer.tokens.push(t.clone());
+        }
+
+        tokenizer.tokens.push(TokenKind::EndOfFile.at(tokenizer.here_loc()));
 
         Ok(tokenizer.tokens)
     }
