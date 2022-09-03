@@ -63,6 +63,7 @@ impl Debug for InternalMethod {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InterpreterError {
     MissingMethod(String, Location),
+    IntegerOverflow(Location),
 }
 
 pub struct Interpreter {
@@ -80,8 +81,9 @@ impl Interpreter {
 
     pub fn evaluate(&mut self, node: &Node) -> Result<Rc<RefCell<Value>>, InterpreterError> {
         match &node.kind {
-            // TODO: safe cast
-            NodeKind::IntegerLiteral(i) => Ok(Value::new_integer(*i as i64).rc()),
+            NodeKind::IntegerLiteral(i) => (*i).try_into()
+                .map(|i| Value::new_integer(i).rc())
+                .map_err(|_| InterpreterError::IntegerOverflow(node.location)),
 
             NodeKind::SendMessage { receiver, components } => {
                 let receiver = self.evaluate(&receiver)?;
@@ -104,11 +106,30 @@ impl Interpreter {
     }
 }
 
-#[test]
-fn test_simple_interpret() {
-    let node = Parser::parse(&Tokenizer::tokenize("32 add: 24.").unwrap()[..]).unwrap();
-    assert_eq!(
-        Interpreter::new().evaluate(&node).unwrap(),
-        Value { type_instance: TypeInstance::PrimitiveInteger(56) }.rc(),
-    );
+mod tests {
+    use std::{cell::RefCell, rc::Rc};
+    use crate::{parser::Parser, tokenizer::Tokenizer, interpreter::{TypeInstance, Interpreter, InterpreterError, Value}};
+
+    fn evaluate(input: &str) -> Result<Rc<RefCell<Value>>, InterpreterError> {
+        let node = Parser::parse(&Tokenizer::tokenize(input).unwrap()[..]).unwrap();
+        Interpreter::new().evaluate(&node)
+    }
+
+    #[test]
+    fn test_simple_interpret() {
+        assert_eq!(
+            evaluate("32 add: 24.").unwrap(),
+            Value { type_instance: TypeInstance::PrimitiveInteger(56) }.rc(),
+        );
+    }
+
+    #[test]
+    fn test_integer_overflow_on_token_conversion() {
+        assert!(matches!(
+            //   One more than the maximum i64
+            //        vvvvvvvvvvvvvvvvvvv
+            evaluate("9223372036854775808."),
+            Err(InterpreterError::IntegerOverflow(..)),
+        ));
+    }
 }
