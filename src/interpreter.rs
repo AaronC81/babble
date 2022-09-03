@@ -1,5 +1,5 @@
 use std::{rc::Rc, fmt::Debug, cell::RefCell};
-use crate::{parser::{Node, NodeKind}, source::Location, stdlib::StandardLibrary};
+use crate::{parser::{Node, NodeKind}, source::Location, stdlib};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Value {
@@ -11,6 +11,10 @@ pub type ValueRef = Rc<RefCell<Value>>;
 impl Value {
     pub fn new_integer(value: i64) -> Self {
         Self { type_instance: TypeInstance::PrimitiveInteger(value) }
+    }
+
+    pub fn new_type(t: Rc<Type>) -> Self {
+        Self { type_instance: TypeInstance::Type(t) }
     }
 
     pub fn new_null() -> Self {
@@ -28,6 +32,33 @@ impl Value {
             Err(InterpreterError::IncorrectType)
         }
     }
+
+    pub fn to_language_string(&self) -> String {
+        match &self.type_instance {
+            TypeInstance::Fields { source_type, field_values } => {
+                let mut result = source_type.id.clone();
+                for (field, value) in source_type.fields.iter().zip(field_values.iter()) {
+                    result.push(' ');
+                    result.push_str(field);
+                    result.push_str(": ");
+
+                    // If the value contains any whitespace, wrap it in parentheses
+                    let mut value_str = value.to_language_string();
+                    if value_str.chars().any(|c| c.is_whitespace()) {
+                        value_str.insert(0, '(');
+                        value_str.push(')');
+                    }
+                    result.push_str(&value_str);
+                }
+
+                result
+            }
+
+            TypeInstance::Type(t) => t.id.clone(),
+            TypeInstance::PrimitiveInteger(i) => i.to_string(),
+            TypeInstance::PrimitiveNull => "null".into(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -36,16 +67,18 @@ pub enum TypeInstance {
         source_type: Rc<Type>,
         field_values: Vec<Box<Value>>,
     },
+    Type(Rc<Type>),
     PrimitiveInteger(i64),
     PrimitiveNull,
 }
 
 impl TypeInstance {
-    pub fn get_type(&self, stdlib: &StandardLibrary) -> Rc<Type> {
+    pub fn get_type(&self, interpreter: &Interpreter) -> Rc<Type> {
         match self {
             TypeInstance::Fields { source_type, .. } => source_type.clone(),
-            TypeInstance::PrimitiveInteger(_) => stdlib.integer.clone(),
-            TypeInstance::PrimitiveNull => stdlib.null.clone(),
+            TypeInstance::Type(_) => interpreter.resolve_stdlib_type("Null"), // TODO: should probably be a `Type` type
+            TypeInstance::PrimitiveInteger(_) => interpreter.resolve_stdlib_type("Integer"),
+            TypeInstance::PrimitiveNull => interpreter.resolve_stdlib_type("Null"),
         }
     }
 }
@@ -55,14 +88,28 @@ pub struct Type {
     pub id: String,
     pub fields: Vec<String>,
     pub methods: Vec<InternalMethodRef>,
+    pub static_methods: Vec<InternalMethodRef>,
 }
 impl PartialEq for Type { fn eq(&self, other: &Self) -> bool { self.id == other.id } }
 impl Eq for Type {}
 
 impl Type {
+    pub fn new(id: &str) -> Self {
+        Self {
+            id: id.into(),
+            fields: vec![],
+            methods: vec![],
+            static_methods: vec![],
+        }
+    }
+
     pub fn resolve_method(&self, name: &str) -> Option<InternalMethodRef> {
         self.methods.iter().find(|m| m.name == name).cloned()
-    }   
+    }
+
+    pub fn resolve_static_method(&self, name: &str) -> Option<InternalMethodRef> {
+        self.static_methods.iter().find(|m| m.name == name).cloned()
+    }
 }
 
 pub struct InternalMethod {
@@ -160,7 +207,6 @@ pub struct StackFrame {
 }
 
 pub struct Interpreter {
-    stdlib: StandardLibrary,
     types: Vec<Rc<Type>>,
     stack: Vec<StackFrame>,
 }
@@ -170,8 +216,7 @@ pub type InterpreterResult = Result<ValueRef, InterpreterError>;
 impl Interpreter {
     pub fn new() -> Self {
         Self {
-            stdlib: StandardLibrary::new(),
-            types: vec![],
+            types: stdlib::types(),
             stack: vec![],
         }
     }
@@ -188,7 +233,13 @@ impl Interpreter {
                 let receiver_ref = receiver.borrow();
 
                 let method_name = components.to_method_name();
-                if let Some(method) = receiver_ref.type_instance.get_type(&self.stdlib).resolve_method(&method_name) {
+                let method =
+                    if let TypeInstance::Type(t) = &receiver_ref.type_instance {
+                        t.resolve_static_method(&method_name)
+                    } else {
+                        receiver_ref.type_instance.get_type(&self).resolve_method(&method_name)
+                    };
+                if let Some(method) = method {
                     drop(receiver_ref);
 
                     // Evaluate parameters
@@ -242,11 +293,21 @@ impl Interpreter {
             NodeKind::Identifier(id) => {
                 if let Some(value) = node.context.borrow().find_local(id) {
                     Ok(value)
+                } else if let Some(t) = self.resolve_type(id) {
+                    Ok(Value::new_type(t.clone()).rc())
                 } else {
                     Err(InterpreterError::MissingName(id.into(), node.location))
                 }
             }
         }
+    }
+
+    pub fn resolve_type(&self, id: &str) -> Option<Rc<Type>> {
+        self.types.iter().find(|t| &t.id == id).cloned()
+    }
+
+    pub fn resolve_stdlib_type(&self, id: &str) -> Rc<Type> {
+        self.resolve_type(id).expect(&format!("internal error: stdlib type {} missing", id))
     }
 }
 
@@ -300,6 +361,14 @@ mod tests {
         assert_eq!(
             evaluate("a = 3. b = 4. a add: b.").unwrap(),
             Value::new_integer(7).rc(),
+        )
+    }
+
+    #[test]
+    fn test_static_methods() {
+        assert_eq!(
+            evaluate("Integer zero.").unwrap(),
+            Value::new_integer(0).rc(),
         )
     }
 }

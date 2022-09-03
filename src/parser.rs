@@ -60,8 +60,6 @@ pub struct Parser<'a> {
     current_index: usize,
 }
 
-// TODO: shift . if found after a message
-// TODO: complain if leftover tokens
 impl<'a> Parser<'a> {
     pub fn new(tokens: &'a [Token]) -> Self {
         Self {
