@@ -13,6 +13,10 @@ impl Value {
         Self { type_instance: TypeInstance::PrimitiveInteger(value) }
     }
 
+    pub fn new_null() -> Self {
+        Self { type_instance: TypeInstance::PrimitiveNull }
+    }
+
     pub fn rc(self) -> ValueRef {
         Rc::new(RefCell::new(self))
     }
@@ -33,6 +37,7 @@ pub enum TypeInstance {
         field_values: Vec<Box<Value>>,
     },
     PrimitiveInteger(i64),
+    PrimitiveNull,
 }
 
 impl TypeInstance {
@@ -40,6 +45,7 @@ impl TypeInstance {
         match self {
             TypeInstance::Fields { source_type, .. } => source_type.clone(),
             TypeInstance::PrimitiveInteger(_) => stdlib.integer.clone(),
+            TypeInstance::PrimitiveNull => stdlib.null.clone(),
         }
     }
 }
@@ -192,6 +198,16 @@ impl Interpreter {
                     Err(InterpreterError::MissingMethod(method_name, node.location))
                 }
             },
+
+            NodeKind::StatementSequence(seq) => {
+                // Bodies return their last statement, except if they have no statements, in which
+                // case they return null
+                let mut result = Value::new_null().rc();
+                for node in seq {
+                    result = self.evaluate(node)?;
+                }
+                Ok(result)
+            }
         }
     }
 }
@@ -210,7 +226,7 @@ mod tests {
     fn test_simple_interpret() {
         assert_eq!(
             evaluate("32 add: 24.").unwrap(),
-            Value { type_instance: TypeInstance::PrimitiveInteger(56) }.rc(),
+            Value::new_integer(56).rc(),
         );
     }
 
@@ -228,7 +244,16 @@ mod tests {
     fn test_message_precedence() {
         assert_eq!(
             evaluate("2 negate add: 7 negate.").unwrap(),
-            Value { type_instance: TypeInstance::PrimitiveInteger(-9) }.rc(),
+            Value::new_integer(-9).rc(),
+        )
+    }
+
+    #[test]
+    fn test_sequence() {
+        // A sequence evaluates to its last item
+        assert_eq!(
+            evaluate("1. 2. 3.").unwrap(),
+            Value::new_integer(3).rc(),
         )
     }
 }

@@ -40,7 +40,8 @@ pub enum NodeKind {
     SendMessage {
         receiver: Box<Node>,
         components: SendMessageComponents,
-    }
+    },
+    StatementSequence(Vec<Node>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -71,8 +72,45 @@ impl<'a> Parser<'a> {
         self.current_index += 1;
     }
 
+    fn all_tokens_consumed(&self) -> bool {
+        self.current_index >= self.tokens.len()
+    }
+
+    pub fn parse(tokens: &'a [Token]) -> Result<Node, ParserError> {
+        let context = LexicalContext::new_top_level().rc();
+        let mut parser = Self::new(tokens);
+        let result = parser.parse_top_level(context)?;
+
+        if !parser.all_tokens_consumed() {
+            return Err(ParserError::UnexpectedToken(parser.here().clone()))
+        }
+
+        Ok(result)
+    }
+
     fn parse_top_level(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
-        self.parse_parameterised_send(context)
+        let mut seq = vec![];
+        while !self.all_tokens_consumed() {
+            seq.push(self.parse_single_statement(context.clone())?);
+        }
+
+        // TODO: calculate location properly
+        Ok(Node {
+            kind: NodeKind::StatementSequence(seq),
+            location: self.tokens.first().map(|t| t.location).unwrap_or(Location::new_single(0)),
+            context,
+        })
+    }
+
+    fn parse_single_statement(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
+        let node = self.parse_parameterised_send(context)?;
+
+        // If there is a separator, advance past it
+        if let Token { kind: TokenKind::Terminator, .. } = self.here() {
+            self.advance();
+        }
+
+        Ok(node)
     }
 
     fn parse_parameterised_send(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
@@ -121,25 +159,31 @@ impl<'a> Parser<'a> {
 
     fn parse_literal(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
         if let Token { kind: TokenKind::IntegerLiteral(value), location } = self.here() {
-            Ok(Node {
+            let node = Node {
                 kind: NodeKind::IntegerLiteral(*value),
                 location: *location,
                 context: context,
-            })
+            };
+            self.advance();
+            Ok(node)
         } else {
             Err(ParserError::UnexpectedToken(self.here().clone()))
         }
-    }
-
-    pub fn parse(tokens: &'a [Token]) -> Result<Node, ParserError> {
-        Self::new(tokens).parse_top_level(LexicalContext::new_top_level().rc())
     }
 }
 
 #[test]
 fn test_simple_parse() {
+    let parsed = Parser::parse(&Tokenizer::tokenize("32 add: 24.").unwrap()[..]).unwrap();
+    let parsed = if let Node { kind: NodeKind::StatementSequence(seq), .. } = parsed {
+        assert_eq!(seq.len(), 1);
+        seq[0].clone()
+    } else {
+        panic!("expected StatementSequence")
+    };
+
     assert!(matches!(
-        Parser::parse(&Tokenizer::tokenize("32 add: 24.").unwrap()[..]).unwrap(),
+        parsed,
         Node {
             kind: NodeKind::SendMessage {
                 receiver: box Node { kind: NodeKind::IntegerLiteral(32), .. },

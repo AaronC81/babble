@@ -3,12 +3,24 @@ use std::{rc::Rc, cell::RefCell};
 use crate::interpreter::{Type, InternalMethod, TypeInstance, Value};
 
 pub struct StandardLibrary {
+    pub null: Rc<Type>,
     pub integer: Rc<Type>,
 }
 
 impl StandardLibrary {
     pub fn new() -> Self {
-        Self { integer: Rc::new(Self::integer()) }
+        Self {
+            null: Rc::new(Self::null()),
+            integer: Rc::new(Self::integer()),
+        }
+    }
+
+    fn null() -> Type {
+        Type {
+            id: "Null".into(),
+            fields: vec![],
+            methods: vec![],
+        }
     }
 
     fn integer() -> Type {
