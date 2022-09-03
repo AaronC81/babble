@@ -110,6 +110,7 @@ impl InternalMethod {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InterpreterError {
     MissingMethod(String, Location),
+    MissingName(String, Location),
     IntegerOverflow(Location),
 
     // TODO: location for these
@@ -119,6 +120,7 @@ pub enum InterpreterError {
         got: usize,
     },
     IncorrectType, // TODO more details
+    InvalidAssignmentTarget(Location),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -138,6 +140,16 @@ impl LexicalContext {
 
     pub fn rc(self) -> LexicalContextRef {
         Rc::new(RefCell::new(self))
+    }
+
+    pub fn find_local(&self, name: &str) -> Option<ValueRef> {
+        self.locals.iter()
+            .find_map(|(n, v)| if n == &name { Some(v.clone()) } else { None })
+            .or_else(|| self.parent.as_ref().and_then(|p| p.borrow().find_local(name)))
+    }
+
+    pub fn create_local(&mut self, name: &str, value: ValueRef) {
+        self.locals.push((name.into(), value))
     }
 }
 
@@ -207,6 +219,32 @@ impl Interpreter {
                     result = self.evaluate(node)?;
                 }
                 Ok(result)
+            },
+
+            NodeKind::Assignment { target, value } => {
+                // Only supported assignment target currently is a plain identifier
+                if let box Node { kind: NodeKind::Identifier(id), .. } = target {
+                    let value = self.evaluate(value)?;
+                    let mut context = node.context.borrow_mut();
+
+                    if let Some(target) = context.find_local(&id) {
+                        *target.borrow_mut() = value.borrow().clone();
+                    } else {
+                        context.create_local(&id, value.clone());
+                    }
+
+                    Ok(value)
+                } else {
+                    Err(InterpreterError::InvalidAssignmentTarget(target.location))
+                }
+            },
+
+            NodeKind::Identifier(id) => {
+                if let Some(value) = node.context.borrow().find_local(id) {
+                    Ok(value)
+                } else {
+                    Err(InterpreterError::MissingName(id.into(), node.location))
+                }
             }
         }
     }
@@ -254,6 +292,14 @@ mod tests {
         assert_eq!(
             evaluate("1. 2. 3.").unwrap(),
             Value::new_integer(3).rc(),
+        )
+    }
+
+    #[test]
+    fn test_assignment() {
+        assert_eq!(
+            evaluate("a = 3. b = 4. a add: b.").unwrap(),
+            Value::new_integer(7).rc(),
         )
     }
 }

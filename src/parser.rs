@@ -37,11 +37,16 @@ impl SendMessageComponents {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NodeKind {
     IntegerLiteral(u64),
+    Identifier(String),
     SendMessage {
         receiver: Box<Node>,
         components: SendMessageComponents,
     },
     StatementSequence(Vec<Node>),
+    Assignment {
+        target: Box<Node>,
+        value: Box<Node>,
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -49,6 +54,7 @@ pub enum ParserError {
     UnexpectedToken(Token),
 }
 
+#[derive(Debug, Clone)]
 pub struct Parser<'a> {
     tokens: &'a [Token],
     current_index: usize,
@@ -74,6 +80,19 @@ impl<'a> Parser<'a> {
 
     fn all_tokens_consumed(&self) -> bool {
         self.current_index >= self.tokens.len()
+    }
+
+    pub fn try_or_revert<F>(&mut self, mut func: F) -> Option<Node>
+    where F: FnMut(&mut Self) -> Result<Node, ParserError> {
+        let previous_state = self.clone();
+
+        match func(self) {
+            Ok(node) => Some(node),
+            Err(_) => {
+                *self = previous_state;
+                None
+            }
+        }
     }
 
     pub fn parse(tokens: &'a [Token]) -> Result<Node, ParserError> {
@@ -103,11 +122,28 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_single_statement(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
-        let node = self.parse_parameterised_send(context)?;
+        let node = self.parse_assignment(context)?;
 
         // If there is a separator, advance past it
         if let Token { kind: TokenKind::Terminator, .. } = self.here() {
             self.advance();
+        }
+
+        Ok(node)
+    }
+
+    fn parse_assignment(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
+        let mut node = self.parse_parameterised_send(context.clone())?;
+
+        // If there is an assignment operator, turn this into an assignment
+        if let Token { kind: TokenKind::Assignment, .. } = self.here() {
+            self.advance();
+            
+            // TODO: merge locations
+            node.kind = NodeKind::Assignment {
+                target: Box::new(node.clone()),
+                value: Box::new(self.parse_single_statement(context)?),
+            };
         }
 
         Ok(node)
@@ -162,7 +198,15 @@ impl<'a> Parser<'a> {
             let node = Node {
                 kind: NodeKind::IntegerLiteral(*value),
                 location: *location,
-                context: context,
+                context,
+            };
+            self.advance();
+            Ok(node)
+        } else if let Token { kind: TokenKind::Identifier(id), location } = self.here() {
+            let node = Node {
+                kind: NodeKind::Identifier(id.clone()),
+                location: *location,
+                context,
             };
             self.advance();
             Ok(node)

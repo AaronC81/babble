@@ -16,6 +16,7 @@ impl Token {
 pub enum TokenKind {
     Terminator,
     NewLine,
+    Assignment,
 
     BlockStart,
     BlockEnd,
@@ -105,6 +106,7 @@ impl<'a> Tokenizer<'a> {
                     }
 
                     // Simple symbols
+                    '=' => self.tokens.push(TokenKind::Assignment.at(self.here_loc())),
                     '.' => self.tokens.push(TokenKind::Terminator.at(self.here_loc())),
                     '[' => self.tokens.push(TokenKind::BlockStart.at(self.here_loc())),
                     ']' => self.tokens.push(TokenKind::BlockEnd.at(self.here_loc())),
