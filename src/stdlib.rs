@@ -6,6 +6,7 @@ pub fn types() -> Vec<Rc<Type>> {
     vec![
         Rc::new(null()),
         Rc::new(integer()),
+        Rc::new(console())
     ]
 }
 
@@ -34,5 +35,23 @@ fn integer() -> Type {
         ],
 
         ..Type::new("Integer")
+    }
+}
+
+fn console() -> Type {
+    Type {
+        static_methods: vec![
+            InternalMethod::new("println:", |_, p| {
+                println!("{}", p[0].borrow().to_language_string());
+                Ok(Value::new_null().rc())
+            }).rc(),
+
+            InternalMethod::new("print:", |_, p| {
+                print!("{}", p[0].borrow().to_language_string());
+                Ok(Value::new_null().rc())
+            }).rc(),
+        ],
+
+        ..Type::new("Console")
     }
 }
