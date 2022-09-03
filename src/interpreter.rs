@@ -179,4 +179,12 @@ mod tests {
             Err(InterpreterError::IntegerOverflow(..)),
         ));
     }
+
+    #[test]
+    fn test_message_precedence() {
+        assert_eq!(
+            evaluate("2 negate add: 7 negate.").unwrap(),
+            Value { type_instance: TypeInstance::PrimitiveInteger(-9) }.rc(),
+        )
+    }
 }
