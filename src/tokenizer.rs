@@ -214,6 +214,7 @@ fn test_simple_tokenize() {
             Token::new(TokenKind::LabelIdentifier("add".into()), Location::new(3, 4)),
             Token::new(TokenKind::IntegerLiteral(24), Location::new(8, 2)),
             Token::new(TokenKind::Terminator, Location::new_single(10)),
+            Token::new(TokenKind::EndOfFile, Location::new_single(11)),
         ])
     )
 }
