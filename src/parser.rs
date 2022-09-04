@@ -121,7 +121,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_single_statement(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
-        let node = self.parse_assignment(context)?;
+        let node = self.parse_expression(context)?;
 
         // If there is a separator, advance past it
         if let Token { kind: TokenKind::Terminator, .. } = self.here() {
@@ -129,6 +129,10 @@ impl<'a> Parser<'a> {
         }
 
         Ok(node)
+    }
+
+    fn parse_expression(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
+        self.parse_assignment(context)
     }
 
     fn parse_assignment(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
@@ -209,6 +213,15 @@ impl<'a> Parser<'a> {
             };
             self.advance();
             Ok(node)
+        } else if let Token { kind: TokenKind::LeftParen, .. } = self.here() {
+            self.advance();
+            let node = self.parse_expression(context)?;
+            if let Token { kind: TokenKind::RightParen, .. } = self.here() {
+                self.advance();
+                Ok(node)
+            } else {
+                Err(ParserError::UnexpectedToken(self.here().clone()))
+            }
         } else {
             Err(ParserError::UnexpectedToken(self.here().clone()))
         }

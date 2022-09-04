@@ -21,6 +21,9 @@ pub enum TokenKind {
     BlockStart,
     BlockEnd,
 
+    LeftParen,
+    RightParen,
+
     Identifier(String),
     LabelIdentifier(String),
 
@@ -112,6 +115,8 @@ impl<'a> Tokenizer<'a> {
                     '.' => self.tokens.push(TokenKind::Terminator.at(self.here_loc())),
                     '[' => self.tokens.push(TokenKind::BlockStart.at(self.here_loc())),
                     ']' => self.tokens.push(TokenKind::BlockEnd.at(self.here_loc())),
+                    '(' => self.tokens.push(TokenKind::LeftParen.at(self.here_loc())),
+                    ')' => self.tokens.push(TokenKind::RightParen.at(self.here_loc())),
 
                     _ => return Err(TokenizerError::UnexpectedCharacter(here, self.here_loc())),
                 }

@@ -22,6 +22,11 @@ fn integer() -> Type {
                 let b = params[0].borrow().to_integer()?;
                 Ok(Value::new_integer(a + b).rc())
             }).rc(),
+            InternalMethod::new("sub:", |recv, params| {
+                let a = recv.borrow().to_integer()?;
+                let b = params[0].borrow().to_integer()?;
+                Ok(Value::new_integer(a - b).rc())
+            }).rc(),
             InternalMethod::new("negate", |recv, _| {
                 let a = recv.borrow().to_integer()?;
                 Ok(Value::new_integer(-a).rc())

@@ -344,7 +344,12 @@ mod tests {
         assert_eq!(
             evaluate("2 negate add: 7 negate.").unwrap(),
             Value::new_integer(-9).rc(),
-        )
+        );
+
+        assert_eq!(
+            evaluate("(5 add: 5) sub: (3 add: 4).").unwrap(),
+            Value::new_integer(3).rc(),
+        );
     }
 
     #[test]
