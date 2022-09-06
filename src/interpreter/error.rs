@@ -2,7 +2,7 @@ use crate::source::Location;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InterpreterError {
-    MissingMethod(String, Location),
+    MissingMethod(String),
     MissingName(String, Location),
     IntegerOverflow(Location),
 

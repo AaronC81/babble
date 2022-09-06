@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::parser::{NodeKind, Node};
+use crate::parser::{NodeKind, Node, SendMessageComponents};
 
 mod error;
 
@@ -86,36 +86,8 @@ impl Interpreter {
             NodeKind::SendMessage { receiver, components } => {
                 // Evaluate the receiver
                 let receiver = self.evaluate(&receiver)?;
-                let receiver_ref = receiver.borrow();
 
-                let method_name = components.to_method_name();
-                let method =
-                    if let TypeInstance::Type(t) = &receiver_ref.type_instance {
-                        t.resolve_static_method(&method_name)
-                    } else {
-                        receiver_ref.type_instance.get_type(&self).resolve_method(&method_name)
-                    };
-                if let Some(method) = method {
-                    drop(receiver_ref);
-
-                    // Evaluate parameters
-                    let parameters = match components {
-                        crate::parser::SendMessageComponents::Unary(_) => vec![],
-                        crate::parser::SendMessageComponents::Parameterised(params) =>
-                            params.iter().map(|(_, p)| self.evaluate(p)).collect::<Result<Vec<_>, _>>()?,
-                    };
-
-                    // Create a new stack frame, call the method within it, and pop the frame
-                    self.stack.push(StackFrame {
-                        context: StackFrameContext::InternalMethod(method.clone()),
-                    });
-                    let result = method.call(self, receiver, parameters);
-                    self.stack.pop();
-
-                    result
-                } else {
-                    Err(InterpreterError::MissingMethod(method_name, node.location))
-                }
+                self.send_message(receiver, components)
             },
 
             NodeKind::StatementSequence(seq) => {
@@ -171,5 +143,38 @@ impl Interpreter {
 
     pub fn resolve_stdlib_type(&self, id: &str) -> Rc<Type> {
         self.resolve_type(id).expect(&format!("internal error: stdlib type {} missing", id))
+    }
+
+    pub fn send_message(&mut self, receiver: ValueRef, components: &SendMessageComponents) -> InterpreterResult {
+        let receiver_ref = receiver.borrow();
+
+        let method_name = components.to_method_name();
+        let method =
+            if let TypeInstance::Type(t) = &receiver_ref.type_instance {
+                t.resolve_static_method(&method_name)
+            } else {
+                receiver_ref.type_instance.get_type(&self).resolve_method(&method_name)
+            };
+        if let Some(method) = method {
+            drop(receiver_ref);
+
+            // Evaluate parameters
+            let parameters = match components {
+                crate::parser::SendMessageComponents::Unary(_) => vec![],
+                crate::parser::SendMessageComponents::Parameterised(params) =>
+                    params.iter().map(|(_, p)| self.evaluate(p)).collect::<Result<Vec<_>, _>>()?,
+            };
+
+            // Create a new stack frame, call the method within it, and pop the frame
+            self.stack.push(StackFrame {
+                context: StackFrameContext::InternalMethod(method.clone()),
+            });
+            let result = method.call(self, receiver, parameters);
+            self.stack.pop();
+
+            result
+        } else {
+            Err(InterpreterError::MissingMethod(method_name))
+        }
     }
 }
