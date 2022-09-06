@@ -46,6 +46,9 @@ pub enum NodeKind {
     Assignment {
         target: Box<Node>,
         value: Box<Node>,
+    },
+    Block {
+        body: Box<Node>,
     }
 }
 
@@ -222,6 +225,33 @@ impl<'a> Parser<'a> {
             } else {
                 Err(ParserError::UnexpectedToken(self.here().clone()))
             }
+        } else if let Token { kind: TokenKind::BlockStart, .. } = self.here() {
+            self.advance();
+
+            // TODO: support block parameters
+            let mut body = vec![];
+            
+            loop {
+                if let Token { kind: TokenKind::BlockEnd, .. } = self.here() {
+                    self.advance();
+                    break
+                }
+                body.push(self.parse_single_statement(context.clone())?);
+            }
+
+            let new_context = LexicalContext::new_with_parent(context).rc();
+            Ok(Node {
+                // TODO
+                location: body[0].location,
+                kind: NodeKind::Block {
+                    body: Box::new(Node {
+                        location: body[0].location,
+                        kind: NodeKind::StatementSequence(body),
+                        context: new_context.clone(),
+                    }),
+                },
+                context: new_context,
+            })    
         } else {
             Err(ParserError::UnexpectedToken(self.here().clone()))
         }

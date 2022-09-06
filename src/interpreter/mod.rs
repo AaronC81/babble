@@ -1,5 +1,8 @@
-mod error;
 use std::{cell::RefCell, rc::Rc};
+
+use crate::parser::{NodeKind, Node};
+
+mod error;
 
 pub use error::*;
 
@@ -9,7 +12,8 @@ pub use value::*;
 mod r#type;
 pub use r#type::*;
 
-use crate::parser::{NodeKind, Node};
+mod block;
+pub use block::*;
 
 mod tests;
 
@@ -48,7 +52,14 @@ impl LexicalContext {
 pub type LexicalContextRef = Rc<RefCell<LexicalContext>>;
 
 pub struct StackFrame {
-    context: InternalMethodRef,
+    context: StackFrameContext,
+}
+
+pub enum StackFrameContext {
+    InternalMethod(InternalMethodRef),
+    Block {
+        arguments: Vec<(String, ValueRef)>,
+    },
 }
 
 pub struct Interpreter {
@@ -96,9 +107,9 @@ impl Interpreter {
 
                     // Create a new stack frame, call the method within it, and pop the frame
                     self.stack.push(StackFrame {
-                        context: method.clone(),
+                        context: StackFrameContext::InternalMethod(method.clone()),
                     });
-                    let result = method.call(receiver, parameters);
+                    let result = method.call(self, receiver, parameters);
                     self.stack.pop();
 
                     result
@@ -143,7 +154,14 @@ impl Interpreter {
                 } else {
                     Err(InterpreterError::MissingName(id.into(), node.location))
                 }
-            }
+            },
+
+            NodeKind::Block { body } => {
+                Ok(Value::new_block(Block {
+                    body: *body.clone(),
+                    parameters: vec![], // TODO
+                }).rc())
+            },
         }
     }
 

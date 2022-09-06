@@ -1,6 +1,6 @@
 use std::{rc::Rc, fmt::Debug};
 
-use super::{ValueRef, InterpreterResult, InterpreterError};
+use super::{ValueRef, InterpreterResult, InterpreterError, Interpreter};
 
 #[derive(Debug)]
 pub struct Type {
@@ -33,7 +33,7 @@ impl Type {
 
 pub struct InternalMethod {
     pub name: String,
-    function: Box<dyn Fn(ValueRef, Vec<ValueRef>) -> InterpreterResult>,
+    function: Box<dyn Fn(&mut Interpreter, ValueRef, Vec<ValueRef>) -> InterpreterResult>,
 }
 impl Debug for InternalMethod {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -45,7 +45,7 @@ pub type InternalMethodRef = Rc<InternalMethod>;
 
 impl InternalMethod {
     pub fn new<F>(name: &str, function: F) -> Self
-    where F: Fn(ValueRef, Vec<ValueRef>) -> InterpreterResult + 'static {
+    where F: Fn(&mut Interpreter, ValueRef, Vec<ValueRef>) -> InterpreterResult + 'static {
         Self {
             name: name.into(),
             function: Box::new(function),
@@ -60,7 +60,7 @@ impl InternalMethod {
         self.name.matches(":").count()
     }
 
-    pub fn call(&self, receiver: ValueRef, parameters: Vec<ValueRef>) -> InterpreterResult {
+    pub fn call(&self, interpreter: &mut Interpreter, receiver: ValueRef, parameters: Vec<ValueRef>) -> InterpreterResult {        
         if self.arity() != parameters.len() {
             return Err(InterpreterError::IncorrectArity {
                 name: self.name.clone(),
@@ -69,6 +69,6 @@ impl InternalMethod {
             })
         }
 
-        (self.function)(receiver, parameters)
+        (self.function)(interpreter, receiver, parameters)
     }
 }

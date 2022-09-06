@@ -62,3 +62,11 @@ fn test_static_methods() {
         Value::new_integer(0).rc(),
     )
 }
+
+#[test]
+fn test_unary_block() {
+    assert_eq!(
+        evaluate("[ 1 add: 1 ] call.").unwrap(),
+        Value::new_integer(2).rc(),
+    )
+}
