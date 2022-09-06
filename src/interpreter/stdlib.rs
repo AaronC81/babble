@@ -1,6 +1,6 @@
 use std::{rc::Rc, cell::RefCell};
 
-use crate::interpreter::{Type, InternalMethod, TypeInstance, Value};
+use crate::{interpreter::{Type, InternalMethod, TypeInstance, Value}, parser::SendMessageComponents};
 
 pub fn types() -> Vec<Rc<Type>> {
     vec![
@@ -31,6 +31,16 @@ fn integer() -> Type {
             InternalMethod::new("negate", |_, recv, _| {
                 let a = recv.borrow().to_integer()?;
                 Ok(Value::new_integer(-a).rc())
+            }).rc(),
+
+            InternalMethod::new("times:", |i, recv, params| {
+                let times = recv.borrow().to_integer()?;
+                let block = &params[0];
+                for _ in 0..times {
+                    i.send_message(block.clone(), &SendMessageComponents::Unary("call".into()))?;
+                }
+
+                Ok(recv)
             }).rc(),
         ],
 
