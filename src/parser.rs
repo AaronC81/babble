@@ -49,6 +49,7 @@ pub enum NodeKind {
     },
     Block {
         body: Box<Node>,
+        parameters: Vec<String>,
     }
 }
 
@@ -228,7 +229,25 @@ impl<'a> Parser<'a> {
         } else if let Token { kind: TokenKind::BlockStart, .. } = self.here() {
             self.advance();
 
-            // TODO: support block parameters
+            // If the first token is a pipe, then parse parameters until the next pipe
+            let mut parameters = vec![];
+            if let Token { kind: TokenKind::Pipe, .. } = self.here() {
+                self.advance();
+                loop {
+                    match &self.here().kind {
+                        TokenKind::Identifier(i) => {
+                            parameters.push(i.clone());
+                            self.advance();
+                        },
+                        TokenKind::Pipe => {
+                            self.advance();
+                            break;
+                        },
+                        _ => return Err(ParserError::UnexpectedToken(self.here().clone()))
+                    }
+                }
+            }
+
             let mut body = vec![];
             
             loop {
@@ -249,6 +268,7 @@ impl<'a> Parser<'a> {
                         kind: NodeKind::StatementSequence(body),
                         context: new_context.clone(),
                     }),
+                    parameters,
                 },
                 context: new_context,
             })    

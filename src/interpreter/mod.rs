@@ -128,10 +128,10 @@ impl Interpreter {
                 }
             },
 
-            NodeKind::Block { body } => {
+            NodeKind::Block { body, parameters } => {
                 Ok(Value::new_block(Block {
                     body: *body.clone(),
-                    parameters: vec![], // TODO
+                    parameters: parameters.clone(),
                 }).rc())
             },
         }

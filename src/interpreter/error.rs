@@ -12,6 +12,10 @@ pub enum InterpreterError {
         expected: usize,
         got: usize,
     },
+    IncorrectBlockArity {
+        expected: usize,
+        got: usize,
+    },
     IncorrectType, // TODO more details
     InvalidAssignmentTarget(Location),
 }

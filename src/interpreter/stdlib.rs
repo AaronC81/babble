@@ -2,12 +2,14 @@ use std::{rc::Rc, cell::RefCell};
 
 use crate::{interpreter::{Type, InternalMethod, TypeInstance, Value}, parser::SendMessageComponents};
 
+use super::InterpreterError;
+
 pub fn types() -> Vec<Rc<Type>> {
     vec![
         Rc::new(null()),
         Rc::new(integer()),
         Rc::new(console()),
-        Rc::new(block0()),
+        Rc::new(block()),
     ]
 }
 
@@ -72,20 +74,46 @@ fn console() -> Type {
     }
 }
 
-// TODO: we can auto-gen and memoize this type for every block of different arities
-fn block0() -> Type {
-    Type {
-        methods: vec![
-            InternalMethod::new("call", |i, r, a| {
+pub const MAXIMUM_BLOCK_ARITY: usize = 64;
+
+fn block() -> Type {
+    let mut methods = vec![];
+    
+    for i in 0..=MAXIMUM_BLOCK_ARITY {
+        let method_name = if i == 0 {
+            "call".into()
+        } else {
+            "call:".repeat(i)
+        };
+
+        methods.push(
+            InternalMethod::new(&method_name, |i, r, a| {
                 match &r.borrow().type_instance {
                     TypeInstance::Block(b) => {
-                        b.call(i, a)
-                    }
+                        if b.arity() != a.len() {
+                            Err(InterpreterError::IncorrectBlockArity {
+                                expected: b.arity(),
+                                got: a.len(),
+                            })
+                        } else {
+                            b.call(i, a)
+                        }
+                    },
                     _ => unreachable!()
                 }
             }).rc(),
-        ],
+        );
+    }
 
-        ..Type::new("Block0")
+    methods.push(InternalMethod::new("arity", |_, r, _| {
+        match &r.borrow().type_instance {
+            TypeInstance::Block(b) => Ok(Value::new_integer(b.arity() as i64).rc()),
+            _ => unreachable!()
+        }
+    }).rc());
+
+    Type {
+        methods,
+        ..Type::new("Block")
     }
 }

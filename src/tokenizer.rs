@@ -17,6 +17,7 @@ pub enum TokenKind {
     Terminator,
     NewLine,
     Assignment,
+    Pipe,
 
     BlockStart,
     BlockEnd,
@@ -117,6 +118,7 @@ impl<'a> Tokenizer<'a> {
                     ']' => self.tokens.push(TokenKind::BlockEnd.at(self.here_loc())),
                     '(' => self.tokens.push(TokenKind::LeftParen.at(self.here_loc())),
                     ')' => self.tokens.push(TokenKind::RightParen.at(self.here_loc())),
+                    '|' => self.tokens.push(TokenKind::Pipe.at(self.here_loc())),
 
                     _ => return Err(TokenizerError::UnexpectedCharacter(here, self.here_loc())),
                 }

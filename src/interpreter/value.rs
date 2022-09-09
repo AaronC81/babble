@@ -84,9 +84,7 @@ impl TypeInstance {
         match self {
             TypeInstance::Fields { source_type, .. } => source_type.clone(),
             TypeInstance::Type(_) => interpreter.resolve_stdlib_type("Null"), // TODO: should probably be a `Type` type
-            // TODO: add create_or_resolve_block_type - this won't work when we have blocks with
-            // parameters
-            TypeInstance::Block(_) => interpreter.resolve_stdlib_type("Block0"), 
+            TypeInstance::Block(_) => interpreter.resolve_stdlib_type("Block"), 
             TypeInstance::PrimitiveInteger(_) => interpreter.resolve_stdlib_type("Integer"),
             TypeInstance::PrimitiveNull => interpreter.resolve_stdlib_type("Null"),
         }
