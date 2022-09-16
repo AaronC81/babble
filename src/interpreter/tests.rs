@@ -83,3 +83,11 @@ fn test_param_block() {
         Value::new_integer(2).rc(),
     );
 }
+
+#[test]
+fn test_capture() {
+    assert_eq!(
+        evaluate("x = [ a = 4. [ | *a x | a add: x ] ]. (x call) call: 3").unwrap(),
+        Value::new_integer(7).rc(),
+    )
+}

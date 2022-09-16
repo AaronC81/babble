@@ -122,10 +122,21 @@ impl Interpreter {
                 }
             },
 
-            NodeKind::Block { body, parameters } => {
+            NodeKind::Block { body, parameters, captures } => {
+                // Grab captures from local variables
+                let capture_values = captures
+                    .iter()
+                    .map(|name|
+                        self.find_local(name)
+                            .ok_or(InterpreterError::MissingCaptureName(name.clone()))
+                            .map(|v| (name.clone(), v))
+                    )
+                    .collect::<Result<Vec<_>, _>>()?;
+
                 Ok(Value::new_block(Block {
                     body: *body.clone(),
                     parameters: parameters.clone(),
+                    captures: capture_values,
                 }).rc())
             },
         }

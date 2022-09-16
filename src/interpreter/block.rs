@@ -7,6 +7,7 @@ use super::{LexicalContextRef, ValueRef, InterpreterResult, Interpreter, Interpr
 pub struct Block {
     pub body: Node,
     pub parameters: Vec<String>,
+    pub captures: Vec<(String, ValueRef)>,
 }
 
 impl Block {
@@ -23,12 +24,16 @@ impl Block {
             })
         }
 
-        // Create a new stack frame with the relevant locals
+        // Create a new stack frame with the relevant locals - that is...
         interpreter.stack.push(StackFrame {
-            locals: self.parameters.iter()
-                .cloned()
-                .zip(arguments)
-                .collect(),
+            locals:
+                // ...parameters...
+                self.parameters.iter()
+                    .cloned()
+                    .zip(arguments)
+                    // ...and captures.
+                    .chain(self.captures.iter().cloned())
+                    .collect(),
             context: StackFrameContext::Block,
         });
 

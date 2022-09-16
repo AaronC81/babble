@@ -50,6 +50,7 @@ pub enum NodeKind {
     Block {
         body: Box<Node>,
         parameters: Vec<String>,
+        captures: Vec<String>,
     }
 }
 
@@ -231,6 +232,7 @@ impl<'a> Parser<'a> {
 
             // If the first token is a pipe, then parse parameters until the next pipe
             let mut parameters = vec![];
+            let mut captures = vec![];
             if let Token { kind: TokenKind::Pipe, .. } = self.here() {
                 self.advance();
                 loop {
@@ -239,6 +241,21 @@ impl<'a> Parser<'a> {
                             parameters.push(i.clone());
                             self.advance();
                         },
+
+                        // TODO: this capture syntax is pretty ugly since it can be interspersed
+                        // into the normal parameter list, and also just kind of shouldn't be
+                        // necessary at all
+                        // Ideally we'll have some pass later to build this list automatically,
+                        // but for now it's explicit - consider removing this syntax at some point
+                        TokenKind::Star => {
+                            self.advance();
+                            if let TokenKind::Identifier(i) = &self.here().kind {
+                                captures.push(i.clone());
+                                self.advance();
+                            } else {
+                                return Err(ParserError::UnexpectedToken(self.here().clone()))
+                            }
+                        }
                         TokenKind::Pipe => {
                             self.advance();
                             break;
@@ -269,6 +286,7 @@ impl<'a> Parser<'a> {
                         context: new_context.clone(),
                     }),
                     parameters,
+                    captures,
                 },
                 context: new_context,
             })    

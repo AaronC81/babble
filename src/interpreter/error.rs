@@ -4,6 +4,7 @@ use crate::source::Location;
 pub enum InterpreterError {
     MissingMethod(String),
     MissingName(String, Location),
+    MissingCaptureName(String),
     IntegerOverflow(Location),
 
     // TODO: location for these
