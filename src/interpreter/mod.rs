@@ -22,30 +22,19 @@ pub mod stdlib;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LexicalContext {
     parent: Option<LexicalContextRef>,
-    locals: Vec<(String, ValueRef)>,
 }
 
 impl LexicalContext {
     pub fn new_top_level() -> Self {
-        LexicalContext { parent: None, locals: vec![] }
+        LexicalContext { parent: None }
     }
 
     pub fn new_with_parent(parent: LexicalContextRef) -> Self {
-        LexicalContext { parent: Some(parent), locals: vec![] }
+        LexicalContext { parent: Some(parent) }
     }
 
     pub fn rc(self) -> LexicalContextRef {
         Rc::new(RefCell::new(self))
-    }
-
-    pub fn find_local(&self, name: &str) -> Option<ValueRef> {
-        self.locals.iter()
-            .find_map(|(n, v)| if n == &name { Some(v.clone()) } else { None })
-            .or_else(|| self.parent.as_ref().and_then(|p| p.borrow().find_local(name)))
-    }
-
-    pub fn create_local(&mut self, name: &str, value: ValueRef) {
-        self.locals.push((name.into(), value))
     }
 }
 
@@ -53,13 +42,13 @@ pub type LexicalContextRef = Rc<RefCell<LexicalContext>>;
 
 pub struct StackFrame {
     context: StackFrameContext,
+    locals: Vec<(String, ValueRef)>,
 }
 
 pub enum StackFrameContext {
+    Root,
     InternalMethod(InternalMethodRef),
-    Block {
-        arguments: Vec<(String, ValueRef)>,
-    },
+    Block,
 }
 
 pub struct Interpreter {
@@ -73,7 +62,12 @@ impl Interpreter {
     pub fn new() -> Self {
         Self {
             types: stdlib::types(),
-            stack: vec![],
+            stack: vec![
+                StackFrame {
+                    context: StackFrameContext::Root,
+                    locals: vec![],
+                }
+            ],
         }
     }
 
@@ -106,10 +100,10 @@ impl Interpreter {
                     let value = self.evaluate(value)?;
                     let mut context = node.context.borrow_mut();
 
-                    if let Some(target) = context.find_local(&id) {
+                    if let Some(target) = self.find_local(&id) {
                         *target.borrow_mut() = value.borrow().clone();
                     } else {
-                        context.create_local(&id, value.clone());
+                        self.create_local(&id, value.clone());
                     }
 
                     Ok(value)
@@ -119,7 +113,7 @@ impl Interpreter {
             },
 
             NodeKind::Identifier(id) => {
-                if let Some(value) = node.context.borrow().find_local(id) {
+                if let Some(value) = self.find_local(id) {
                     Ok(value)
                 } else if let Some(t) = self.resolve_type(id) {
                     Ok(Value::new_type(t.clone()).rc())
@@ -168,6 +162,7 @@ impl Interpreter {
             // Create a new stack frame, call the method within it, and pop the frame
             self.stack.push(StackFrame {
                 context: StackFrameContext::InternalMethod(method.clone()),
+                locals: vec![],
             });
             let result = method.call(self, receiver, parameters);
             self.stack.pop();
@@ -176,5 +171,17 @@ impl Interpreter {
         } else {
             Err(InterpreterError::MissingMethod(method_name))
         }
+    }
+
+    pub fn find_local(&self, name: &str) -> Option<ValueRef> {
+        self.stack.iter()
+            .rev()
+            .find_map(|frame|
+                frame.locals.iter().find_map(|(n, v)| if n == &name { Some(v.clone()) } else { None })
+            )
+    }
+
+    pub fn create_local(&mut self, name: &str, value: ValueRef) {
+        self.stack.last_mut().unwrap().locals.push((name.into(), value))
     }
 }

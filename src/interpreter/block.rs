@@ -25,12 +25,11 @@ impl Block {
 
         // Create a new stack frame with the relevant locals
         interpreter.stack.push(StackFrame {
-            context: StackFrameContext::Block {
-                arguments: self.parameters.iter()
-                    .cloned()
-                    .zip(arguments)
-                    .collect()
-            },
+            locals: self.parameters.iter()
+                .cloned()
+                .zip(arguments)
+                .collect(),
+            context: StackFrameContext::Block,
         });
 
         // Run the body
