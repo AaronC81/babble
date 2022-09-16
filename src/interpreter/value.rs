@@ -48,7 +48,7 @@ impl Value {
                     result.push_str(": ");
 
                     // If the value contains any whitespace, wrap it in parentheses
-                    let mut value_str = value.to_language_string();
+                    let mut value_str = value.borrow().to_language_string();
                     if value_str.chars().any(|c| c.is_whitespace()) {
                         value_str.insert(0, '(');
                         value_str.push(')');
@@ -71,7 +71,7 @@ impl Value {
 pub enum TypeInstance {
     Fields {
         source_type: Rc<Type>,
-        field_values: Vec<Box<Value>>,
+        field_values: Vec<ValueRef>,
     },
     Type(Rc<Type>),
     Block(Block),

@@ -67,10 +67,12 @@ pub struct Parser<'a> {
 
 impl<'a> Parser<'a> {
     pub fn new(tokens: &'a [Token]) -> Self {
-        Self {
+        let mut s = Self {
             tokens,
             current_index: 0,
-        }
+        };
+        s.skip_newlines(); // TODO: Temporary (maybe)
+        s
     }
 
     fn here(&self) -> &Token {
@@ -79,6 +81,13 @@ impl<'a> Parser<'a> {
 
     fn advance(&mut self) {
         self.current_index += 1;
+        self.skip_newlines() // TODO: Temporary (maybe)
+    }
+
+    fn skip_newlines(&mut self) {
+        while !self.all_tokens_consumed() && self.here().kind == TokenKind::NewLine {
+            self.current_index += 1;
+        }
     }
 
     fn all_tokens_consumed(&self) -> bool {
@@ -289,7 +298,7 @@ impl<'a> Parser<'a> {
                     captures,
                 },
                 context: new_context,
-            })    
+            })   
         } else {
             Err(ParserError::UnexpectedToken(self.here().clone()))
         }
