@@ -38,6 +38,11 @@ impl Block {
         });
 
         // Run the body
-        interpreter.evaluate(&self.body)
+        let result = interpreter.evaluate(&self.body);
+
+        // Pop the frame
+        interpreter.stack.pop();
+
+        result
     }
 }
