@@ -184,15 +184,22 @@ impl Interpreter {
         }
     }
 
+    pub fn current_stack_frame(&self) -> &StackFrame {
+        self.stack.last().unwrap()
+    }
+
+    pub fn current_stack_frame_mut(&mut self) -> &mut StackFrame {
+        self.stack.last_mut().unwrap()
+    }
+
     pub fn find_local(&self, name: &str) -> Option<ValueRef> {
-        self.stack.iter()
-            .rev()
-            .find_map(|frame|
-                frame.locals.iter().find_map(|(n, v)| if n == &name { Some(v.clone()) } else { None })
-            )
+        self.current_stack_frame()
+            .locals
+            .iter()
+            .find_map(|(n, v)| if n == &name { Some(v.clone()) } else { None })
     }
 
     pub fn create_local(&mut self, name: &str, value: ValueRef) {
-        self.stack.last_mut().unwrap().locals.push((name.into(), value))
+        self.current_stack_frame_mut().locals.push((name.into(), value))
     }
 }
