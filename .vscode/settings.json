@@ -1,0 +1,40 @@
+{
+    "highlight.regexes": {
+        "\\b(true|false)\\b": {
+            "regexFlags": "g",
+            "filterFileRegex": ".*\\.lang",
+            "decorations": [
+                { "color": "cornflowerblue" }
+            ]
+        },
+        "\\b([0-9]+)\\b": {
+            "regexFlags": "g",
+            "filterFileRegex": ".*\\.lang",
+            "decorations": [
+                { "color": "bisque" }
+            ]
+        },
+        "(\".+\")": {
+            "regexFlags": "g",
+            "filterFileRegex": ".*\\.lang",
+            "decorations": [
+                { "color": "lightsalmon" }
+            ]
+        },
+
+        "\\b([A-Z][a-zA-Z0-9_]+)\\b": {
+            "regexFlags": "g",
+            "filterFileRegex": ".*\\.lang",
+            "decorations": [
+                { "color": "darkseagreen" }
+            ]
+        },
+        "\\b([a-z_][a-zA-Z0-9_]*:?)": {
+            "regexFlags": "g",
+            "filterFileRegex": ".*\\.lang",
+            "decorations": [
+                { "color": "lightblue" }
+            ]
+        },
+    }
+}
