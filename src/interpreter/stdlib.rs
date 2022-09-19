@@ -35,6 +35,38 @@ fn integer() -> Type {
                 let a = recv.borrow().to_integer()?;
                 Ok(Value::new_integer(-a).rc())
             }).rc(),
+            InternalMethod::new("modulo:", |i, recv, params| {
+                let a = recv.borrow().to_integer()?;
+                let b = params[0].borrow().to_integer()?;
+                Ok(Value::new_integer(a % b).rc())
+            }).rc(),
+
+            // TODO: maybe these should be shared?
+            InternalMethod::new("greaterThan:", |i, recv, params| {
+                let a = recv.borrow().to_integer()?;
+                let b = params[0].borrow().to_integer()?;
+                Ok(Value::new_boolean(i, a > b).rc())
+            }).rc(),
+            InternalMethod::new("greaterThanOrEquals:", |i, recv, params| {
+                let a = recv.borrow().to_integer()?;
+                let b = params[0].borrow().to_integer()?;
+                Ok(Value::new_boolean(i, a >= b).rc())
+            }).rc(),
+            InternalMethod::new("lessThan:", |i, recv, params| {
+                let a = recv.borrow().to_integer()?;
+                let b = params[0].borrow().to_integer()?;
+                Ok(Value::new_boolean(i, a < b).rc())
+            }).rc(),
+            InternalMethod::new("lessThanOrEquals:", |i, recv, params| {
+                let a = recv.borrow().to_integer()?;
+                let b = params[0].borrow().to_integer()?;
+                Ok(Value::new_boolean(i, a <= b).rc())
+            }).rc(),
+            InternalMethod::new("equals:", |i, recv, params| {
+                let a = recv.borrow().to_integer()?;
+                let b = params[0].borrow().to_integer()?;
+                Ok(Value::new_boolean(i, a == b).rc())
+            }).rc(),
 
             InternalMethod::new("times:", |i, recv, params| {
                 let times = recv.borrow().to_integer()?;
@@ -103,9 +135,24 @@ fn block() -> Type {
         );
     }
 
-    methods.push(InternalMethod::new("arity", |_, r, _| {
-        Ok(Value::new_integer(r.borrow().to_block()?.arity() as i64).rc())
-    }).rc());
+    methods.extend([
+        InternalMethod::new("arity", |_, r, _| {
+            Ok(Value::new_integer(r.borrow().to_block()?.arity() as i64).rc())
+        }).rc(),
+
+        InternalMethod::new("whileTrue:", |i, r, a| {
+            let r = r.borrow();
+            let condition_block = r.to_block()?;
+
+            while condition_block.call(i, vec![])?.borrow().to_boolean()? {
+                let arg = a[0].borrow();
+                let block = arg.to_block()?;
+                block.call(i, vec![])?;
+            }
+
+            Ok(Value::new_null().rc())
+        }).rc(),
+    ]);
 
     Type {
         methods,
