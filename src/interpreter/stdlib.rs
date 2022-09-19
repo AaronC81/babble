@@ -8,6 +8,7 @@ pub fn types() -> Vec<Rc<Type>> {
     vec![
         Rc::new(null()),
         Rc::new(integer()),
+        Rc::new(string()),
         Rc::new(console()),
         Rc::new(block()),
         Rc::new(boolean()),
@@ -87,6 +88,10 @@ fn integer() -> Type {
 
         ..Type::new("Integer")
     }
+}
+
+fn string() -> Type {
+    Type::new("String")
 }
 
 fn console() -> Type {

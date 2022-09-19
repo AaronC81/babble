@@ -14,6 +14,10 @@ impl Value {
         Self { type_instance: TypeInstance::PrimitiveInteger(value) }
     }
 
+    pub fn new_string(value: &str) -> Self {
+        Self { type_instance: TypeInstance::PrimitiveString(value.into()) }
+    }
+
     pub fn new_type(t: Rc<Type>) -> Self {
         Self { type_instance: TypeInstance::Type(t) }
     }
@@ -116,6 +120,7 @@ impl Value {
             TypeInstance::Block(_) => "(anonymous block)".into(),
             TypeInstance::Type(t) => t.id.clone(),
             TypeInstance::PrimitiveInteger(i) => i.to_string(),
+            TypeInstance::PrimitiveString(s) => s.clone(),
             TypeInstance::PrimitiveNull => "null".into(),
         }
     }
@@ -131,6 +136,7 @@ pub enum TypeInstance {
     Type(Rc<Type>),
     Block(Block),
     PrimitiveInteger(i64),
+    PrimitiveString(String),
     PrimitiveNull,
 }
 
@@ -141,6 +147,7 @@ impl TypeInstance {
             TypeInstance::Type(_) => interpreter.resolve_stdlib_type("Null"), // TODO: should probably be a `Type` type
             TypeInstance::Block(_) => interpreter.resolve_stdlib_type("Block"), 
             TypeInstance::PrimitiveInteger(_) => interpreter.resolve_stdlib_type("Integer"),
+            TypeInstance::PrimitiveString(_) => interpreter.resolve_stdlib_type("String"),
             TypeInstance::PrimitiveNull => interpreter.resolve_stdlib_type("Null"),
         }
     }

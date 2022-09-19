@@ -77,6 +77,8 @@ impl Interpreter {
                 .map(|i| Value::new_integer(i).rc())
                 .map_err(|_| InterpreterError::IntegerOverflow(node.location)),
 
+            NodeKind::StringLiteral(s) => Ok(Value::new_string(s).rc()),
+
             NodeKind::SendMessage { receiver, components } => {
                 // Evaluate the receiver
                 let receiver = self.evaluate(&receiver)?;

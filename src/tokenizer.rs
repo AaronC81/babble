@@ -32,6 +32,7 @@ pub enum TokenKind {
     LabelIdentifier(String),
 
     IntegerLiteral(u64),
+    StringLiteral(String),
 
     EndOfFile,
 }
@@ -121,6 +122,13 @@ impl<'a> Tokenizer<'a> {
                         )
                     }
 
+                    // Start of a string literal
+                    '"' => {
+                        self.state = TokenizerState::CollectingWhitespaceSeparated(
+                            TokenKind::StringLiteral("".into()).at(self.here_loc()),
+                        )
+                    }
+
                     // Simple symbols
                     '=' => self.tokens.push(TokenKind::Assignment.at(self.here_loc())),
                     '.' => self.tokens.push(TokenKind::Terminator.at(self.here_loc())),
@@ -197,6 +205,21 @@ impl<'a> Tokenizer<'a> {
 
                                 return Ok(())
                             },
+                        }
+                    }
+
+                    TokenKind::StringLiteral(ref mut value) => {
+                        // TODO: escapes
+                        match here {
+                            // Finish on matching quote
+                            '"' => {
+                                self.tokens.push(token.clone());
+                                self.state = TokenizerState::Idle;
+                            },
+
+                            _ => {
+                                value.push(here)
+                            }
                         }
                     }
 

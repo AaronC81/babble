@@ -37,6 +37,7 @@ impl SendMessageComponents {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NodeKind {
     IntegerLiteral(u64),
+    StringLiteral(String),
     TrueLiteral,
     FalseLiteral,
     NullLiteral,
@@ -233,6 +234,14 @@ impl<'a> Parser<'a> {
         if let Token { kind: TokenKind::IntegerLiteral(value), location } = self.here() {
             let node = Node {
                 kind: NodeKind::IntegerLiteral(*value),
+                location: *location,
+                context,
+            };
+            self.advance();
+            Ok(node)
+        } else if let Token { kind: TokenKind::StringLiteral(value), location } = self.here() {
+            let node = Node {
+                kind: NodeKind::StringLiteral(value.clone()),
                 location: *location,
                 context,
             };
