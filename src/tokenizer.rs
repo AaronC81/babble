@@ -19,6 +19,7 @@ pub enum TokenKind {
     Assignment,
     Pipe,
     Star,
+    Hash,
 
     BlockStart,
     BlockEnd,
@@ -121,6 +122,7 @@ impl<'a> Tokenizer<'a> {
                     ')' => self.tokens.push(TokenKind::RightParen.at(self.here_loc())),
                     '|' => self.tokens.push(TokenKind::Pipe.at(self.here_loc())),
                     '*' => self.tokens.push(TokenKind::Star.at(self.here_loc())),
+                    '#' => self.tokens.push(TokenKind::Hash.at(self.here_loc())),
 
                     _ => return Err(TokenizerError::UnexpectedCharacter(here, self.here_loc())),
                 }

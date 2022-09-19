@@ -5,6 +5,7 @@ pub enum InterpreterError {
     MissingMethod(String),
     MissingName(String, Location),
     MissingCaptureName(String),
+    MissingVariant(String),
     IntegerOverflow(Location),
 
     // TODO: location for these
@@ -19,4 +20,7 @@ pub enum InterpreterError {
     },
     IncorrectType, // TODO more details
     InvalidAssignmentTarget(Location),
+
+    VariantAccessOnNonEnum,
+    IncorrectVariantParameters,
 }

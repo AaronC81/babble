@@ -2,13 +2,13 @@ use std::rc::Rc;
 
 use crate::{parser::Parser, tokenizer::Tokenizer, interpreter::{TypeInstance, Interpreter, InterpreterError, Value}};
 
-use super::{ValueRef, Type, InternalMethod};
+use super::{ValueRef, Type, InternalMethod, TypeData};
 
 fn evaluate(input: &str) -> Result<ValueRef, InterpreterError> {
     let node = Parser::parse(&Tokenizer::tokenize(input).unwrap()[..]).unwrap();
     let mut interpreter = Interpreter::new();
     interpreter.types.push(Rc::new(Type {
-        fields: vec!["first".into(), "second".into()],
+        data: TypeData::Fields(vec!["first".into(), "second".into()]),
 
         methods: vec![
             InternalMethod::new("first", |_, recv, _| {
@@ -30,6 +30,7 @@ fn evaluate(input: &str) -> Result<ValueRef, InterpreterError> {
                 Ok(Value {
                     type_instance: TypeInstance::Fields { 
                         source_type: itptr.resolve_type("TestPair").unwrap(),
+                        variant: None,
                         field_values: params,
                     }
                 }.rc())
@@ -140,5 +141,25 @@ fn test_capture() {
             (p first) call
         ").unwrap(),
         Value::new_integer(10).rc(),
+    );
+}
+
+#[test]
+fn test_boolean() {
+    let interpreter = Interpreter::new();
+
+    assert_eq!(
+        evaluate("Boolean#True").unwrap(),
+        Value::new_boolean(&interpreter, true).rc(),
+    );
+
+    assert_eq!(
+        evaluate("Boolean#False").unwrap(),
+        Value::new_boolean(&interpreter, false).rc(),
+    );
+
+    assert_eq!(
+        evaluate("Boolean#True not").unwrap(),
+        Value::new_boolean(&interpreter, false).rc(),
     );
 }

@@ -2,7 +2,7 @@ use std::{rc::Rc, cell::RefCell};
 
 use crate::{interpreter::{Type, InternalMethod, TypeInstance, Value}, parser::SendMessageComponents};
 
-use super::InterpreterError;
+use super::{InterpreterError, TypeData, Variant};
 
 pub fn types() -> Vec<Rc<Type>> {
     vec![
@@ -10,6 +10,7 @@ pub fn types() -> Vec<Rc<Type>> {
         Rc::new(integer()),
         Rc::new(console()),
         Rc::new(block()),
+        Rc::new(boolean()),
     ]
 }
 
@@ -115,5 +116,33 @@ fn block() -> Type {
     Type {
         methods,
         ..Type::new("Block")
+    }
+}
+
+fn boolean() -> Type {
+    Type {
+        data: TypeData::Variants(vec![
+            Variant::new("False", vec![]),
+            Variant::new("True", vec![]),
+        ]),
+
+        methods: vec![
+            InternalMethod::new("not", |i, r, a| {
+                match &r.borrow().type_instance {
+                    TypeInstance::Fields { variant, .. } => {
+                        // A bit naughty to just compare variant indexes - but we defined the
+                        // variant, so we can be reasonably confident
+                        match variant {
+                            Some(0) => Ok(Value::new_boolean(i, true).rc()),
+                            Some(1) => Ok(Value::new_boolean(i, false).rc()),
+                            _ => unreachable!()
+                        }
+                    },
+                    _ => unreachable!()
+                }
+            }).rc(),
+        ],
+
+        ..Type::new("Boolean")
     }
 }

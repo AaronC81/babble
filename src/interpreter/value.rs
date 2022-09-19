@@ -1,6 +1,6 @@
 use std::{rc::Rc, cell::RefCell};
 
-use super::{Type, Interpreter, InterpreterError, Block};
+use super::{Type, Interpreter, InterpreterError, Block, TypeData, Variant};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Value {
@@ -26,6 +26,19 @@ impl Value {
         Self { type_instance: TypeInstance::Block(block) }
     }
 
+    pub fn new_boolean(interpreter: &Interpreter, value: bool) -> Self {
+        let boolean_type = interpreter.resolve_stdlib_type("Boolean");
+        let variant_name = if value { "True" } else { "False" };
+
+        Self {
+            type_instance: TypeInstance::Fields {
+                source_type: boolean_type.clone(),
+                variant: Some(boolean_type.resolve_variant(variant_name).unwrap().0),
+                field_values: vec![],
+            }
+        }
+    }
+
     pub fn rc(self) -> ValueRef {
         Rc::new(RefCell::new(self))
     }
@@ -40,9 +53,28 @@ impl Value {
 
     pub fn to_language_string(&self) -> String {
         match &self.type_instance {
-            TypeInstance::Fields { source_type, field_values } => {
+            TypeInstance::Fields { source_type, variant, field_values } => {
+                let (fields, variant) = if let Some(variant) = variant {
+                    if let TypeData::Variants(variants) = &source_type.data {
+                        let Variant { name, fields } = &variants[*variant];
+                        (fields, Some(name))
+                    } else {
+                        unreachable!()
+                    }
+                } else {
+                    if let TypeData::Fields(f) = &source_type.data {
+                        (f, None)
+                    } else {
+                        unreachable!()
+                    }
+                };
+
                 let mut result = source_type.id.clone();
-                for (field, value) in source_type.fields.iter().zip(field_values.iter()) {
+                if let Some(variant) = variant {
+                    result.push('#');
+                    result.push_str(variant);
+                }
+                for (field, value) in fields.iter().zip(field_values.iter()) {
                     result.push(' ');
                     result.push_str(field);
                     result.push_str(": ");
@@ -71,6 +103,7 @@ impl Value {
 pub enum TypeInstance {
     Fields {
         source_type: Rc<Type>,
+        variant: Option<usize>,
         field_values: Vec<ValueRef>,
     },
     Type(Rc<Type>),

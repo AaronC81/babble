@@ -139,6 +139,46 @@ impl Interpreter {
                     captures: capture_values,
                 }).rc())
             },
+
+            NodeKind::EnumVariant { enum_type, variant_name, components } => {
+                // TODO: enums with fields untested
+                
+                // Resolve the type and its variants
+                let enum_type =
+                    if let TypeInstance::Type(t) = &self.evaluate(enum_type)?.borrow().type_instance {
+                        t.clone()
+                    } else {
+                        // Should never parse
+                        unreachable!()
+                    };
+
+                // Find details of the requested variant
+                let (variant_idx, variant) = enum_type.resolve_variant(&variant_name)?;
+
+                // Check that names of passed fields match expected fields
+                let given_field_names = match components {
+                    SendMessageComponents::Unary(_) => vec![],
+                    SendMessageComponents::Parameterised(params) => params.iter().map(|(n, _)| n.clone()).collect()
+                };
+                if given_field_names != variant.fields {
+                    return Err(InterpreterError::IncorrectVariantParameters)
+                }
+
+                // Evaluate fields
+                let field_values = match components {
+                    crate::parser::SendMessageComponents::Unary(_) => vec![],
+                    crate::parser::SendMessageComponents::Parameterised(params) =>
+                        params.iter().map(|(_, p)| self.evaluate(p)).collect::<Result<Vec<_>, _>>()?,
+                };
+
+                Ok(Value {
+                    type_instance: TypeInstance::Fields {
+                        source_type: enum_type,
+                        variant: Some(variant_idx),
+                        field_values,
+                    }
+                }.rc())
+            }
         }
     }
 

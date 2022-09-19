@@ -51,7 +51,12 @@ pub enum NodeKind {
         body: Box<Node>,
         parameters: Vec<String>,
         captures: Vec<String>,
-    }
+    },
+    EnumVariant {
+        enum_type: Box<Node>,
+        variant_name: String,
+        components: SendMessageComponents,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -65,6 +70,9 @@ pub struct Parser<'a> {
     current_index: usize,
 }
 
+// TODO: add an `EnumVariant` item, which parses like `Id#Id (msg:*)`, and evaluates to an instance
+// of an enum type
+// (Even without any messages, for unary enums like true or false)
 impl<'a> Parser<'a> {
     pub fn new(tokens: &'a [Token]) -> Self {
         let mut s = Self {
@@ -168,9 +176,23 @@ impl<'a> Parser<'a> {
 
     fn parse_parameterised_send(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
         let mut result = self.parse_unary_send(context.clone())?;
-        if let Token { kind: TokenKind::LabelIdentifier(_), location } = self.here() {
-            let location = *location;
+        if let Some(components) = self.try_parse_only_send_parameters(context.clone())? {
+            let location = result.location.clone();
+            result = Node {
+                kind: NodeKind::SendMessage {
+                    receiver: Box::new(result),
+                    components,
+                },
+                location,
+                context: LexicalContext::new_with_parent(context).rc(),
+            }
+        }
 
+        Ok(result)
+    }
+
+    fn try_parse_only_send_parameters(&mut self, context: LexicalContextRef) -> Result<Option<SendMessageComponents>, ParserError> {
+        if let Token { kind: TokenKind::LabelIdentifier(_), .. } = self.here() {
             // There are parameters are this! Parse them, and convert to a parameterised send
             let mut parameters = vec![];
             while let Token { kind: TokenKind::LabelIdentifier(id), .. } = self.here() {
@@ -180,17 +202,10 @@ impl<'a> Parser<'a> {
                 parameters.push((id, Box::new(value)));
             }
 
-            result = Node {
-                kind: NodeKind::SendMessage {
-                    receiver: Box::new(result),
-                    components: SendMessageComponents::Parameterised(parameters),
-                },
-                location,
-                context: LexicalContext::new_with_parent(context).rc(),
-            }
+            Ok(Some(SendMessageComponents::Parameterised(parameters)))
+        } else {
+            Ok(None)
         }
-
-        Ok(result)
     }
 
     fn parse_unary_send(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
@@ -220,12 +235,35 @@ impl<'a> Parser<'a> {
             self.advance();
             Ok(node)
         } else if let Token { kind: TokenKind::Identifier(id), location } = self.here() {
-            let node = Node {
+            let mut node = Node {
                 kind: NodeKind::Identifier(id.clone()),
                 location: *location,
-                context,
+                context: context.clone(),
             };
             self.advance();
+
+            // This is an enum variant constructor!
+            if let Token { kind: TokenKind::Hash, .. } = self.here() {
+                self.advance();
+                
+                // Grab the name of the variant
+                let variant_name = if let Token { kind: TokenKind::Identifier(id), location } = self.here() {
+                    id.clone()
+                } else {
+                    return Err(ParserError::UnexpectedToken(self.here().clone()))
+                };
+                self.advance();
+
+                let components = self.try_parse_only_send_parameters(context)?
+                    .unwrap_or(SendMessageComponents::Unary("<blank>".into()));
+                
+                node.kind = NodeKind::EnumVariant {
+                    enum_type: Box::new(node.clone()),
+                    variant_name,
+                    components,
+                }
+            }
+
             Ok(node)
         } else if let Token { kind: TokenKind::LeftParen, .. } = self.here() {
             self.advance();

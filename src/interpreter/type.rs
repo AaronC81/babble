@@ -5,7 +5,7 @@ use super::{ValueRef, InterpreterResult, InterpreterError, Interpreter};
 #[derive(Debug)]
 pub struct Type {
     pub id: String,
-    pub fields: Vec<String>,
+    pub data: TypeData,
     pub methods: Vec<InternalMethodRef>,
     pub static_methods: Vec<InternalMethodRef>,
 }
@@ -16,7 +16,7 @@ impl Type {
     pub fn new(id: &str) -> Self {
         Self {
             id: id.into(),
-            fields: vec![],
+            data: TypeData::Empty,
             methods: vec![],
             static_methods: vec![],
         }
@@ -28,6 +28,42 @@ impl Type {
 
     pub fn resolve_static_method(&self, name: &str) -> Option<InternalMethodRef> {
         self.static_methods.iter().find(|m| m.name == name).cloned()
+    }
+
+    pub fn resolve_variant(&self, name: &str) -> Result<(usize, &Variant), InterpreterError> {
+        let variants = if let TypeData::Variants(variants) = &self.data {
+            variants
+        } else {
+            return Err(InterpreterError::VariantAccessOnNonEnum);
+        };
+
+        if let Some(variant) = variants.iter().enumerate().find(|(_, v)| &v.name == name) {
+            Ok(variant)
+        } else {
+            Err(InterpreterError::MissingVariant(name.into()))
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum TypeData {
+    Empty,
+    Fields(Vec<String>),
+    Variants(Vec<Variant>)
+}
+
+#[derive(Debug, Clone)]
+pub struct Variant {
+    pub name: String,
+    pub fields: Vec<String>,
+}
+
+impl Variant {
+    pub fn new(name: &str, fields: Vec<&str>) -> Self {
+        Self {
+            name: name.into(),
+            fields: fields.into_iter().map(|x| x.into()).collect()
+        }
     }
 }
 
