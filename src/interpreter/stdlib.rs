@@ -122,15 +122,7 @@ fn boolean() -> Type {
 
         methods: vec![
             InternalMethod::new("not", |i, r, _| {
-                let TypeInstance::Fields { variant, .. } = &r.borrow().type_instance else { unreachable!() };
-
-                // A bit naughty to just compare variant indexes - but we defined the
-                // variant, so we can be reasonably confident
-                match variant {
-                    Some(0) => Ok(Value::new_boolean(i, true).rc()),
-                    Some(1) => Ok(Value::new_boolean(i, false).rc()),
-                    _ => unreachable!()
-                }
+                Ok(Value::new_boolean(i, !r.borrow().to_boolean()?).rc())
             }).rc(),
         ],
 

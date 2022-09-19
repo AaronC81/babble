@@ -51,6 +51,20 @@ impl Value {
         }
     }
 
+    pub fn to_boolean(&self) -> Result<bool, InterpreterError> {
+        if let TypeInstance::Fields { variant, .. } = self.type_instance {
+            // A bit naughty to just compare variant indexes - but we defined the
+            // variant, so we can be reasonably confident
+            match variant {
+                Some(0) => Ok(false),
+                Some(1) => Ok(true),
+                _ => unreachable!()
+            }
+        } else {
+            Err(InterpreterError::IncorrectType)
+        }
+    }
+
     pub fn to_language_string(&self) -> String {
         match &self.type_instance {
             TypeInstance::Fields { source_type, variant, field_values } => {
