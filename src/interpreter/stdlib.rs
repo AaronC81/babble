@@ -89,28 +89,22 @@ fn block() -> Type {
 
         methods.push(
             InternalMethod::new(&method_name, |i, r, a| {
-                match &r.borrow().type_instance {
-                    TypeInstance::Block(b) => {
-                        if b.arity() != a.len() {
-                            Err(InterpreterError::IncorrectBlockArity {
-                                expected: b.arity(),
-                                got: a.len(),
-                            })
-                        } else {
-                            b.call(i, a)
-                        }
-                    },
-                    _ => unreachable!()
+                let TypeInstance::Block(b) = &r.borrow().type_instance else { unreachable!() };
+                if b.arity() != a.len() {
+                    Err(InterpreterError::IncorrectBlockArity {
+                        expected: b.arity(),
+                        got: a.len(),
+                    })
+                } else {
+                    b.call(i, a)
                 }
             }).rc(),
         );
     }
 
     methods.push(InternalMethod::new("arity", |_, r, _| {
-        match &r.borrow().type_instance {
-            TypeInstance::Block(b) => Ok(Value::new_integer(b.arity() as i64).rc()),
-            _ => unreachable!()
-        }
+        let TypeInstance::Block(b) = &r.borrow().type_instance else { unreachable!() };
+        Ok(Value::new_integer(b.arity() as i64).rc())
     }).rc());
 
     Type {
@@ -127,17 +121,14 @@ fn boolean() -> Type {
         ]),
 
         methods: vec![
-            InternalMethod::new("not", |i, r, a| {
-                match &r.borrow().type_instance {
-                    TypeInstance::Fields { variant, .. } => {
-                        // A bit naughty to just compare variant indexes - but we defined the
-                        // variant, so we can be reasonably confident
-                        match variant {
-                            Some(0) => Ok(Value::new_boolean(i, true).rc()),
-                            Some(1) => Ok(Value::new_boolean(i, false).rc()),
-                            _ => unreachable!()
-                        }
-                    },
+            InternalMethod::new("not", |i, r, _| {
+                let TypeInstance::Fields { variant, .. } = &r.borrow().type_instance else { unreachable!() };
+
+                // A bit naughty to just compare variant indexes - but we defined the
+                // variant, so we can be reasonably confident
+                match variant {
+                    Some(0) => Ok(Value::new_boolean(i, true).rc()),
+                    Some(1) => Ok(Value::new_boolean(i, false).rc()),
                     _ => unreachable!()
                 }
             }).rc(),

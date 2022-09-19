@@ -31,9 +31,7 @@ impl Type {
     }
 
     pub fn resolve_variant(&self, name: &str) -> Result<(usize, &Variant), InterpreterError> {
-        let variants = if let TypeData::Variants(variants) = &self.data {
-            variants
-        } else {
+        let TypeData::Variants(variants) = &self.data else {
             return Err(InterpreterError::VariantAccessOnNonEnum);
         };
 

@@ -1,4 +1,5 @@
 #![feature(box_patterns)]
+#![feature(let_else)]
 
 use std::env::args;
 
