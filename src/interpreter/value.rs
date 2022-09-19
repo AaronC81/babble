@@ -65,6 +65,14 @@ impl Value {
         }
     }
 
+    pub fn to_block(&self) -> Result<&Block, InterpreterError> {
+        if let TypeInstance::Block(b) = &self.type_instance {
+            Ok(b)
+        } else {
+            Err(InterpreterError::IncorrectType)
+        }
+    }
+
     pub fn to_language_string(&self) -> String {
         match &self.type_instance {
             TypeInstance::Fields { source_type, variant, field_values } => {

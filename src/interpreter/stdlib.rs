@@ -89,7 +89,8 @@ fn block() -> Type {
 
         methods.push(
             InternalMethod::new(&method_name, |i, r, a| {
-                let TypeInstance::Block(b) = &r.borrow().type_instance else { unreachable!() };
+                let r = r.borrow();
+                let b = r.to_block()?;
                 if b.arity() != a.len() {
                     Err(InterpreterError::IncorrectBlockArity {
                         expected: b.arity(),
@@ -103,8 +104,7 @@ fn block() -> Type {
     }
 
     methods.push(InternalMethod::new("arity", |_, r, _| {
-        let TypeInstance::Block(b) = &r.borrow().type_instance else { unreachable!() };
-        Ok(Value::new_integer(b.arity() as i64).rc())
+        Ok(Value::new_integer(r.borrow().to_block()?.arity() as i64).rc())
     }).rc());
 
     Type {
@@ -123,6 +123,26 @@ fn boolean() -> Type {
         methods: vec![
             InternalMethod::new("not", |i, r, _| {
                 Ok(Value::new_boolean(i, !r.borrow().to_boolean()?).rc())
+            }).rc(),
+
+            InternalMethod::new("ifTrue:", |i, r, a| {
+                if r.borrow().to_boolean()? {
+                    let arg = a[0].borrow();
+                    let block = arg.to_block()?;
+                    block.call(i, vec![])?;
+                }
+
+                Ok(r)
+            }).rc(),
+
+            InternalMethod::new("ifFalse:", |i, r, a| {
+                if !r.borrow().to_boolean()? {
+                    let arg = a[0].borrow();
+                    let block = arg.to_block()?;
+                    block.call(i, vec![])?;
+                }
+
+                Ok(r)
             }).rc(),
         ],
 
