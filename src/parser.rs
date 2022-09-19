@@ -1,4 +1,4 @@
-use crate::{source::Location, tokenizer::{Token, TokenKind, Tokenizer}, interpreter::{LexicalContext, LexicalContextRef}};
+use crate::{source::Location, tokenizer::{Token, TokenKind, Tokenizer, TokenKeyword}, interpreter::{LexicalContext, LexicalContextRef}};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Node {
@@ -37,6 +37,10 @@ impl SendMessageComponents {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NodeKind {
     IntegerLiteral(u64),
+    TrueLiteral,
+    FalseLiteral,
+    NullLiteral,
+
     Identifier(String),
     SendMessage {
         receiver: Box<Node>,
@@ -336,7 +340,19 @@ impl<'a> Parser<'a> {
                     captures,
                 },
                 context: new_context,
-            })   
+            })
+        } else if let Token { kind: TokenKind::Keyword(kw), location } = self.here() {
+            let node = Node {
+                location: *location,
+                kind: match kw {
+                    TokenKeyword::True => NodeKind::TrueLiteral,
+                    TokenKeyword::False => NodeKind::FalseLiteral,
+                    TokenKeyword::Null => NodeKind::NullLiteral,
+                },
+                context,
+            };
+            self.advance();
+            Ok(node)
         } else {
             Err(ParserError::UnexpectedToken(self.here().clone()))
         }

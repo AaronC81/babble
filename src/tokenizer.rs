@@ -20,6 +20,7 @@ pub enum TokenKind {
     Pipe,
     Star,
     Hash,
+    Keyword(TokenKeyword),
 
     BlockStart,
     BlockEnd,
@@ -39,6 +40,13 @@ impl TokenKind {
     pub fn at(self, location: Location) -> Token {
         Token::new(self, location)
     }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum TokenKeyword {
+    True,
+    False,
+    Null,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -153,6 +161,11 @@ impl<'a> Tokenizer<'a> {
                             // If we encounter another character, finish parsing this identifier.
                             // Explicitly return to avoid advancing the pointer.
                             _ => {
+                                // But first, check if the token happens to be a keyword
+                                if let Some(keyword) = Self::to_keyword(id) {
+                                    token.kind = TokenKind::Keyword(keyword);
+                                }
+
                                 self.tokens.push(token.clone());
                                 self.state = TokenizerState::Idle;
 
@@ -197,6 +210,15 @@ impl<'a> Tokenizer<'a> {
         Ok(())
     }
 
+    pub fn to_keyword(keyword: &str) -> Option<TokenKeyword> {
+        match keyword {
+            "true"  => Some(TokenKeyword::True),
+            "false" => Some(TokenKeyword::False),
+            "null"  => Some(TokenKeyword::Null),
+            _       => None,
+        }
+    }
+
     pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenizerError> {
         let chars = input.chars().collect::<Vec<_>>();
         let mut tokenizer = Tokenizer::new(&chars[..]);
@@ -206,7 +228,14 @@ impl<'a> Tokenizer<'a> {
         }
 
         // If the tokenizer was parsing an arbitrary-length token, shift it now
-        if let TokenizerState::CollectingWhitespaceSeparated(t) = &tokenizer.state {
+        if let TokenizerState::CollectingWhitespaceSeparated(ref mut t) = tokenizer.state {
+            // Keyword check
+            if let TokenKind::Identifier(id) = &t.kind {
+                if let Some(keyword) = Self::to_keyword(&id) {
+                    t.kind = TokenKind::Keyword(keyword);
+                }
+            }
+            
             tokenizer.tokens.push(t.clone());
         }
 

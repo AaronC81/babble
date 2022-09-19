@@ -150,16 +150,16 @@ fn test_boolean() {
 
     assert_eq!(
         evaluate("Boolean#True").unwrap(),
-        Value::new_boolean(&interpreter, true).rc(),
+        evaluate("true").unwrap(),
     );
 
     assert_eq!(
         evaluate("Boolean#False").unwrap(),
-        Value::new_boolean(&interpreter, false).rc(),
+        evaluate("false").unwrap(),
     );
 
     assert_eq!(
-        evaluate("Boolean#True not").unwrap(),
-        Value::new_boolean(&interpreter, false).rc(),
+        evaluate("true not").unwrap(),
+        evaluate("false").unwrap(),
     );
 }
