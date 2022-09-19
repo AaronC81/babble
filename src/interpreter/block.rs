@@ -19,8 +19,8 @@ impl Block {
         if self.arity() != arguments.len() {
             return Err(InterpreterError::IncorrectArity {
                 name: "anonymous block".into(),
-                expected: self.arity(),
-                got: arguments.len(),
+                expected: arguments.len(),
+                got: self.arity(),
             })
         }
 
