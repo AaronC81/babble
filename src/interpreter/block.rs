@@ -1,6 +1,6 @@
 use crate::parser::Node;
 
-use super::{LexicalContextRef, ValueRef, InterpreterResult, Interpreter, InterpreterError, StackFrame, StackFrameContext};
+use super::{ValueRef, InterpreterResult, Interpreter, InterpreterError, StackFrame, StackFrameContext};
 
 // TODO: more sensible Eq implementation, maybe use some unique ID
 #[derive(Debug, Clone, PartialEq, Eq)]

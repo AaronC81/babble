@@ -1,4 +1,6 @@
-use crate::{source::Location, tokenizer::{Token, TokenKind, Tokenizer, TokenKeyword}, interpreter::{LexicalContext, LexicalContextRef}};
+use std::{rc::Rc, cell::RefCell};
+
+use crate::{source::Location, tokenizer::{Token, TokenKind, Tokenizer, TokenKeyword}};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Node {
@@ -63,6 +65,27 @@ pub enum NodeKind {
         components: SendMessageComponents,
     },
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LexicalContext {
+    parent: Option<LexicalContextRef>,
+}
+
+impl LexicalContext {
+    pub fn new_top_level() -> Self {
+        LexicalContext { parent: None }
+    }
+
+    pub fn new_with_parent(parent: LexicalContextRef) -> Self {
+        LexicalContext { parent: Some(parent) }
+    }
+
+    pub fn rc(self) -> LexicalContextRef {
+        Rc::new(RefCell::new(self))
+    }
+}
+
+pub type LexicalContextRef = Rc<RefCell<LexicalContext>>;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ParserError {
