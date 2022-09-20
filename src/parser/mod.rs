@@ -1,91 +1,12 @@
-use std::{rc::Rc, cell::RefCell};
+mod node;
+pub use node::*;
 
-use crate::{source::Location, tokenizer::{Token, TokenKind, Tokenizer, TokenKeyword}};
+mod lexical_context;
+pub use lexical_context::*;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Node {
-    pub kind: NodeKind,
-    pub location: Location,
-    pub context: LexicalContextRef,
-}
+mod tests;
 
-impl Node {
-    pub fn new(kind: NodeKind, location: Location, context: LexicalContextRef) -> Self {
-        Node { kind, location, context }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum SendMessageComponents {
-    Unary(String),
-    Parameterised(Vec<(String, Box<Node>)>),
-}
-
-impl SendMessageComponents {
-    pub fn to_method_name(&self) -> String {
-        match self {
-            SendMessageComponents::Unary(s) => s.clone(),
-            SendMessageComponents::Parameterised(params) => {
-                params
-                    .iter()
-                    .map(|(p, _)| format!("{p}:"))
-                    .collect::<Vec<_>>()
-                    .concat()
-            }
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum NodeKind {
-    IntegerLiteral(u64),
-    StringLiteral(String),
-    TrueLiteral,
-    FalseLiteral,
-    NullLiteral,
-
-    Identifier(String),
-    SendMessage {
-        receiver: Box<Node>,
-        components: SendMessageComponents,
-    },
-    StatementSequence(Vec<Node>),
-    Assignment {
-        target: Box<Node>,
-        value: Box<Node>,
-    },
-    Block {
-        body: Box<Node>,
-        parameters: Vec<String>,
-        captures: Vec<String>,
-    },
-    EnumVariant {
-        enum_type: Box<Node>,
-        variant_name: String,
-        components: SendMessageComponents,
-    },
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct LexicalContext {
-    parent: Option<LexicalContextRef>,
-}
-
-impl LexicalContext {
-    pub fn new_top_level() -> Self {
-        LexicalContext { parent: None }
-    }
-
-    pub fn new_with_parent(parent: LexicalContextRef) -> Self {
-        LexicalContext { parent: Some(parent) }
-    }
-
-    pub fn rc(self) -> LexicalContextRef {
-        Rc::new(RefCell::new(self))
-    }
-}
-
-pub type LexicalContextRef = Rc<RefCell<LexicalContext>>;
+use crate::{tokenizer::{Token, TokenKind, TokenKeyword}, source::Location};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ParserError {
@@ -98,9 +19,6 @@ pub struct Parser<'a> {
     current_index: usize,
 }
 
-// TODO: add an `EnumVariant` item, which parses like `Id#Id (msg:*)`, and evaluates to an instance
-// of an enum type
-// (Even without any messages, for unary enums like true or false)
 impl<'a> Parser<'a> {
     pub fn new(tokens: &'a [Token]) -> Self {
         let mut s = Self {
@@ -389,28 +307,4 @@ impl<'a> Parser<'a> {
             Err(ParserError::UnexpectedToken(self.here().clone()))
         }
     }
-}
-
-#[test]
-fn test_simple_parse() {
-    let parsed = Parser::parse(&Tokenizer::tokenize("32 add: 24.").unwrap()[..]).unwrap();
-    let parsed = if let Node { kind: NodeKind::StatementSequence(seq), .. } = parsed {
-        assert_eq!(seq.len(), 1);
-        seq[0].clone()
-    } else {
-        panic!("expected StatementSequence")
-    };
-
-    assert!(matches!(
-        parsed,
-        Node {
-            kind: NodeKind::SendMessage {
-                receiver: box Node { kind: NodeKind::IntegerLiteral(32), .. },
-                components: SendMessageComponents::Parameterised(params)
-            },
-            ..
-        } if matches!(&params[..], [
-            (p1, box Node { kind: NodeKind::IntegerLiteral(24), .. }),
-        ] if p1 == "add")
-    ))
 }
