@@ -1,6 +1,6 @@
 use std::{rc::Rc, cell::RefCell};
 
-use crate::{interpreter::{Type, InternalMethod, TypeInstance, Value}, parser::SendMessageComponents};
+use crate::{interpreter::{Type, InternalMethod, TypeInstance, Value}, parser::{SendMessageComponents, SendMessageParameter}};
 
 use super::{InterpreterError, TypeData, Variant};
 
@@ -72,8 +72,15 @@ fn integer() -> Type {
             InternalMethod::new("times:", |i, recv, params| {
                 let times = recv.borrow().to_integer()?;
                 let block = &params[0];
-                for _ in 0..times {
-                    i.send_message(block.clone(), &SendMessageComponents::Unary("call".into()))?;
+                for x in 0..times {
+                    let args = if let Ok(block) = block.borrow().to_block() && block.arity() == 1 {
+                        SendMessageComponents::Parameterised(vec![
+                            ("call".into(), SendMessageParameter::Evaluated(Value::new_integer(x).rc()))
+                        ])
+                    } else {
+                        SendMessageComponents::Unary("call".into())
+                    };
+                    i.send_message(block.clone(), &args)?;
                 }
 
                 Ok(recv)

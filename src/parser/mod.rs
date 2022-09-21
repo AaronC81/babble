@@ -153,7 +153,7 @@ impl<'a> Parser<'a> {
                 let id = id.clone();
                 self.advance();
                 let value = self.parse_unary_send(context.clone())?;
-                parameters.push((id, Box::new(value)));
+                parameters.push((id, SendMessageParameter::Parsed(Box::new(value))));
             }
 
             Ok(Some(SendMessageComponents::Parameterised(parameters)))

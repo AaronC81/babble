@@ -1,4 +1,4 @@
-use crate::source::Location;
+use crate::{source::Location, interpreter::ValueRef};
 
 use super::LexicalContextRef;
 
@@ -18,7 +18,7 @@ impl Node {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SendMessageComponents {
     Unary(String),
-    Parameterised(Vec<(String, Box<Node>)>),
+    Parameterised(Vec<(String, SendMessageParameter)>),
 }
 
 impl SendMessageComponents {
@@ -38,7 +38,10 @@ impl SendMessageComponents {
     pub fn child_nodes(&self) -> Vec<&Node> {
         match self {
             SendMessageComponents::Parameterised(params) => {
-                params.iter().map(|(_, node)| &**node).collect()
+                params.iter().filter_map(|(_, param)| match param {
+                    SendMessageParameter::Parsed(node) => Some(&**node),
+                    _ => None,
+                }).collect()
             },
             SendMessageComponents::Unary(_) => vec![],
         }
@@ -47,11 +50,20 @@ impl SendMessageComponents {
     pub fn child_nodes_mut(&mut self) -> Vec<&mut Node> {
         match self {
             SendMessageComponents::Parameterised(params) => {
-                params.iter_mut().map(|(_, node)| &mut **node).collect()
+                params.iter_mut().filter_map(|(_, param)| match param {
+                    SendMessageParameter::Parsed(node) => Some(&mut **node),
+                    _ => None,
+                }).collect()
             },
             SendMessageComponents::Unary(_) => vec![],
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SendMessageParameter {
+    Parsed(Box<Node>),
+    Evaluated(ValueRef),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

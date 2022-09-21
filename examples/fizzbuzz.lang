@@ -1,5 +1,6 @@
-x = 1.
-50 times: [
+50 times: [ |x|
+    x = x add: 1.
+
     output = "".
     ((x modulo: 3) equals: 0) ifTrue: [
         output = output concat: "fizz".
@@ -12,6 +13,4 @@ x = 1.
     ].
 
     Console println: output.
-
-    x = x add: 1.
 ].

@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::parser::{NodeKind, Node, SendMessageComponents};
+use crate::parser::{NodeKind, Node, SendMessageComponents, SendMessageParameter};
 
 mod error;
 
@@ -149,7 +149,12 @@ impl Interpreter {
                 let field_values = match components {
                     crate::parser::SendMessageComponents::Unary(_) => vec![],
                     crate::parser::SendMessageComponents::Parameterised(params) =>
-                        params.iter().map(|(_, p)| self.evaluate(p)).collect::<Result<Vec<_>, _>>()?,
+                        params.iter()
+                            .map(|(_, p)| match p {
+                                SendMessageParameter::Parsed(n) => self.evaluate(n),
+                                SendMessageParameter::Evaluated(v) => Ok(v.clone()),
+                            })
+                            .collect::<Result<Vec<_>, _>>()?,
                 };
 
                 Ok(Value {
@@ -192,8 +197,13 @@ impl Interpreter {
             let parameters = match components {
                 crate::parser::SendMessageComponents::Unary(_) => vec![],
                 crate::parser::SendMessageComponents::Parameterised(params) =>
-                    params.iter().map(|(_, p)| self.evaluate(p)).collect::<Result<Vec<_>, _>>()?,
-            };
+                params.iter()
+                    .map(|(_, p)| match p {
+                        SendMessageParameter::Parsed(n) => self.evaluate(n),
+                        SendMessageParameter::Evaluated(v) => Ok(v.clone()),
+                    })
+                    .collect::<Result<Vec<_>, _>>()?,
+                };
 
             // Create a new stack frame, call the method within it, and pop the frame
             self.stack.push(StackFrame {
