@@ -91,7 +91,24 @@ fn integer() -> Type {
 }
 
 fn string() -> Type {
-    Type::new("String")
+    Type {
+        methods: vec![
+            InternalMethod::new("concat:", |_, recv, params| {
+                let a = recv.borrow().to_string()?;
+                let b = params[0].borrow().to_string()?;
+                Ok(Value::new_string(&format!("{}{}", a, b)).rc())
+            }).rc(),
+
+            // TODO: should be shared
+            InternalMethod::new("equals:", |i, recv, params| {
+                let a = recv.borrow().to_string()?;
+                let b = params[0].borrow().to_string()?;
+                Ok(Value::new_boolean(i, a == b).rc())
+            }).rc(),
+        ],
+
+        ..Type::new("String")
+    }
 }
 
 fn console() -> Type {

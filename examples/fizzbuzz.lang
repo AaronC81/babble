@@ -1,19 +1,17 @@
 x = 1.
 50 times: [
-    replaced = false.
+    output = "".
     ((x modulo: 3) equals: 0) ifTrue: [
-        Console print: "fizz".
-        replaced = true.
+        output = output concat: "fizz".
     ].
     ((x modulo: 5) equals: 0) ifTrue: [
-        Console print: "buzz".
-        replaced = true.
+        output = output concat: "buzz".
+    ].
+    (output equals: "") ifTrue: [
+        output = x.
     ].
 
-    replaced ifFalse: [
-        Console print: x.
-    ].
-    Console println: "".
+    Console println: output.
 
     x = x add: 1.
 ].

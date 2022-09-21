@@ -55,6 +55,14 @@ impl Value {
         }
     }
 
+    pub fn to_string(&self) -> Result<String, InterpreterError> {
+        if let TypeInstance::PrimitiveString(string) = &self.type_instance {
+            Ok(string.clone())
+        } else {
+            Err(InterpreterError::IncorrectType)
+        }
+    }
+
     pub fn to_boolean(&self) -> Result<bool, InterpreterError> {
         if let TypeInstance::Fields { variant, .. } = self.type_instance {
             // A bit naughty to just compare variant indexes - but we defined the
