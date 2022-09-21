@@ -1,16 +1,16 @@
 x = 1.
-50 times: [ |*x|
+50 times: [
     replaced = false.
-    ((x modulo: 3) equals: 0) ifTrue: [ |*replaced|
+    ((x modulo: 3) equals: 0) ifTrue: [
         Console print: "fizz".
         replaced = true.
     ].
-    ((x modulo: 5) equals: 0) ifTrue: [ |*replaced|
+    ((x modulo: 5) equals: 0) ifTrue: [
         Console print: "buzz".
         replaced = true.
     ].
 
-    replaced ifFalse: [ |*x|
+    replaced ifFalse: [
         Console print: x.
     ].
     Console println: "".

@@ -34,6 +34,24 @@ impl SendMessageComponents {
             }
         }
     }
+
+    pub fn child_nodes(&self) -> Vec<&Node> {
+        match self {
+            SendMessageComponents::Parameterised(params) => {
+                params.iter().map(|(_, node)| &**node).collect()
+            },
+            SendMessageComponents::Unary(_) => vec![],
+        }
+    }
+
+    pub fn child_nodes_mut(&mut self) -> Vec<&mut Node> {
+        match self {
+            SendMessageComponents::Parameterised(params) => {
+                params.iter_mut().map(|(_, node)| &mut **node).collect()
+            },
+            SendMessageComponents::Unary(_) => vec![],
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -64,4 +82,46 @@ pub enum NodeKind {
         variant_name: String,
         components: SendMessageComponents,
     },
+}
+
+pub trait NodeWalk {
+    fn walk_children(&mut self, func: &mut impl FnMut(&mut Node));
+}
+
+impl NodeWalk for Node {
+    fn walk_children(&mut self, func: &mut impl FnMut(&mut Node)) {
+        match &mut self.kind {
+            NodeKind::StatementSequence(seq) => {
+                for node in seq {
+                    func(node);
+                }
+            },
+            NodeKind::SendMessage { receiver, components } => {
+                func(receiver);
+                for node in components.child_nodes_mut() {
+                    func(node);
+                }
+            },
+            NodeKind::Assignment { target, value } => {
+                func(target);
+                func(value);
+            },
+            NodeKind::Block { body, parameters, captures } => {
+                func(body);
+            },
+            NodeKind::EnumVariant { enum_type, variant_name, components } => {
+                func(enum_type);
+                for node in components.child_nodes_mut() {
+                    func(node);
+                }
+            },
+
+            NodeKind::IntegerLiteral(_)
+            | NodeKind::StringLiteral(_) 
+            | NodeKind::TrueLiteral
+            | NodeKind::FalseLiteral
+            | NodeKind::NullLiteral 
+            | NodeKind::Identifier(_) => (),
+        }
+    }
 }

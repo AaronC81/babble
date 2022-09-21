@@ -4,6 +4,8 @@ pub use node::*;
 mod lexical_context;
 pub use lexical_context::*;
 
+pub mod capture_analysis;
+
 mod tests;
 
 use crate::{tokenizer::{Token, TokenKind, TokenKeyword}, source::Location};
@@ -72,6 +74,12 @@ impl<'a> Parser<'a> {
         }
 
         Ok(result)
+    }
+
+    pub fn parse_and_analyse(tokens: &'a [Token]) -> Result<Node, ParserError> {
+        let mut parsed = Self::parse(tokens)?;
+        capture_analysis::populate_captures(&mut parsed);
+        Ok(parsed)
     }
 
     fn parse_top_level(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {

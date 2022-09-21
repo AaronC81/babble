@@ -18,6 +18,6 @@ fn main() {
         input = read_to_string(args().nth(2).expect("no file passed")).unwrap();
     }
     let tokens = Tokenizer::tokenize(&input).expect("tokenization failed");
-    let node = Parser::parse(&tokens[..]).expect("parsing failed");
+    let node = Parser::parse_and_analyse(&tokens[..]).expect("parsing failed");
     Interpreter::new().evaluate(&node).expect("evaluation failed");
 }

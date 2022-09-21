@@ -5,7 +5,7 @@ use crate::{parser::Parser, tokenizer::Tokenizer, interpreter::{TypeInstance, In
 use super::{ValueRef, Type, InternalMethod, TypeData};
 
 fn evaluate(input: &str) -> Result<ValueRef, InterpreterError> {
-    let node = Parser::parse(&Tokenizer::tokenize(input).unwrap()[..]).unwrap();
+    let node = Parser::parse_and_analyse(&Tokenizer::tokenize(input).unwrap()[..]).unwrap();
     let mut interpreter = Interpreter::new();
     interpreter.types.push(Rc::new(Type {
         data: TypeData::Fields(vec!["first".into(), "second".into()]),
@@ -122,7 +122,7 @@ fn test_param_block() {
 #[test]
 fn test_capture() {
     assert_eq!(
-        evaluate("x = [ a = 4. [ | *a x | a add: x ] ]. (x call) call: 3").unwrap(),
+        evaluate("x = [ a = 4. [ | x | a add: x ] ]. (x call) call: 3").unwrap(),
         Value::new_integer(7).rc(),
     );
 
@@ -133,8 +133,8 @@ fn test_capture() {
             p = [
                 a = 4.
                 TestPair
-                    first: [ | *a | a ]
-                    second: [ | *a x | a = a add: x ]
+                    first: [ a ]
+                    second: [ | x | a = a add: x ]
             ] call.
             (p second) call: 2.
             (p second) call: 4.
