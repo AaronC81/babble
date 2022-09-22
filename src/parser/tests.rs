@@ -25,3 +25,10 @@ fn test_simple_parse() {
         ] if p1 == "add")
     ))
 }
+
+#[test]
+fn test_comments() {
+    let parsed = Parser::parse(&Tokenizer::tokenize(
+        "32 add: 24. // This would be a syntax error, if not a comment!"
+    ).unwrap()[..]).unwrap();
+}

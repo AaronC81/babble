@@ -60,6 +60,7 @@ pub enum TokenizerError {
 pub enum TokenizerState {
     Idle,
     CollectingWhitespaceSeparated(Token),
+    Comment,
 }
 
 #[derive(Debug, Clone)]
@@ -139,6 +140,12 @@ impl<'a> Tokenizer<'a> {
                     '|' => self.tokens.push(TokenKind::Pipe.at(self.here_loc())),
                     '*' => self.tokens.push(TokenKind::Star.at(self.here_loc())),
                     '#' => self.tokens.push(TokenKind::Hash.at(self.here_loc())),
+
+                    // Start of a comment
+                    '/' if self.peek() == '/' => {
+                        self.advance();
+                        self.state = TokenizerState::Comment;
+                    }
 
                     _ => return Err(TokenizerError::UnexpectedCharacter(here, self.here_loc())),
                 }
@@ -225,6 +232,13 @@ impl<'a> Tokenizer<'a> {
 
                     // Other tokens are one-shot, and won't ever be stored in the state
                     _ => unreachable!(),
+                }
+            }
+        
+            TokenizerState::Comment => {
+                if here == '\n' {
+                    self.tokens.push(TokenKind::NewLine.at(self.here_loc()));
+                    self.state = TokenizerState::Idle
                 }
             }
         }
