@@ -58,6 +58,16 @@ impl SendMessageComponents {
             SendMessageComponents::Unary(_) => vec![],
         }
     }
+
+    pub fn defined_internal_names(&self) -> Vec<String> {
+        match self {
+            SendMessageComponents::Unary(_) => vec![],
+            SendMessageComponents::Parameterised(pl) => pl.iter().map(|(_, p)| match p {
+                SendMessageParameter::Defined(id) => id.clone(),
+                _ => unreachable!(),
+            }).collect(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

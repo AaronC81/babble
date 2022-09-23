@@ -58,6 +58,13 @@ fn handle_node(node: &mut Node, stack: &mut Vec<AnalysisStackFrame>) {
             stack.push(frame);
         },
 
+        // Function definitions also introduce a frame, so that we can capture parameters
+        NodeKind::FuncDefinition { parameters, body } => {
+            let mut frame = AnalysisStackFrame::new();
+            frame.assignments.extend(parameters.defined_internal_names());
+            stack.push(frame);
+        }
+
         // We're not bothered about anything else
         _ => (),
     }
@@ -69,6 +76,11 @@ fn handle_node(node: &mut Node, stack: &mut Vec<AnalysisStackFrame>) {
     if let NodeKind::Block { captures, .. } = &mut node.kind {
         let frame = stack.pop().unwrap();
         captures.extend(frame.captures);
+    }
+
+    // If it was a function definition, just pop the stack
+    if let NodeKind::FuncDefinition { .. } = node.kind {
+        stack.pop().unwrap();
     }
 }
 

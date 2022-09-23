@@ -201,13 +201,7 @@ impl Interpreter {
                 let body = body.clone();
 
                 let name = parameters.to_method_name();
-                let internal_names = match parameters {
-                    SendMessageComponents::Unary(_) => vec![],
-                    SendMessageComponents::Parameterised(pl) => pl.iter().map(|(_, p)| match p {
-                        SendMessageParameter::Defined(id) => id.clone(),
-                        _ => unreachable!(),
-                    }).collect(),
-                };
+                let internal_names = parameters.defined_internal_names();
                 
                 // TODO: This isn't really want `InternalMethod` is for, we should have a dedicated
                 // type for this which just stores the node and parameter mapping
