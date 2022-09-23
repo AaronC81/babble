@@ -1,6 +1,6 @@
 use std::{rc::Rc, cell::RefCell};
 
-use super::{Type, Interpreter, InterpreterError, Block, TypeData, Variant};
+use super::{Type, Interpreter, InterpreterError, Block, TypeData, Variant, TypeRef};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Value {
@@ -18,7 +18,7 @@ impl Value {
         Self { type_instance: TypeInstance::PrimitiveString(value.into()) }
     }
 
-    pub fn new_type(t: Rc<Type>) -> Self {
+    pub fn new_type(t: TypeRef) -> Self {
         Self { type_instance: TypeInstance::Type(t) }
     }
 
@@ -32,12 +32,13 @@ impl Value {
 
     pub fn new_boolean(interpreter: &Interpreter, value: bool) -> Self {
         let boolean_type = interpreter.resolve_stdlib_type("Boolean");
+        let boolean_type_ref = boolean_type.borrow();
         let variant_name = if value { "True" } else { "False" };
 
         Self {
             type_instance: TypeInstance::Fields {
                 source_type: boolean_type.clone(),
-                variant: Some(boolean_type.resolve_variant(variant_name).unwrap().0),
+                variant: Some(boolean_type_ref.resolve_variant(variant_name).unwrap().0),
                 field_values: vec![],
             }
         }
@@ -85,7 +86,7 @@ impl Value {
         }
     }
 
-    pub fn to_type(&self) -> Result<Rc<Type>, InterpreterError> {
+    pub fn to_type(&self) -> Result<TypeRef, InterpreterError> {
         if let TypeInstance::Type(t) = &self.type_instance {
             Ok(t.clone())
         } else {
@@ -96,22 +97,23 @@ impl Value {
     pub fn to_language_string(&self) -> String {
         match &self.type_instance {
             TypeInstance::Fields { source_type, variant, field_values } => {
+                let source_type_ref = source_type.borrow();
                 let (fields, variant) = if let Some(variant) = variant {
-                    if let TypeData::Variants(variants) = &source_type.data {
+                    if let TypeData::Variants(variants) = &source_type_ref.data {
                         let Variant { name, fields } = &variants[*variant];
                         (fields, Some(name))
                     } else {
                         unreachable!()
                     }
                 } else {
-                    if let TypeData::Fields(f) = &source_type.data {
+                    if let TypeData::Fields(f) = &source_type_ref.data {
                         (f, None)
                     } else {
                         unreachable!()
                     }
                 };
 
-                let mut result = source_type.id.clone();
+                let mut result = source_type.borrow().id.clone();
                 if let Some(variant) = variant {
                     result.push('#');
                     result.push_str(variant);
@@ -134,7 +136,7 @@ impl Value {
             }
 
             TypeInstance::Block(_) => "(anonymous block)".into(),
-            TypeInstance::Type(t) => t.id.clone(),
+            TypeInstance::Type(t) => t.borrow().id.clone(),
             TypeInstance::PrimitiveInteger(i) => i.to_string(),
             TypeInstance::PrimitiveString(s) => s.clone(),
             TypeInstance::PrimitiveNull => "null".into(),
@@ -145,11 +147,11 @@ impl Value {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TypeInstance {
     Fields {
-        source_type: Rc<Type>,
+        source_type: TypeRef,
         variant: Option<usize>,
         field_values: Vec<ValueRef>,
     },
-    Type(Rc<Type>),
+    Type(TypeRef),
     Block(Block),
     PrimitiveInteger(i64),
     PrimitiveString(String),
@@ -157,7 +159,7 @@ pub enum TypeInstance {
 }
 
 impl TypeInstance {
-    pub fn get_type(&self, interpreter: &Interpreter) -> Rc<Type> {
+    pub fn get_type(&self, interpreter: &Interpreter) -> TypeRef {
         match self {
             TypeInstance::Fields { source_type, .. } => source_type.clone(),
             TypeInstance::Type(_) => interpreter.resolve_stdlib_type("Null"), // TODO: should probably be a `Type` type

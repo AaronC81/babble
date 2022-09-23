@@ -2,16 +2,16 @@ use std::{rc::Rc, cell::RefCell};
 
 use crate::{interpreter::{Type, InternalMethod, TypeInstance, Value}, parser::{SendMessageComponents, SendMessageParameter}};
 
-use super::{InterpreterError, TypeData, Variant};
+use super::{InterpreterError, TypeData, Variant, TypeRef};
 
-pub fn types() -> Vec<Rc<Type>> {
+pub fn types() -> Vec<TypeRef> {
     vec![
-        Rc::new(null()),
-        Rc::new(integer()),
-        Rc::new(string()),
-        Rc::new(console()),
-        Rc::new(block()),
-        Rc::new(boolean()),
+        null().rc(),
+        integer().rc(),
+        string().rc(),
+        console().rc(),
+        block().rc(),
+        boolean().rc(),
     ]
 }
 

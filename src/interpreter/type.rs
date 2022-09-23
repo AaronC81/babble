@@ -1,4 +1,4 @@
-use std::{rc::Rc, fmt::Debug, borrow::Borrow};
+use std::{rc::Rc, fmt::Debug, borrow::Borrow, cell::RefCell};
 
 use super::{ValueRef, InterpreterResult, InterpreterError, Interpreter};
 
@@ -46,7 +46,13 @@ impl Type {
         self.methods.retain(|m| m.name != method.name);
         self.methods.push(method);
     }
+
+    pub fn rc(self) -> TypeRef {
+        Rc::new(RefCell::new(self))
+    }
 }
+
+pub type TypeRef = Rc<RefCell<Type>>;
 
 #[derive(Debug, Clone)]
 pub enum TypeData {

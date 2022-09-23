@@ -7,7 +7,7 @@ use super::{ValueRef, Type, InternalMethod, TypeData};
 fn evaluate(input: &str) -> Result<ValueRef, InterpreterError> {
     let node = Parser::parse_and_analyse(&Tokenizer::tokenize(input).unwrap()[..]).unwrap();
     let mut interpreter = Interpreter::new();
-    interpreter.types.push(Rc::new(Type {
+    interpreter.types.push(Type {
         data: TypeData::Fields(vec!["first".into(), "second".into()]),
 
         methods: vec![
@@ -38,7 +38,7 @@ fn evaluate(input: &str) -> Result<ValueRef, InterpreterError> {
         ],
 
         ..Type::new("TestPair")
-    }));
+    }.rc());
     interpreter.evaluate(&node)
 }
 

@@ -26,13 +26,13 @@ pub struct StackFrame {
 
 pub enum StackFrameContext {
     Root,
-    Impl(Rc<Type>),
+    Impl(TypeRef),
     InternalMethod(InternalMethodRef),
     Block,
 }
 
 pub struct Interpreter {
-    types: Vec<Rc<Type>>,
+    types: Vec<TypeRef>,
     stack: Vec<StackFrame>,
 }
 
@@ -135,7 +135,8 @@ impl Interpreter {
                     };
 
                 // Find details of the requested variant
-                let (variant_idx, variant) = enum_type.resolve_variant(&variant_name)?;
+                let enum_type_ref = enum_type.borrow();
+                let (variant_idx, variant) = enum_type_ref.resolve_variant(&variant_name)?;
 
                 // Check that names of passed fields match expected fields
                 let given_field_names = match components {
@@ -161,7 +162,7 @@ impl Interpreter {
 
                 Ok(Value {
                     type_instance: TypeInstance::Fields {
-                        source_type: enum_type,
+                        source_type: enum_type.clone(),
                         variant: Some(variant_idx),
                         field_values,
                     }
@@ -204,11 +205,11 @@ impl Interpreter {
                     }).collect(),
                 };
                 
-                /*
-                TODO: WIP
-                t.add_method(InternalMethod {
-                    name,
-                    function: Box::new(|i, r, a| {
+                // TODO: This isn't really want `InternalMethod` is for, we should have a dedicated
+                // type for this which just stores the node and parameter mapping
+                t.borrow_mut().add_method(InternalMethod::new(
+                    &name,
+                    Box::new(move |i: &mut Interpreter, r, a| {
                         // Create a new stack frame with the relevant parameters
                         i.stack.push(StackFrame {
                             locals: internal_names.iter().cloned().zip(a).collect(),
@@ -223,20 +224,18 @@ impl Interpreter {
 
                         result
                     })
-                }.rc());
-                */
-                todo!();
+                ).rc());
 
                 Ok(Value::new_null().rc())
             },
         }
     }
 
-    pub fn resolve_type(&self, id: &str) -> Option<Rc<Type>> {
-        self.types.iter().find(|t| &t.id == id).cloned()
+    pub fn resolve_type(&self, id: &str) -> Option<TypeRef> {
+        self.types.iter().find(|t| t.borrow().id == id).cloned()
     }
 
-    pub fn resolve_stdlib_type(&self, id: &str) -> Rc<Type> {
+    pub fn resolve_stdlib_type(&self, id: &str) -> TypeRef {
         self.resolve_type(id).expect(&format!("internal error: stdlib type {} missing", id))
     }
 
@@ -246,9 +245,9 @@ impl Interpreter {
         let method_name = components.to_method_name();
         let method =
             if let TypeInstance::Type(t) = &receiver_ref.type_instance {
-                t.resolve_static_method(&method_name)
+                t.borrow().resolve_static_method(&method_name)
             } else {
-                receiver_ref.type_instance.get_type(&self).resolve_method(&method_name)
+                receiver_ref.type_instance.get_type(&self).borrow().resolve_method(&method_name)
             };
         if let Some(method) = method {
             drop(receiver_ref);
