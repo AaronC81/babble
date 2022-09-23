@@ -364,10 +364,9 @@ impl<'a> Parser<'a> {
 
     fn parse_func_definition(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
         // Definitions should always begin with `func`
-        let Token { location, kind: TokenKind::Keyword(TokenKeyword::Func) } = self.here() else {
+        let &Token { location, kind: TokenKind::Keyword(TokenKeyword::Func) } = self.here() else {
             return self.token_error();
         };
-        let location = *location;
         self.advance();
 
         // Parse message parameters, but ensure that the values are identifiers and transform them
