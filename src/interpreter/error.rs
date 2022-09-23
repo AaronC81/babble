@@ -23,4 +23,6 @@ pub enum InterpreterError {
 
     VariantAccessOnNonEnum,
     IncorrectVariantParameters,
+
+    FuncDefinitionInvalidContext,
 }

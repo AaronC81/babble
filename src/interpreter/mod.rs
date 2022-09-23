@@ -26,6 +26,7 @@ pub struct StackFrame {
 
 pub enum StackFrameContext {
     Root,
+    Impl(Rc<Type>),
     InternalMethod(InternalMethodRef),
     Block,
 }
@@ -153,6 +154,7 @@ impl Interpreter {
                             .map(|(_, p)| match p {
                                 SendMessageParameter::Parsed(n) => self.evaluate(n),
                                 SendMessageParameter::Evaluated(v) => Ok(v.clone()),
+                                SendMessageParameter::Defined(v) => unreachable!("defined parameters not valid in evaluation"),
                             })
                             .collect::<Result<Vec<_>, _>>()?,
                 };
@@ -169,6 +171,64 @@ impl Interpreter {
             NodeKind::TrueLiteral => Ok(Value::new_boolean(self, true).rc()),
             NodeKind::FalseLiteral => Ok(Value::new_boolean(self, false).rc()),
             NodeKind::NullLiteral => Ok(Value::new_null().rc()),
+
+            NodeKind::ImplBlock { target, body } => {
+                // Evaluate target - it should be a type
+                let target = self.evaluate(target)?.borrow().to_type()?;
+
+                // Push new stack frame and evaluate body inside it
+                self.stack.push(StackFrame {
+                    context: StackFrameContext::Impl(target),
+                    locals: vec![],
+                });
+                self.evaluate(body)?;
+                self.stack.pop();
+
+                Ok(Value::new_null().rc())
+            },
+
+            NodeKind::FuncDefinition { parameters, body } => {
+                // The current stack frame should represent an `impl` block, so we know where to
+                // put this method
+                let StackFrame { context: StackFrameContext::Impl(t), .. } = self.current_stack_frame() else {
+                    return Err(InterpreterError::FuncDefinitionInvalidContext);
+                };
+                let body = body.clone();
+
+                let name = parameters.to_method_name();
+                let internal_names = match parameters {
+                    SendMessageComponents::Unary(_) => vec![],
+                    SendMessageComponents::Parameterised(pl) => pl.iter().map(|(_, p)| match p {
+                        SendMessageParameter::Defined(id) => id.clone(),
+                        _ => unreachable!(),
+                    }).collect(),
+                };
+                
+                /*
+                TODO: WIP
+                t.add_method(InternalMethod {
+                    name,
+                    function: Box::new(|i, r, a| {
+                        // Create a new stack frame with the relevant parameters
+                        i.stack.push(StackFrame {
+                            locals: internal_names.iter().cloned().zip(a).collect(),
+                            context: StackFrameContext::Block,
+                        });
+
+                        // Run the body
+                        let result = i.evaluate(&body);
+
+                        // Pop the frame
+                        i.stack.pop();
+
+                        result
+                    })
+                }.rc());
+                */
+                todo!();
+
+                Ok(Value::new_null().rc())
+            },
         }
     }
 
@@ -201,6 +261,7 @@ impl Interpreter {
                     .map(|(_, p)| match p {
                         SendMessageParameter::Parsed(n) => self.evaluate(n),
                         SendMessageParameter::Evaluated(v) => Ok(v.clone()),
+                        SendMessageParameter::Defined(v) => unreachable!("defined parameters not valid in evaluation"),
                     })
                     .collect::<Result<Vec<_>, _>>()?,
                 };

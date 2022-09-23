@@ -85,6 +85,14 @@ impl Value {
         }
     }
 
+    pub fn to_type(&self) -> Result<Rc<Type>, InterpreterError> {
+        if let TypeInstance::Type(t) = &self.type_instance {
+            Ok(t.clone())
+        } else {
+            Err(InterpreterError::IncorrectType)
+        }
+    }
+
     pub fn to_language_string(&self) -> String {
         match &self.type_instance {
             TypeInstance::Fields { source_type, variant, field_values } => {

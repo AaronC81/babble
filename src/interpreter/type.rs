@@ -1,4 +1,4 @@
-use std::{rc::Rc, fmt::Debug};
+use std::{rc::Rc, fmt::Debug, borrow::Borrow};
 
 use super::{ValueRef, InterpreterResult, InterpreterError, Interpreter};
 
@@ -40,6 +40,11 @@ impl Type {
         } else {
             Err(InterpreterError::MissingVariant(name.into()))
         }
+    }
+
+    pub fn add_method(&mut self, method: InternalMethodRef) {
+        self.methods.retain(|m| m.name != method.name);
+        self.methods.push(method);
     }
 }
 

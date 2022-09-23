@@ -13,6 +13,7 @@ use crate::{tokenizer::{Token, TokenKind, TokenKeyword}, source::Location};
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ParserError {
     UnexpectedToken(Token),
+    InvalidFuncDefinitionParameter,
 }
 
 #[derive(Debug, Clone)]
@@ -97,6 +98,46 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_single_statement(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
+        // Check if this is an `impl` statement, and if so, handle it differently
+        if let TokenKind::Keyword(TokenKeyword::Impl) = self.here().kind {
+            self.advance();
+
+            // Parse one expression, which will evaluate to the type to implement on
+            let impl_target = self.parse_expression(context.clone())?;
+
+            // Expect an opening brace
+            let TokenKind::LeftBrace = self.here().kind else {
+                return Err(ParserError::UnexpectedToken(self.here().clone()))
+            };
+            self.advance();
+
+            // Collect a list of function definitions within the impl, until we hit a closing brace
+            let inner_context = LexicalContext::new_with_parent(context).rc();
+            let mut items = vec![];
+            loop {
+                if let TokenKind::RightBrace = self.here().kind {
+                    self.advance();
+                    break
+                }
+                items.push(self.parse_func_definition(inner_context.clone())?);
+            }
+
+            // Construct and return node
+            let loc = impl_target.location;
+            return Ok(Node {
+                location: loc.clone(),
+                context: inner_context.clone(),
+                kind: NodeKind::ImplBlock {
+                    target: Box::new(impl_target),
+                    body: Box::new(Node {
+                        location: loc.clone(),
+                        context: inner_context,
+                        kind: NodeKind::StatementSequence(items),
+                    }),
+                },
+            })
+        }
+
         let node = self.parse_expression(context)?;
 
         // If there is a separator, advance past it
@@ -306,6 +347,10 @@ impl<'a> Parser<'a> {
                     TokenKeyword::True => NodeKind::TrueLiteral,
                     TokenKeyword::False => NodeKind::FalseLiteral,
                     TokenKeyword::Null => NodeKind::NullLiteral,
+                    
+                    // Should have been handled earlier
+                    TokenKeyword::Impl | TokenKeyword::Func =>
+                        return Err(ParserError::UnexpectedToken(self.here().clone())),
                 },
                 context,
             };
@@ -314,5 +359,65 @@ impl<'a> Parser<'a> {
         } else {
             Err(ParserError::UnexpectedToken(self.here().clone()))
         }
+    }
+
+    fn parse_func_definition(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
+        // Definitions should always begin with `func`
+        let Token { location, kind: TokenKind::Keyword(TokenKeyword::Func) } = self.here() else {
+            return self.token_error();
+        };
+        let location = *location;
+        self.advance();
+
+        // Parse message parameters, but ensure that the values are identifiers and transform them
+        // (These will be used as the names of locals for each parameter)
+        let inner_context = LexicalContext::new_with_parent(context).rc();
+        let Some(mut parameters) = self.try_parse_only_send_parameters(inner_context.clone())? else {
+            return self.token_error();
+        };
+        if let SendMessageComponents::Parameterised(ref mut components) = &mut parameters {
+            for (_, internal_name) in components {
+                // The "value" for this parameter should always be a plain identifier
+                let SendMessageParameter::Parsed(box Node { kind: NodeKind::Identifier(id), .. }) = internal_name else {
+                    return Err(ParserError::InvalidFuncDefinitionParameter);
+                };
+
+                *internal_name = SendMessageParameter::Defined(id.clone());
+            }
+        }
+
+        // Expect an opening brace
+        let TokenKind::LeftBrace = self.here().kind else {
+            return self.token_error();
+        };
+        self.advance();
+
+        // Collect a list of statements within the definition, until we hit a closing brace
+        let mut items = vec![];
+        loop {
+            if let TokenKind::RightBrace = self.here().kind {
+                self.advance();
+                break
+            }
+            items.push(self.parse_single_statement(inner_context.clone())?);
+        }
+
+        // Construct definition
+        Ok(Node {
+            location,
+            context: inner_context.clone(),
+            kind: NodeKind::FuncDefinition {
+                parameters,
+                body: Box::new(Node {
+                    location,
+                    context: inner_context.clone(),
+                    kind: NodeKind::StatementSequence(items),
+                }),
+            },
+        })
+    }
+    
+    fn token_error(&self) -> Result<Node, ParserError> {
+        return Err(ParserError::UnexpectedToken(self.here().clone()));
     }
 }

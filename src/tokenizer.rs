@@ -28,6 +28,9 @@ pub enum TokenKind {
     LeftParen,
     RightParen,
 
+    LeftBrace,
+    RightBrace,
+
     Identifier(String),
     LabelIdentifier(String),
 
@@ -48,6 +51,8 @@ pub enum TokenKeyword {
     True,
     False,
     Null,
+    Impl,
+    Func,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -137,6 +142,8 @@ impl<'a> Tokenizer<'a> {
                     ']' => self.tokens.push(TokenKind::BlockEnd.at(self.here_loc())),
                     '(' => self.tokens.push(TokenKind::LeftParen.at(self.here_loc())),
                     ')' => self.tokens.push(TokenKind::RightParen.at(self.here_loc())),
+                    '{' => self.tokens.push(TokenKind::LeftBrace.at(self.here_loc())),
+                    '}' => self.tokens.push(TokenKind::RightBrace.at(self.here_loc())),
                     '|' => self.tokens.push(TokenKind::Pipe.at(self.here_loc())),
                     '*' => self.tokens.push(TokenKind::Star.at(self.here_loc())),
                     '#' => self.tokens.push(TokenKind::Hash.at(self.here_loc())),
@@ -252,6 +259,8 @@ impl<'a> Tokenizer<'a> {
             "true"  => Some(TokenKeyword::True),
             "false" => Some(TokenKeyword::False),
             "null"  => Some(TokenKeyword::Null),
+            "impl"  => Some(TokenKeyword::Impl),
+            "func"  => Some(TokenKeyword::Func),
             _       => None,
         }
     }

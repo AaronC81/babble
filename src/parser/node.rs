@@ -64,6 +64,7 @@ impl SendMessageComponents {
 pub enum SendMessageParameter {
     Parsed(Box<Node>),
     Evaluated(ValueRef),
+    Defined(String),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -94,6 +95,14 @@ pub enum NodeKind {
         variant_name: String,
         components: SendMessageComponents,
     },
+    ImplBlock {
+        target: Box<Node>,
+        body: Box<Node>,
+    },
+    FuncDefinition {
+        parameters: SendMessageComponents,
+        body: Box<Node>,
+    }
 }
 
 pub trait NodeWalk {
@@ -127,6 +136,16 @@ impl NodeWalk for Node {
                     func(node);
                 }
             },
+            NodeKind::ImplBlock { target, body } => {
+                func(target);
+                func(body);
+            },
+            NodeKind::FuncDefinition { parameters, body } => {
+                for node in parameters.child_nodes_mut() {
+                    func(node);
+                }
+                func(body);
+            }
 
             NodeKind::IntegerLiteral(_)
             | NodeKind::StringLiteral(_) 
