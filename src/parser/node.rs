@@ -74,6 +74,7 @@ pub enum NodeKind {
     TrueLiteral,
     FalseLiteral,
     NullLiteral,
+    SelfLiteral,
 
     Identifier(String),
     SendMessage {
@@ -152,6 +153,7 @@ impl NodeWalk for Node {
             | NodeKind::TrueLiteral
             | NodeKind::FalseLiteral
             | NodeKind::NullLiteral 
+            | NodeKind::SelfLiteral
             | NodeKind::Identifier(_) => (),
         }
     }

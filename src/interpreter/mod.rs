@@ -21,6 +21,7 @@ pub mod stdlib;
 
 pub struct StackFrame {
     context: StackFrameContext,
+    self_value: ValueRef,
     locals: Vec<(String, ValueRef)>,
 }
 
@@ -45,6 +46,7 @@ impl Interpreter {
             stack: vec![
                 StackFrame {
                     context: StackFrameContext::Root,
+                    self_value: Value::new_null().rc(),
                     locals: vec![],
                 }
             ],
@@ -172,6 +174,7 @@ impl Interpreter {
             NodeKind::TrueLiteral => Ok(Value::new_boolean(self, true).rc()),
             NodeKind::FalseLiteral => Ok(Value::new_boolean(self, false).rc()),
             NodeKind::NullLiteral => Ok(Value::new_null().rc()),
+            NodeKind::SelfLiteral => Ok(self.current_stack_frame().self_value.clone()),
 
             NodeKind::ImplBlock { target, body } => {
                 // Evaluate target - it should be a type
@@ -180,6 +183,7 @@ impl Interpreter {
                 // Push new stack frame and evaluate body inside it
                 self.stack.push(StackFrame {
                     context: StackFrameContext::Impl(target),
+                    self_value: Value::new_null().rc(),
                     locals: vec![],
                 });
                 self.evaluate(body)?;
@@ -213,6 +217,7 @@ impl Interpreter {
                         // Create a new stack frame with the relevant parameters
                         i.stack.push(StackFrame {
                             locals: internal_names.iter().cloned().zip(a).collect(),
+                            self_value: r,
                             context: StackFrameContext::Block,
                         });
 
@@ -268,6 +273,7 @@ impl Interpreter {
             // Create a new stack frame, call the method within it, and pop the frame
             self.stack.push(StackFrame {
                 context: StackFrameContext::InternalMethod(method.clone()),
+                self_value: self.current_stack_frame().self_value.clone(),
                 locals: vec![],
             });
             let result = method.call(self, receiver, parameters);

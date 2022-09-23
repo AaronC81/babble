@@ -1,6 +1,6 @@
 {
     "highlight.regexes": {
-        "\\b(true|false|null|impl|func)\\b": {
+        "\\b(true|false|null|impl|func|self)\\b": {
             "regexFlags": "g",
             "filterFileRegex": ".*\\.lang",
             "decorations": [

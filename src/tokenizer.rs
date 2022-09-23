@@ -53,6 +53,7 @@ pub enum TokenKeyword {
     Null,
     Impl,
     Func,
+    Zelf, // Self
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -261,6 +262,7 @@ impl<'a> Tokenizer<'a> {
             "null"  => Some(TokenKeyword::Null),
             "impl"  => Some(TokenKeyword::Impl),
             "func"  => Some(TokenKeyword::Func),
+            "self"  => Some(TokenKeyword::Zelf),
             _       => None,
         }
     }

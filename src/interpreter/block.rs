@@ -34,6 +34,7 @@ impl Block {
                     // ...and captures.
                     .chain(self.captures.iter().cloned())
                     .collect(),
+            self_value: interpreter.current_stack_frame().self_value.clone(),
             context: StackFrameContext::Block,
         });
 

@@ -347,6 +347,7 @@ impl<'a> Parser<'a> {
                     TokenKeyword::True => NodeKind::TrueLiteral,
                     TokenKeyword::False => NodeKind::FalseLiteral,
                     TokenKeyword::Null => NodeKind::NullLiteral,
+                    TokenKeyword::Zelf => NodeKind::SelfLiteral,
                     
                     // Should have been handled earlier
                     TokenKeyword::Impl | TokenKeyword::Func =>
