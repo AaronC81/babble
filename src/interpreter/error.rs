@@ -1,8 +1,10 @@
 use crate::source::Location;
 
+use super::ValueRef;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InterpreterError {
-    MissingMethod(String),
+    MissingMethod(ValueRef, String),
     MissingName(String, Location),
     MissingCaptureName(String),
     MissingVariant(String),
@@ -25,4 +27,5 @@ pub enum InterpreterError {
     IncorrectVariantParameters,
 
     FuncDefinitionInvalidContext,
+    InternalTestFailed(String),
 }

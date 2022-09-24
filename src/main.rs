@@ -17,7 +17,5 @@ fn main() {
     if input == "--file" || input == "-f" {
         input = read_to_string(args().nth(2).expect("no file passed")).unwrap();
     }
-    let tokens = Tokenizer::tokenize(&input).expect("tokenization failed");
-    let node = Parser::parse_and_analyse(&tokens[..]).expect("parsing failed");
-    Interpreter::new().evaluate(&node).expect("evaluation failed");
+    Interpreter::new().parse_and_evaluate(&input).expect("evaluation failed");
 }

@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::parser::{NodeKind, Node, SendMessageComponents, SendMessageParameter};
+use crate::{parser::{NodeKind, Node, SendMessageComponents, SendMessageParameter, Parser}, tokenizer::Tokenizer};
 
 mod error;
 
@@ -41,8 +41,8 @@ pub type InterpreterResult = Result<ValueRef, InterpreterError>;
 
 impl Interpreter {
     pub fn new() -> Self {
-        Self {
-            types: stdlib::types(),
+        let mut result = Self {
+            types: vec![],
             stack: vec![
                 StackFrame {
                     context: StackFrameContext::Root,
@@ -50,8 +50,16 @@ impl Interpreter {
                     locals: vec![],
                 }
             ],
-        }
+        };
+        stdlib::instantiate(&mut result);
+        result
     }
+
+    pub fn parse_and_evaluate(&mut self, code: &str) -> InterpreterResult {
+        let tokens = Tokenizer::tokenize(code).expect("tokenization failed");
+        let node = Parser::parse_and_analyse(&tokens[..]).expect("parsing failed");
+        self.evaluate(&node)
+    } 
 
     pub fn evaluate(&mut self, node: &Node) -> InterpreterResult {
         match &node.kind {
@@ -260,7 +268,7 @@ impl Interpreter {
 
             result
         } else {
-            Err(InterpreterError::MissingMethod(method_name))
+            Err(InterpreterError::MissingMethod(receiver.clone(), method_name))
         }
     }
 

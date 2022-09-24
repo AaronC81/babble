@@ -2,9 +2,15 @@ use std::{rc::Rc, cell::RefCell};
 
 use crate::{interpreter::{Type, InternalMethod, TypeInstance, Value}, parser::{SendMessageComponents, SendMessageParameter}};
 
-use super::{InterpreterError, TypeData, Variant, TypeRef};
+use super::{InterpreterError, TypeData, Variant, TypeRef, Interpreter};
 
-pub fn types() -> Vec<TypeRef> {
+pub fn instantiate(interpreter: &mut Interpreter) {
+    interpreter.types.extend(core_types());
+    interpreter.parse_and_evaluate(include_str!("../../stdlib/boolean.lang")).unwrap();
+    interpreter.parse_and_evaluate(include_str!("../../stdlib/integer.lang")).unwrap();
+}
+
+fn core_types() -> Vec<TypeRef> {
     vec![
         null().rc(),
         integer().rc(),
@@ -12,6 +18,7 @@ pub fn types() -> Vec<TypeRef> {
         console().rc(),
         block().rc(),
         boolean().rc(),
+        internal_test().rc(),
     ]
 }
 
@@ -67,23 +74,6 @@ fn integer() -> Type {
                 let a = recv.borrow().to_integer()?;
                 let b = params[0].borrow().to_integer()?;
                 Ok(Value::new_boolean(i, a == b).rc())
-            }).rc(),
-
-            InternalMethod::new("times:", |i, recv, params| {
-                let times = recv.borrow().to_integer()?;
-                let block = &params[0];
-                for x in 0..times {
-                    let args = if let Ok(block) = block.borrow().to_block() && block.arity() == 1 {
-                        SendMessageComponents::Parameterised(vec![
-                            ("call".into(), SendMessageParameter::Evaluated(Value::new_integer(x).rc()))
-                        ])
-                    } else {
-                        SendMessageComponents::Unary("call".into())
-                    };
-                    i.send_message(block.clone(), &args)?;
-                }
-
-                Ok(recv)
             }).rc(),
         ],
 
@@ -210,18 +200,32 @@ fn boolean() -> Type {
 
                 Ok(r)
             }).rc(),
-
-            InternalMethod::new("ifFalse:", |i, r, a| {
-                if !r.borrow().to_boolean()? {
-                    let arg = a[0].borrow();
-                    let block = arg.to_block()?;
-                    block.call(i, vec![])?;
-                }
-
-                Ok(r)
-            }).rc(),
         ],
 
         ..Type::new("Boolean")
+    }
+}
+
+fn internal_test() -> Type {
+    Type {
+        static_methods: vec![
+            InternalMethod::new("case:that:equals:", |i, _, a| {
+                let left = a[1].clone();
+                let right = a[2].clone();
+
+                let equal = i.send_message(left, &SendMessageComponents::Parameterised(vec![
+                    ("equals".into(), SendMessageParameter::Evaluated(right))
+                ]))?;
+
+                if equal.borrow().to_boolean()? {
+                    Ok(Value::new_null().rc())
+                } else {
+                    Err(InterpreterError::InternalTestFailed(a[0].borrow().to_string()?))
+                }
+
+            }).rc(),
+        ],
+
+        ..Type::new("InternalTest")
     }
 }

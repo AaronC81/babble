@@ -1,0 +1,15 @@
+impl Boolean {
+    func ifFalse: action {
+        (self not) ifTrue: action
+    }
+
+    func ifTrue: trueAction else: falseAction {
+        result = null.
+        self ifTrue: [ result = trueAction call. ].
+        self ifFalse: [ result = falseAction call. ].
+        result
+    }
+
+    InternalTest case: "ifTrue:else: pos branch" that: (true  ifTrue: [1] else: [2]) equals: 1.
+    InternalTest case: "ifTrue:else: neg branch" that: (false ifTrue: [1] else: [2]) equals: 2.
+}

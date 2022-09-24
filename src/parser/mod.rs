@@ -111,7 +111,7 @@ impl<'a> Parser<'a> {
             };
             self.advance();
 
-            // Collect a list of function definitions within the impl, until we hit a closing brace
+            // Collect a list of items within the impl, until we hit a closing brace
             let inner_context = LexicalContext::new_with_parent(context).rc();
             let mut items = vec![];
             loop {
@@ -119,7 +119,7 @@ impl<'a> Parser<'a> {
                     self.advance();
                     break
                 }
-                items.push(self.parse_func_definition(inner_context.clone())?);
+                items.push(self.parse_single_statement(inner_context.clone())?);
             }
 
             // Construct and return node
@@ -136,6 +136,11 @@ impl<'a> Parser<'a> {
                     }),
                 },
             })
+        }
+
+        // Likewise, handle `func`s differently
+        if let TokenKind::Keyword(TokenKeyword::Func) = self.here().kind {
+            return self.parse_func_definition(context.clone());
         }
 
         let node = self.parse_expression(context)?;
