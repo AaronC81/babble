@@ -6,8 +6,8 @@ use super::{InterpreterError, TypeData, Variant, TypeRef, Interpreter};
 
 pub fn instantiate(interpreter: &mut Interpreter) {
     interpreter.types.extend(core_types());
-    interpreter.parse_and_evaluate(include_str!("../../stdlib/boolean.lang")).unwrap();
-    interpreter.parse_and_evaluate(include_str!("../../stdlib/integer.lang")).unwrap();
+    interpreter.parse_and_evaluate(include_str!("../../stdlib/boolean.bbl")).unwrap();
+    interpreter.parse_and_evaluate(include_str!("../../stdlib/integer.bbl")).unwrap();
 }
 
 fn core_types() -> Vec<TypeRef> {

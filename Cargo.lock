@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "message-lang"
+name = "babble"
 version = "0.1.0"
