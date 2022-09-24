@@ -81,8 +81,13 @@ impl Interpreter {
             NodeKind::Assignment { target, value } => {
                 // Only supported assignment target currently is a plain identifier
                 if let box Node { kind: NodeKind::Identifier(id), .. } = target {
+                    // Perform a value copy so that we don't actually mirror the value of the 
+                    // assignment value, for example:
+                    //   a = 3.
+                    //   b = 5.
+                    //   a = 10. // b should remain 5
                     let value = self.evaluate(value)?;
-                    let mut context = node.context.borrow_mut();
+                    let value = value.borrow().value_copy().rc();
 
                     if let Some(target) = self.find_local(&id) {
                         *target.borrow_mut() = value.borrow().clone();
@@ -149,18 +154,8 @@ impl Interpreter {
                     return Err(InterpreterError::IncorrectVariantParameters)
                 }
 
-                // Evaluate fields
-                let field_values = match components {
-                    crate::parser::SendMessageComponents::Unary(_) => vec![],
-                    crate::parser::SendMessageComponents::Parameterised(params) =>
-                        params.iter()
-                            .map(|(_, p)| match p {
-                                SendMessageParameter::Parsed(n) => self.evaluate(n),
-                                SendMessageParameter::Evaluated(v) => Ok(v.clone()),
-                                SendMessageParameter::Defined(v) => unreachable!("defined parameters not valid in evaluation"),
-                            })
-                            .collect::<Result<Vec<_>, _>>()?,
-                };
+                // Evaluate and value-copy fields
+                let field_values = components.evaluate_parameters(self)?;
 
                 Ok(Value {
                     type_instance: TypeInstance::Fields {
@@ -251,18 +246,8 @@ impl Interpreter {
         if let Some(method) = method {
             drop(receiver_ref);
 
-            // Evaluate parameters
-            let parameters = match components {
-                crate::parser::SendMessageComponents::Unary(_) => vec![],
-                crate::parser::SendMessageComponents::Parameterised(params) =>
-                params.iter()
-                    .map(|(_, p)| match p {
-                        SendMessageParameter::Parsed(n) => self.evaluate(n),
-                        SendMessageParameter::Evaluated(v) => Ok(v.clone()),
-                        SendMessageParameter::Defined(v) => unreachable!("defined parameters not valid in evaluation"),
-                    })
-                    .collect::<Result<Vec<_>, _>>()?,
-                };
+            // Evaluate and value-copy parameters
+            let parameters = components.evaluate_parameters(self)?;
 
             // Create a new stack frame, call the method within it, and pop the frame
             self.stack.push(StackFrame {

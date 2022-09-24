@@ -87,7 +87,13 @@ fn test_assignment() {
     assert_eq!(
         evaluate("a = 3. b = 4. a add: b.").unwrap(),
         Value::new_integer(7).rc(),
-    )
+    );
+
+    // Assignment performs a value copy
+    assert_eq!(
+        evaluate("a = 3. b = a. a = 5. b").unwrap(),
+        Value::new_integer(3).rc(),
+    );
 }
 
 #[test]
@@ -146,8 +152,6 @@ fn test_capture() {
 
 #[test]
 fn test_boolean() {
-    let interpreter = Interpreter::new();
-
     assert_eq!(
         evaluate("Boolean#True").unwrap(),
         evaluate("true").unwrap(),
@@ -161,5 +165,17 @@ fn test_boolean() {
     assert_eq!(
         evaluate("true not").unwrap(),
         evaluate("false").unwrap(),
+    );
+}
+
+#[test]
+fn test_parameter_assignment() {
+    assert_eq!(
+        evaluate("
+            x = 3.
+            [ |i| i = i add: 1 ] call: x.
+            x
+        ").unwrap(),
+        Value::new_integer(3).rc(),
     );
 }

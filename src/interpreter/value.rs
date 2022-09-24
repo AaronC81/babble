@@ -142,6 +142,10 @@ impl Value {
             TypeInstance::PrimitiveNull => "null".into(),
         }
     }
+
+    pub fn value_copy(&self) -> Value {
+        self.clone()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

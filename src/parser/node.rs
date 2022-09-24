@@ -1,4 +1,4 @@
-use crate::{source::Location, interpreter::ValueRef};
+use crate::{source::Location, interpreter::{ValueRef, InterpreterError, Interpreter}};
 
 use super::LexicalContextRef;
 
@@ -67,6 +67,23 @@ impl SendMessageComponents {
                 _ => unreachable!(),
             }).collect(),
         }
+    }
+
+    pub fn evaluate_parameters(&self, interpreter: &mut Interpreter) -> Result<Vec<ValueRef>, InterpreterError> {
+        Ok(match self {
+            SendMessageComponents::Unary(_) => vec![],
+            SendMessageComponents::Parameterised(params) =>
+                params.iter()
+                    .map(|(_, p)| match p {
+                        SendMessageParameter::Parsed(n) => interpreter.evaluate(n),
+                        SendMessageParameter::Evaluated(v) => Ok(v.clone()),
+                        SendMessageParameter::Defined(v) => unreachable!("defined parameters not valid in evaluation"),
+                    })
+                    .collect::<Result<Vec<_>, _>>()?
+                    .iter()
+                    .map(|v| v.borrow().value_copy().rc())
+                    .collect::<Vec<_>>()
+        })
     }
 }
 
