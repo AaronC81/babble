@@ -27,5 +27,7 @@ pub enum InterpreterError {
     IncorrectVariantParameters,
 
     FuncDefinitionInvalidContext,
+    DuplicateTypeDefinition(String),
+
     InternalTestFailed(String),
 }

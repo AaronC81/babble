@@ -1,4 +1,4 @@
-use crate::{source::Location, interpreter::{ValueRef, InterpreterError, Interpreter}};
+use crate::{source::Location, interpreter::{ValueRef, InterpreterError, Interpreter, Variant}};
 
 use super::LexicalContextRef;
 
@@ -130,7 +130,15 @@ pub enum NodeKind {
     FuncDefinition {
         parameters: SendMessageComponents,
         body: Box<Node>,
-    }
+    },
+    EnumDefinition {
+        name: String,
+        variants: Vec<Variant>,
+    },
+    StructDefinition {
+        name: String,
+        fields: Vec<String>,
+    },
 }
 
 pub trait NodeWalk {
@@ -173,7 +181,7 @@ impl NodeWalk for Node {
                     func(node);
                 }
                 func(body);
-            }
+            },
 
             NodeKind::IntegerLiteral(_)
             | NodeKind::StringLiteral(_) 
@@ -181,6 +189,8 @@ impl NodeWalk for Node {
             | NodeKind::FalseLiteral
             | NodeKind::NullLiteral 
             | NodeKind::SelfLiteral
+            | NodeKind::EnumDefinition { .. }
+            | NodeKind::StructDefinition { .. }
             | NodeKind::Identifier(_) => (),
         }
     }

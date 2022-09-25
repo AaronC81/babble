@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{rc::Rc, assert_matches::assert_matches};
 
 use crate::{parser::Parser, tokenizer::Tokenizer, interpreter::{TypeInstance, Interpreter, InterpreterError, Value}};
 
@@ -7,38 +7,6 @@ use super::{ValueRef, Type, InternalMethod, TypeData};
 fn evaluate(input: &str) -> Result<ValueRef, InterpreterError> {
     let node = Parser::parse_and_analyse(&Tokenizer::tokenize(input).unwrap()[..]).unwrap();
     let mut interpreter = Interpreter::new();
-    interpreter.types.push(Type {
-        data: TypeData::Fields(vec!["first".into(), "second".into()]),
-
-        methods: vec![
-            InternalMethod::new("first", |_, recv, _| {
-                match &recv.borrow().type_instance {
-                    TypeInstance::Fields { field_values, .. } => Ok(field_values[0].clone()),
-                    _ => unreachable!()
-                }
-            }).rc(),
-            InternalMethod::new("second", |_, recv, _| {
-                match &recv.borrow().type_instance {
-                    TypeInstance::Fields { field_values, .. } => Ok(field_values[1].clone()),
-                    _ => unreachable!()
-                }
-            }).rc(),
-        ],
-
-        static_methods: vec![
-            InternalMethod::new("first:second:", |itptr, _, params| {
-                Ok(Value {
-                    type_instance: TypeInstance::Fields { 
-                        source_type: itptr.resolve_type("TestPair").unwrap(),
-                        variant: None,
-                        field_values: params,
-                    }
-                }.rc())
-            }).rc()
-        ],
-
-        ..Type::new("TestPair")
-    }.rc());
     interpreter.evaluate(&node)
 }
 
@@ -133,12 +101,11 @@ fn test_capture() {
     );
 
     assert_eq!(
-        // Use `TestPair` to have a closure return a "getter" and "setter" to a captured variable,
-        // and check that they behave as expected.
         evaluate("
+            struct Pair first second.
             p = [
                 a = 4.
-                TestPair
+                Pair
                     first: [ a ]
                     second: [ | x | a = a add: x ]
             ] call.
@@ -177,5 +144,112 @@ fn test_parameter_assignment() {
             x
         ").unwrap(),
         Value::new_integer(3).rc(),
+    );
+}
+
+#[test]
+fn test_enum_definition() {
+    let enum_def = "
+        enum Occupation {
+            Teacher salary yearGroup.
+            Doctor salary department.
+            Other salary description.
+        }
+    ";
+
+    // Construction and field access
+    assert_eq!(
+        evaluate(&format!("
+            {enum_def}
+            t = Occupation#Teacher salary: 123 yearGroup: 6.
+            (t salary) add: (t yearGroup)
+        ")).unwrap(),
+        Value::new_integer(123 + 6).rc(),
+    );
+
+    // Errors on missing/incorrect/extraneous fields
+    assert_matches!(
+        evaluate(&format!("
+            {enum_def}
+            Occupation#Teacher salary: 123
+        ")),
+        Err(InterpreterError::IncorrectVariantParameters),
+    );
+    assert_matches!(
+        evaluate(&format!("
+            {enum_def}
+            Occupation#Teacher salary: 123 department: \"Health\"
+        ")),
+        Err(InterpreterError::IncorrectVariantParameters),
+    );
+    assert_matches!(
+        evaluate(&format!("
+            {enum_def}
+            Occupation#Teacher salary: 123 yearGroup: 6 department: \"Health\"
+        ")),
+        Err(InterpreterError::IncorrectVariantParameters),
+    );
+}
+
+#[test]
+fn test_struct_definition() {
+    let enum_def = "
+        struct Foo a b.
+    ";
+
+    // Construction and field access
+    assert_eq!(
+        evaluate(&format!("
+            {enum_def}
+            f = Foo a: 123 b: 456
+            (f a) add: (f b)
+        ")).unwrap(),
+        Value::new_integer(123 + 456).rc(),
+    );
+
+    // Errors on missing/incorrect/extraneous fields
+    assert_matches!(
+        evaluate(&format!("
+            {enum_def}
+            Foo a: 123
+        ")),
+        Err(InterpreterError::MissingMethod(_, _)),
+    );
+    assert_matches!(
+        evaluate(&format!("
+            {enum_def}
+            Foo a: 123 c: 456
+        ")),
+        Err(InterpreterError::MissingMethod(_, _)),
+    );
+    assert_matches!(
+        evaluate(&format!("
+            {enum_def}
+            Foo a: 123 b: 456 c: 789
+        ")),
+        Err(InterpreterError::MissingMethod(_, _)),
+    );
+}
+
+#[test]
+fn test_impl_block() {
+    assert_eq!(
+        evaluate("
+            struct NumberPair a b.
+
+            impl NumberPair {
+                func sum {
+                    self a add: self b.
+                }
+
+                func combine: other {
+                    NumberPair a: self sum b: other
+                }
+            }
+
+            p = NumberPair a: 2 b: 4.
+            (p combine: 10) sum
+        ").unwrap(),
+        Value::new_integer(16).rc(),
     );
 }

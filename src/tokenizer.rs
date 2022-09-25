@@ -54,6 +54,8 @@ pub enum TokenKeyword {
     Impl,
     Func,
     Zelf, // Self
+    Enum,
+    Struct,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -257,13 +259,15 @@ impl<'a> Tokenizer<'a> {
 
     pub fn to_keyword(keyword: &str) -> Option<TokenKeyword> {
         match keyword {
-            "true"  => Some(TokenKeyword::True),
-            "false" => Some(TokenKeyword::False),
-            "null"  => Some(TokenKeyword::Null),
-            "impl"  => Some(TokenKeyword::Impl),
-            "func"  => Some(TokenKeyword::Func),
-            "self"  => Some(TokenKeyword::Zelf),
-            _       => None,
+            "true"    => Some(TokenKeyword::True),
+            "false"   => Some(TokenKeyword::False),
+            "null"    => Some(TokenKeyword::Null),
+            "impl"    => Some(TokenKeyword::Impl),
+            "func"    => Some(TokenKeyword::Func),
+            "self"    => Some(TokenKeyword::Zelf),
+            "enum"    => Some(TokenKeyword::Enum),
+            "struct"  => Some(TokenKeyword::Struct),
+            _         => None,
         }
     }
 

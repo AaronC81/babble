@@ -230,6 +230,42 @@ impl Interpreter {
 
                 Ok(Value::new_null().rc())
             },
+
+            NodeKind::EnumDefinition { name, variants } => {
+                if let Some(_) = self.resolve_type(name) {
+                    return Err(InterpreterError::DuplicateTypeDefinition(name.into()));
+                }
+
+                let mut t = Type {
+                    id: name.into(),
+                    data: TypeData::Variants(variants.clone()),
+                    methods: vec![],
+                    static_methods: vec![],
+                };
+                t.generate_accessor_methods();
+                self.types.push(t.rc());
+
+                Ok(Value::new_null().rc())
+            },
+
+            NodeKind::StructDefinition { name, fields } => {
+                if let Some(_) = self.resolve_type(name) {
+                    return Err(InterpreterError::DuplicateTypeDefinition(name.into()));
+                }
+
+                let mut t = Type {
+                    id: name.into(),
+                    data: TypeData::Fields(fields.clone()),
+                    methods: vec![],
+                    static_methods: vec![],
+                };
+                t.generate_accessor_methods();
+                let t = t.rc();
+                Type::generate_struct_constructor(t.clone());
+                self.types.push(t);
+
+                Ok(Value::new_null().rc())
+            }
         }
     }
 
