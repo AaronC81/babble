@@ -1,0 +1,24 @@
+// This example shows a nifty example of creating a type with mutable state using variable captures.
+
+struct ValueBox getter setter.
+impl ValueBox {
+    static func newContaining: value {
+        ValueBox
+            getter: [ value ]
+            setter: [ |v| value = v ]
+    }
+
+    func get {
+        self getter call
+    }
+
+    func set: value {
+        self setter call: value
+    }
+}
+
+box = ValueBox newContaining: 10.
+
+Console println: box get.
+box set: 3.
+Console println: box get.
