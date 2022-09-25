@@ -59,7 +59,7 @@ fn handle_node(node: &mut Node, stack: &mut Vec<AnalysisStackFrame>) {
         },
 
         // Function definitions also introduce a frame, so that we can capture parameters
-        NodeKind::FuncDefinition { parameters, body } => {
+        NodeKind::FuncDefinition { parameters, body, .. } => {
             let mut frame = AnalysisStackFrame::new();
             frame.assignments.extend(parameters.defined_internal_names());
             stack.push(frame);

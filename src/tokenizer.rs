@@ -56,6 +56,7 @@ pub enum TokenKeyword {
     Zelf, // Self
     Enum,
     Struct,
+    Static,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -267,6 +268,7 @@ impl<'a> Tokenizer<'a> {
             "self"    => Some(TokenKeyword::Zelf),
             "enum"    => Some(TokenKeyword::Enum),
             "struct"  => Some(TokenKeyword::Struct),
+            "static"  => Some(TokenKeyword::Static),
             _         => None,
         }
     }

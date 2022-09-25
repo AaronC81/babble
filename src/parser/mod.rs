@@ -101,7 +101,7 @@ impl<'a> Parser<'a> {
         // Some statements are handled differently, indicated by a keyword
         match self.here().kind {
             TokenKind::Keyword(TokenKeyword::Impl) => self.parse_impl_block(context),
-            TokenKind::Keyword(TokenKeyword::Func) => self.parse_func_definition(context),
+            TokenKind::Keyword(TokenKeyword::Func | TokenKeyword::Static) => self.parse_func_definition(context),
             TokenKind::Keyword(TokenKeyword::Enum) => self.parse_enum_definition(context),
             TokenKind::Keyword(TokenKeyword::Struct) => self.parse_struct_definition(context),
 
@@ -321,7 +321,11 @@ impl<'a> Parser<'a> {
                     TokenKeyword::Zelf => NodeKind::SelfLiteral,
                     
                     // Should have been handled earlier
-                    TokenKeyword::Impl | TokenKeyword::Func | TokenKeyword::Struct | TokenKeyword::Enum =>
+                    TokenKeyword::Impl
+                    | TokenKeyword::Func
+                    | TokenKeyword::Struct
+                    | TokenKeyword::Enum 
+                    | TokenKeyword::Static =>
                         return Err(ParserError::UnexpectedToken(self.here().clone())),
                 },
                 context,
@@ -377,7 +381,16 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_func_definition(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
-        // Definitions should always begin with `func`
+        // The definition can optionally begin with a `static` keyword
+        let is_static =
+            if let &Token { location, kind: TokenKind::Keyword(TokenKeyword::Static) } = self.here() {
+                self.advance();
+                true
+            } else {
+                false
+            };
+
+        // After this, definitions should always begin with `func`
         let &Token { location, kind: TokenKind::Keyword(TokenKeyword::Func) } = self.here() else {
             self.token_error()?;
         };
@@ -436,6 +449,7 @@ impl<'a> Parser<'a> {
                     context: inner_context.clone(),
                     kind: NodeKind::StatementSequence(items),
                 }),
+                is_static,
             },
         })
     }

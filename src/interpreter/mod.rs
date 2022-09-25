@@ -195,7 +195,7 @@ impl Interpreter {
                 Ok(Value::new_null().rc())
             },
 
-            NodeKind::FuncDefinition { parameters, body } => {
+            NodeKind::FuncDefinition { parameters, body, is_static } => {
                 // The current stack frame should represent an `impl` block, so we know where to
                 // put this method
                 let StackFrame { context: StackFrameContext::Impl(t), .. } = self.current_stack_frame() else {
@@ -208,7 +208,7 @@ impl Interpreter {
                 
                 // TODO: This isn't really want `InternalMethod` is for, we should have a dedicated
                 // type for this which just stores the node and parameter mapping
-                t.borrow_mut().add_method(InternalMethod::new(
+                let method = InternalMethod::new(
                     &name,
                     Box::new(move |i: &mut Interpreter, r, a| {
                         // Create a new stack frame with the relevant parameters
@@ -226,7 +226,12 @@ impl Interpreter {
 
                         result
                     })
-                ).rc());
+                ).rc();
+                if *is_static {
+                    t.borrow_mut().add_static_method(method);
+                } else {
+                    t.borrow_mut().add_method(method);
+                }
 
                 Ok(Value::new_null().rc())
             },

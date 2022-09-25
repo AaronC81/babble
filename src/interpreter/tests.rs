@@ -252,4 +252,34 @@ fn test_impl_block() {
         ").unwrap(),
         Value::new_integer(16).rc(),
     );
+
+    // Static methods, plus a relatively complex case testing some other stuff (e.g. captures)
+    assert_eq!(
+        evaluate("
+            struct ValueBox getter setter.
+            impl ValueBox {
+                static func newContaining: value {
+                    ValueBox
+                        getter: [ value ]
+                        setter: [ |v| value = v ]
+                }
+            
+                func get {
+                    self getter call
+                }
+            
+                func set: value {
+                    self setter call: value
+                }
+            }
+            
+            box = ValueBox newContaining: 10.
+            oldValue = box get.
+            box set: 3.
+            newValue = box get.
+
+            oldValue add: newValue
+        ").unwrap(),
+        Value::new_integer(13).rc(),
+    )
 }
