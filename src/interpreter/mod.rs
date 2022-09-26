@@ -1,6 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
-
-use crate::{parser::{NodeKind, Node, SendMessageComponents, SendMessageParameter, Parser}, tokenizer::Tokenizer};
+use crate::{parser::{NodeKind, Node, SendMessageComponents, Parser}, tokenizer::Tokenizer};
 
 mod error;
 
@@ -15,9 +13,10 @@ pub use r#type::*;
 mod block;
 pub use block::*;
 
-mod tests;
-
 pub mod stdlib;
+
+#[cfg(test)]
+mod tests;
 
 pub struct StackFrame {
     context: StackFrameContext,

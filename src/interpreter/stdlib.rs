@@ -1,6 +1,4 @@
-use std::{rc::Rc, cell::RefCell};
-
-use crate::{interpreter::{Type, InternalMethod, TypeInstance, Value}, parser::{SendMessageComponents, SendMessageParameter}};
+use crate::{interpreter::{Type, InternalMethod, Value}, parser::{SendMessageComponents, SendMessageParameter}};
 
 use super::{InterpreterError, TypeData, Variant, TypeRef, Interpreter};
 
@@ -43,7 +41,7 @@ fn integer() -> Type {
                 let a = recv.borrow().to_integer()?;
                 Ok(Value::new_integer(-a).rc())
             }).rc(),
-            InternalMethod::new("modulo:", |i, recv, params| {
+            InternalMethod::new("modulo:", |_, recv, params| {
                 let a = recv.borrow().to_integer()?;
                 let b = params[0].borrow().to_integer()?;
                 Ok(Value::new_integer(a % b).rc())

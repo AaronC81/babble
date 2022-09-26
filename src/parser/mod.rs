@@ -6,6 +6,7 @@ pub use lexical_context::*;
 
 pub mod capture_analysis;
 
+#[cfg(test)]
 mod tests;
 
 use crate::{tokenizer::{Token, TokenKind, TokenKeyword}, source::Location, interpreter::Variant};
@@ -50,19 +51,6 @@ impl<'a> Parser<'a> {
     fn all_tokens_consumed(&self) -> bool {
         self.current_index >= self.tokens.len()
         || self.tokens.get(self.current_index).map(|t| t.kind.clone()) == Some(TokenKind::EndOfFile)
-    }
-
-    pub fn try_or_revert<F>(&mut self, mut func: F) -> Option<Node>
-    where F: FnMut(&mut Self) -> Result<Node, ParserError> {
-        let previous_state = self.clone();
-
-        match func(self) {
-            Ok(node) => Some(node),
-            Err(_) => {
-                *self = previous_state;
-                None
-            }
-        }
     }
 
     pub fn parse(tokens: &'a [Token]) -> Result<Node, ParserError> {
@@ -221,7 +209,7 @@ impl<'a> Parser<'a> {
                 self.advance();
                 
                 // Grab the name of the variant
-                let variant_name = if let Token { kind: TokenKind::Identifier(id), location } = self.here() {
+                let variant_name = if let Token { kind: TokenKind::Identifier(id), .. } = self.here() {
                     id.clone()
                 } else {
                     return Err(ParserError::UnexpectedToken(self.here().clone()))
@@ -383,7 +371,7 @@ impl<'a> Parser<'a> {
     fn parse_func_definition(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
         // The definition can optionally begin with a `static` keyword
         let is_static =
-            if let &Token { location, kind: TokenKind::Keyword(TokenKeyword::Static) } = self.here() {
+            if let &Token { kind: TokenKind::Keyword(TokenKeyword::Static), .. } = self.here() {
                 self.advance();
                 true
             } else {
@@ -480,7 +468,7 @@ impl<'a> Parser<'a> {
                 self.advance();
                 break
             }
-            let (name, fields) = self.parse_data_layout(inner_context.clone())?;
+            let (name, fields) = self.parse_data_layout()?;
             variants.push(Variant { name, fields });
         }
         
@@ -499,7 +487,7 @@ impl<'a> Parser<'a> {
         self.advance();
         
         // Parse its contents
-        let (name, fields) = self.parse_data_layout(context.clone())?;
+        let (name, fields) = self.parse_data_layout()?;
         
         Ok(Node {
             location,
@@ -511,7 +499,7 @@ impl<'a> Parser<'a> {
         })
     }
 
-    fn parse_data_layout(&mut self, context: LexicalContextRef) -> Result<(String, Vec<String>), ParserError> {
+    fn parse_data_layout(&mut self) -> Result<(String, Vec<String>), ParserError> {
         // Parse name
         let TokenKind::Identifier(name) = &self.here().kind else {
             self.token_error()?;

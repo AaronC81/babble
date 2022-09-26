@@ -1,8 +1,8 @@
-use std::{rc::Rc, assert_matches::assert_matches};
+use std::assert_matches::assert_matches;
 
-use crate::{parser::Parser, tokenizer::Tokenizer, interpreter::{TypeInstance, Interpreter, InterpreterError, Value}};
+use crate::{parser::Parser, tokenizer::Tokenizer, interpreter::{Interpreter, InterpreterError, Value}};
 
-use super::{ValueRef, Type, InternalMethod, TypeData};
+use super::{ValueRef};
 
 fn evaluate(input: &str) -> Result<ValueRef, InterpreterError> {
     let node = Parser::parse_and_analyse(&Tokenizer::tokenize(input).unwrap()[..]).unwrap();

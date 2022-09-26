@@ -1,6 +1,6 @@
 use std::{rc::Rc, cell::RefCell};
 
-use super::{Type, Interpreter, InterpreterError, Block, TypeData, Variant, TypeRef};
+use super::{Interpreter, InterpreterError, Block, TypeData, Variant, TypeRef};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Value {

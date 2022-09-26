@@ -1,4 +1,4 @@
-use std::{rc::Rc, fmt::Debug, borrow::Borrow, cell::RefCell};
+use std::{rc::Rc, fmt::Debug, cell::RefCell};
 
 use crate::interpreter::TypeInstance;
 
@@ -81,7 +81,7 @@ impl Type {
                 for field in all_fields.iter().cloned() {
                     let variants_copy = variants.clone();
                     self.add_method(InternalMethod::new(&field.clone(), move |_, r, _| {
-                        let TypeInstance::Fields { variant, field_values, source_type } = &(*r).borrow().type_instance else {
+                        let TypeInstance::Fields { variant, field_values, .. } = &(*r).borrow().type_instance else {
                             return Err(InterpreterError::IncorrectType);
                         };
                         let variant = &variants_copy[variant.unwrap()];

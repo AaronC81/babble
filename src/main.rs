@@ -1,13 +1,10 @@
 #![feature(box_patterns)]
-#![feature(let_else)]
 #![feature(never_type)]
 #![feature(assert_matches)]
 
 use std::{env::args, fs::read_to_string};
 
 use interpreter::Interpreter;
-use parser::Parser;
-use tokenizer::Tokenizer;
 
 mod source;
 mod tokenizer;

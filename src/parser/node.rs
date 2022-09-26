@@ -9,12 +9,6 @@ pub struct Node {
     pub context: LexicalContextRef,
 }
 
-impl Node {
-    pub fn new(kind: NodeKind, location: Location, context: LexicalContextRef) -> Self {
-        Node { kind, location, context }
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SendMessageComponents {
     Unary(String),
@@ -35,6 +29,7 @@ impl SendMessageComponents {
         }
     }
 
+    #[allow(unused)]
     pub fn child_nodes(&self) -> Vec<&Node> {
         match self {
             SendMessageComponents::Parameterised(params) => {
@@ -77,7 +72,7 @@ impl SendMessageComponents {
                     .map(|(_, p)| match p {
                         SendMessageParameter::Parsed(n) => interpreter.evaluate(n),
                         SendMessageParameter::Evaluated(v) => Ok(v.clone()),
-                        SendMessageParameter::Defined(v) => unreachable!("defined parameters not valid in evaluation"),
+                        SendMessageParameter::Defined(_) => unreachable!("defined parameters not valid in evaluation"),
                     })
                     .collect::<Result<Vec<_>, _>>()?
                     .iter()
@@ -164,10 +159,10 @@ impl NodeWalk for Node {
                 func(target);
                 func(value);
             },
-            NodeKind::Block { body, parameters, captures } => {
+            NodeKind::Block { body, parameters: _, captures: _ } => {
                 func(body);
             },
-            NodeKind::EnumVariant { enum_type, variant_name, components } => {
+            NodeKind::EnumVariant { enum_type, variant_name: _, components } => {
                 func(enum_type);
                 for node in components.child_nodes_mut() {
                     func(node);
@@ -177,7 +172,7 @@ impl NodeWalk for Node {
                 func(target);
                 func(body);
             },
-            NodeKind::FuncDefinition { parameters, body, .. } => {
+            NodeKind::FuncDefinition { parameters, body, is_static: _ } => {
                 for node in parameters.child_nodes_mut() {
                     func(node);
                 }
@@ -190,8 +185,8 @@ impl NodeWalk for Node {
             | NodeKind::FalseLiteral
             | NodeKind::NullLiteral 
             | NodeKind::SelfLiteral
-            | NodeKind::EnumDefinition { .. }
-            | NodeKind::StructDefinition { .. }
+            | NodeKind::EnumDefinition { name: _, variants: _ }
+            | NodeKind::StructDefinition { name: _, fields: _ }
             | NodeKind::Identifier(_) => (),
         }
     }
