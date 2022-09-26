@@ -285,7 +285,7 @@ impl<'a> Tokenizer<'a> {
         if let TokenizerState::CollectingWhitespaceSeparated(ref mut t) = tokenizer.state {
             // Keyword check
             if let TokenKind::Identifier(id) = &t.kind {
-                if let Some(keyword) = Self::to_keyword(&id) {
+                if let Some(keyword) = Self::to_keyword(id) {
                     t.kind = TokenKind::Keyword(keyword);
                 }
             }

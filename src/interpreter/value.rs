@@ -105,12 +105,10 @@ impl Value {
                     } else {
                         unreachable!()
                     }
+                } else if let TypeData::Fields(f) = &source_type_ref.data {
+                    (f, None)
                 } else {
-                    if let TypeData::Fields(f) = &source_type_ref.data {
-                        (f, None)
-                    } else {
-                        unreachable!()
-                    }
+                    unreachable!()
                 };
 
                 let mut result = source_type.borrow().id.clone();

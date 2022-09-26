@@ -70,7 +70,7 @@ impl Interpreter {
 
             NodeKind::SendMessage { receiver, components } => {
                 // Evaluate the receiver
-                let receiver = self.evaluate(&receiver)?;
+                let receiver = self.evaluate(receiver)?;
 
                 self.send_message(receiver, components)
             },
@@ -112,7 +112,7 @@ impl Interpreter {
                 if let Some(value) = self.find_local(id) {
                     Ok(value)
                 } else if let Some(t) = self.resolve_type(id) {
-                    Ok(Value::new_type(t.clone()).rc())
+                    Ok(Value::new_type(t).rc())
                 } else {
                     Err(InterpreterError::MissingName(id.into(), node.location))
                 }
@@ -124,7 +124,7 @@ impl Interpreter {
                     .iter()
                     .map(|name|
                         self.find_local(name)
-                            .ok_or(InterpreterError::MissingCaptureName(name.clone()))
+                            .ok_or_else(|| InterpreterError::MissingCaptureName(name.clone()))
                             .map(|v| (name.clone(), v))
                     )
                     .collect::<Result<Vec<_>, _>>()?;
@@ -150,7 +150,7 @@ impl Interpreter {
 
                 // Find details of the requested variant
                 let enum_type_ref = enum_type.borrow();
-                let (variant_idx, variant) = enum_type_ref.resolve_variant(&variant_name)?;
+                let (variant_idx, variant) = enum_type_ref.resolve_variant(variant_name)?;
 
                 // Check that names of passed fields match expected fields
                 let given_field_names = match components {
@@ -236,7 +236,7 @@ impl Interpreter {
             },
 
             NodeKind::EnumDefinition { name, variants } => {
-                if let Some(_) = self.resolve_type(name) {
+                if self.resolve_type(name).is_some() {
                     return Err(InterpreterError::DuplicateTypeDefinition(name.into()));
                 }
 
@@ -253,7 +253,7 @@ impl Interpreter {
             },
 
             NodeKind::StructDefinition { name, fields } => {
-                if let Some(_) = self.resolve_type(name) {
+                if self.resolve_type(name).is_some() {
                     return Err(InterpreterError::DuplicateTypeDefinition(name.into()));
                 }
 
@@ -278,7 +278,7 @@ impl Interpreter {
     }
 
     pub fn resolve_stdlib_type(&self, id: &str) -> TypeRef {
-        self.resolve_type(id).expect(&format!("internal error: stdlib type {} missing", id))
+        self.resolve_type(id).unwrap_or_else(|| panic!("internal error: stdlib type {} missing", id))
     }
 
     pub fn send_message(&mut self, receiver: ValueRef, components: &SendMessageComponents) -> InterpreterResult {
@@ -289,7 +289,7 @@ impl Interpreter {
             if let TypeInstance::Type(t) = &receiver_ref.type_instance {
                 t.borrow().resolve_static_method(&method_name)
             } else {
-                receiver_ref.type_instance.get_type(&self).borrow().resolve_method(&method_name)
+                receiver_ref.type_instance.get_type(self).borrow().resolve_method(&method_name)
             };
         if let Some(method) = method {
             drop(receiver_ref);
@@ -324,7 +324,7 @@ impl Interpreter {
         self.current_stack_frame()
             .locals
             .iter()
-            .find_map(|(n, v)| if n == &name { Some(v.clone()) } else { None })
+            .find_map(|(n, v)| if n == name { Some(v.clone()) } else { None })
     }
 
     pub fn create_local(&mut self, name: &str, value: ValueRef) {

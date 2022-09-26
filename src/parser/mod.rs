@@ -80,7 +80,7 @@ impl<'a> Parser<'a> {
         // TODO: calculate location properly
         Ok(Node {
             kind: NodeKind::StatementSequence(seq),
-            location: self.tokens.first().map(|t| t.location).unwrap_or(Location::new_single(0)),
+            location: self.tokens.first().map(|t| t.location).unwrap_or_else(|| Location::new_single(0)),
             context,
         })
     }
@@ -131,7 +131,7 @@ impl<'a> Parser<'a> {
     fn parse_parameterised_send(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
         let mut result = self.parse_unary_send(context.clone())?;
         if let Some(components) = self.try_parse_only_send_parameters(context.clone())? {
-            let location = result.location.clone();
+            let location = result.location;
             result = Node {
                 kind: NodeKind::SendMessage {
                     receiver: Box::new(result),
@@ -217,7 +217,7 @@ impl<'a> Parser<'a> {
                 self.advance();
 
                 let components = self.try_parse_only_send_parameters(context)?
-                    .unwrap_or(SendMessageComponents::Unary("<blank>".into()));
+                    .unwrap_or_else(|| SendMessageComponents::Unary("<blank>".into()));
                 
                 node.kind = NodeKind::EnumVariant {
                     enum_type: Box::new(node.clone()),
@@ -353,14 +353,14 @@ impl<'a> Parser<'a> {
         }
 
         // Construct and return node
-        let loc = impl_target.location;
-        return Ok(Node {
-            location: loc.clone(),
+        let location = impl_target.location;
+        Ok(Node {
+            location,
             context: inner_context.clone(),
             kind: NodeKind::ImplBlock {
                 target: Box::new(impl_target),
                 body: Box::new(Node {
-                    location: loc.clone(),
+                    location,
                     context: inner_context,
                     kind: NodeKind::StatementSequence(items),
                 }),
@@ -434,7 +434,7 @@ impl<'a> Parser<'a> {
                 parameters,
                 body: Box::new(Node {
                     location,
-                    context: inner_context.clone(),
+                    context: inner_context,
                     kind: NodeKind::StatementSequence(items),
                 }),
                 is_static,

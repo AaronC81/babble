@@ -84,7 +84,7 @@ fn handle_node(node: &mut Node, stack: &mut Vec<AnalysisStackFrame>) {
     }
 }
 
-fn try_propagate_capture(id: &String, stack: &mut Vec<AnalysisStackFrame>) -> bool {
+fn try_propagate_capture(id: &String, stack: &mut [AnalysisStackFrame]) -> bool {
     // If the variable is already available in the last (i.e. current) stack frame, we don't need to
     // do anything
     let current_frame = stack.last().unwrap();

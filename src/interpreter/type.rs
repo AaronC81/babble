@@ -37,7 +37,7 @@ impl Type {
             return Err(InterpreterError::VariantAccessOnNonEnum);
         };
 
-        if let Some(variant) = variants.iter().enumerate().find(|(_, v)| &v.name == name) {
+        if let Some(variant) = variants.iter().enumerate().find(|(_, v)| v.name == name) {
             Ok(variant)
         } else {
             Err(InterpreterError::MissingVariant(name.into()))
@@ -102,13 +102,12 @@ impl Type {
     pub fn generate_struct_constructor(t: Rc<RefCell<Type>>) {
         // TODO: how to handle empty structs?
 
-        let fields = if let TypeData::Fields(ref fields) = t.clone().as_ref().borrow().data {
+        let fields = if let TypeData::Fields(ref fields) = t.as_ref().borrow().data {
             fields.clone()
         } else {
             panic!("can only generate constructor for structs");
         };
-        if fields.len() == 0 { return }
-        let fields = fields.clone();
+        if fields.is_empty() { return }
 
         let constructor_name = fields.iter()
             .map(|f| format!("{}:", f))
@@ -183,7 +182,7 @@ impl InternalMethod {
     }
 
     pub fn arity(&self) -> usize {
-        self.name.matches(":").count()
+        self.name.matches(':').count()
     }
 
     pub fn call(&self, interpreter: &mut Interpreter, receiver: ValueRef, parameters: Vec<ValueRef>) -> InterpreterResult {        
