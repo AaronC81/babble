@@ -2,14 +2,14 @@ use std::{rc::Rc, fmt::Debug, cell::RefCell};
 
 use crate::interpreter::TypeInstance;
 
-use super::{ValueRef, InterpreterResult, InterpreterError, Interpreter, Value};
+use super::{InterpreterError, Value, Method, MethodRef};
 
 #[derive(Debug)]
 pub struct Type {
     pub id: String,
     pub data: TypeData,
-    pub methods: Vec<InternalMethodRef>,
-    pub static_methods: Vec<InternalMethodRef>,
+    pub methods: Vec<MethodRef>,
+    pub static_methods: Vec<MethodRef>,
 }
 impl PartialEq for Type { fn eq(&self, other: &Self) -> bool { self.id == other.id } }
 impl Eq for Type {}
@@ -24,11 +24,11 @@ impl Type {
         }
     }
 
-    pub fn resolve_method(&self, name: &str) -> Option<InternalMethodRef> {
+    pub fn resolve_method(&self, name: &str) -> Option<MethodRef> {
         self.methods.iter().find(|m| m.name == name).cloned()
     }
 
-    pub fn resolve_static_method(&self, name: &str) -> Option<InternalMethodRef> {
+    pub fn resolve_static_method(&self, name: &str) -> Option<MethodRef> {
         self.static_methods.iter().find(|m| m.name == name).cloned()
     }
 
@@ -44,12 +44,12 @@ impl Type {
         }
     }
 
-    pub fn add_method(&mut self, method: InternalMethodRef) {
+    pub fn add_method(&mut self, method: MethodRef) {
         self.methods.retain(|m| m.name != method.name);
         self.methods.push(method);
     }
 
-    pub fn add_static_method(&mut self, method: InternalMethodRef) {
+    pub fn add_static_method(&mut self, method: MethodRef) {
         self.static_methods.retain(|m| m.name != method.name);
         self.static_methods.push(method);
     }
@@ -60,7 +60,7 @@ impl Type {
         match &self.data {
             TypeData::Fields(fields) => {
                 for (i, field) in fields.clone().iter().enumerate() {
-                    self.add_method(InternalMethod::new(field, move |_, r, _| {
+                    self.add_method(Method::new_internal(field, move |_, r, _| {
                         let TypeInstance::Fields { field_values, .. } = &(*r).borrow().type_instance else {
                             return Err(InterpreterError::IncorrectType);
                         };
@@ -80,7 +80,7 @@ impl Type {
                 
                 for field in all_fields.iter().cloned() {
                     let variants_copy = variants.clone();
-                    self.add_method(InternalMethod::new(&field.clone(), move |_, r, _| {
+                    self.add_method(Method::new_internal(&field.clone(), move |_, r, _| {
                         let TypeInstance::Fields { variant, field_values, .. } = &(*r).borrow().type_instance else {
                             return Err(InterpreterError::IncorrectType);
                         };
@@ -112,7 +112,7 @@ impl Type {
         let constructor_name = fields.iter()
             .map(|f| format!("{}:", f))
             .collect::<String>();
-        t.clone().borrow_mut().add_static_method(InternalMethod::new(&constructor_name, move |_, _, a| {
+        t.clone().borrow_mut().add_static_method(Method::new_internal(&constructor_name, move |_, _, a| {
             Ok(Value {
                 type_instance: TypeInstance::Fields {
                     source_type: t.clone(),
@@ -153,47 +153,5 @@ impl Variant {
 
     pub fn field_index(&self, name: &str) -> Option<usize> {
         self.fields.iter().enumerate().find(|(_, f)| f == &name).map(|(i, _)| i)
-    }
-}
-
-pub struct InternalMethod {
-    pub name: String,
-    function: Box<dyn Fn(&mut Interpreter, ValueRef, Vec<ValueRef>) -> InterpreterResult>,
-}
-impl Debug for InternalMethod {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("InternalMethod").field("name", &self.name).finish()
-    }
-}
-
-pub type InternalMethodRef = Rc<InternalMethod>;
-
-impl InternalMethod {
-    pub fn new<F>(name: &str, function: F) -> Self
-    where F: Fn(&mut Interpreter, ValueRef, Vec<ValueRef>) -> InterpreterResult + 'static {
-        Self {
-            name: name.into(),
-            function: Box::new(function),
-        }
-    }
-    
-    pub fn rc(self) -> InternalMethodRef {
-        Rc::new(self)
-    }
-
-    pub fn arity(&self) -> usize {
-        self.name.matches(':').count()
-    }
-
-    pub fn call(&self, interpreter: &mut Interpreter, receiver: ValueRef, parameters: Vec<ValueRef>) -> InterpreterResult {        
-        if self.arity() != parameters.len() {
-            return Err(InterpreterError::IncorrectArity {
-                name: self.name.clone(),
-                expected: self.arity(),
-                got: parameters.len(),
-            })
-        }
-
-        (self.function)(interpreter, receiver, parameters)
     }
 }

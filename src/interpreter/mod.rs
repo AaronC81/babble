@@ -13,6 +13,9 @@ pub use r#type::*;
 mod block;
 pub use block::*;
 
+mod method;
+pub use method::*;
+
 pub mod stdlib;
 
 #[cfg(test)]
@@ -27,7 +30,7 @@ pub struct StackFrame {
 pub enum StackFrameContext {
     Root,
     Impl(TypeRef),
-    InternalMethod(InternalMethodRef),
+    Method(MethodRef),
     Block,
 }
 
@@ -203,27 +206,7 @@ impl Interpreter {
                 let name = parameters.to_method_name();
                 let internal_names = parameters.defined_internal_names();
                 
-                // TODO: This isn't really want `InternalMethod` is for, we should have a dedicated
-                // type for this which just stores the node and parameter mapping
-                let method = InternalMethod::new(
-                    &name,
-                    Box::new(move |i: &mut Interpreter, r, a| {
-                        // Create a new stack frame with the relevant parameters
-                        i.stack.push(StackFrame {
-                            locals: internal_names.iter().cloned().zip(a).collect(),
-                            self_value: r,
-                            context: StackFrameContext::Block,
-                        });
-
-                        // Run the body
-                        let result = i.evaluate(&body);
-
-                        // Pop the frame
-                        i.stack.pop();
-
-                        result
-                    })
-                ).rc();
+                let method = Method::new_parsed(&name, *body, internal_names).rc();
                 if *is_static {
                     t.borrow_mut().add_static_method(method);
                 } else {
@@ -297,7 +280,7 @@ impl Interpreter {
 
             // Create a new stack frame, call the method within it, and pop the frame
             self.stack.push(StackFrame {
-                context: StackFrameContext::InternalMethod(method.clone()),
+                context: StackFrameContext::Method(method.clone()),
                 self_value: self.current_stack_frame().self_value.clone(),
                 locals: vec![],
             });
