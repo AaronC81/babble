@@ -137,8 +137,6 @@ impl Interpreter {
             },
 
             NodeKind::EnumVariant { enum_type, variant_name, components } => {
-                // TODO: enums with fields untested
-
                 // Resolve the type and its variants
                 let enum_type =
                     if let TypeInstance::Type(t) = &self.evaluate(enum_type)?.borrow().type_instance {

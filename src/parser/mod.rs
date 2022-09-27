@@ -29,7 +29,7 @@ impl<'a> Parser<'a> {
             tokens,
             current_index: 0,
         };
-        s.skip_newlines(); // TODO: Temporary (maybe)
+        s.skip_newlines();
         s
     }
 
@@ -39,7 +39,7 @@ impl<'a> Parser<'a> {
 
     fn advance(&mut self) {
         self.current_index += 1;
-        self.skip_newlines() // TODO: Temporary (maybe)
+        self.skip_newlines()
     }
 
     fn skip_newlines(&mut self) {
