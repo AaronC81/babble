@@ -3,6 +3,7 @@ use crate::{interpreter::{Type, Method, Value}, parser::{SendMessageComponents, 
 use super::{InterpreterError, TypeData, Variant, TypeRef, Interpreter};
 
 pub fn instantiate(interpreter: &mut Interpreter) {
+    interpreter.parse_and_evaluate(include_str!("../../stdlib/core_mixins.bbl")).unwrap();
     interpreter.types.extend(core_types());
     interpreter.parse_and_evaluate(include_str!("../../stdlib/boolean.bbl")).unwrap();
     interpreter.parse_and_evaluate(include_str!("../../stdlib/integer.bbl")).unwrap();

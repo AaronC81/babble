@@ -17,6 +17,7 @@ mod method;
 pub use method::*;
 
 pub mod stdlib;
+pub mod mixin_derive;
 
 #[cfg(test)]
 mod tests;
@@ -255,6 +256,7 @@ impl Interpreter {
                     ..Type::new(name)
                 };
                 t.generate_accessor_methods();
+                mixin_derive::derive_core_mixins(self, &mut t);
                 self.types.push(t.rc());
 
                 Ok(Value::new_null().rc())
@@ -270,6 +272,7 @@ impl Interpreter {
                     ..Type::new(name)
                 };
                 t.generate_accessor_methods();
+                mixin_derive::derive_core_mixins(self, &mut t);
                 let t = t.rc();
                 Type::generate_struct_constructor(t.clone());
                 self.types.push(t);

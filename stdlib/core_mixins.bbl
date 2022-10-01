@@ -1,0 +1,25 @@
+// Requirements:
+//   - `equals:`
+mixin Equatable.
+impl Equatable {
+    func notEquals: other {
+        (self equals: other) not
+    }
+}
+
+// Requirements:
+//   - `greaterThan:`
+//   - Use of `Equatable`
+mixin Orderable.
+impl Orderable {
+    func greaterThanOrEquals: other {
+        (self greaterThan: other) or: (self equals: other).
+    }
+
+    func lessThan: other {
+        (self greaterThan: other) not.
+    }
+    func lessThanOrEquals: other {
+        (self lessThan: other) or: (self equals: other).
+    }
+}
