@@ -94,6 +94,20 @@ fn string() -> Type {
                 Ok(Value::new_string(&format!("{}{}", a, b)).rc())
             }).rc(),
 
+            Method::new_internal("length", |_, recv, _| {
+                Ok(Value::new_integer(recv.borrow().to_string()?.len() as i64).rc())
+            }).rc(),
+
+            Method::new_internal("charAt:", |_, recv, params| {
+                let s = recv.borrow().to_string()?;
+                let i = params[0].borrow().to_integer()?;
+                if let Some(c) = s.chars().nth(i as usize) {
+                    Ok(Value::new_string(&c.to_string()).rc())
+                } else {
+                    Ok(Value::new_null().rc())
+                }
+            }).rc(),
+
             // TODO: should be shared
             Method::new_internal("equals:", |i, recv, params| {
                 let a = recv.borrow().to_string()?;
