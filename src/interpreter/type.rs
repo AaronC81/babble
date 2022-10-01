@@ -2,7 +2,7 @@ use std::{rc::Rc, fmt::Debug, cell::RefCell};
 
 use crate::{interpreter::TypeInstance, parser::Node};
 
-use super::{InterpreterError, Value, Method, MethodRef, MethodLocality};
+use super::{InterpreterError, Value, Method, MethodRef, MethodLocality, mixin_derive, Interpreter};
 
 #[derive(Debug)]
 pub struct Type {
@@ -146,10 +146,6 @@ impl Type {
                 }
             }.rc())
         }).rc());
-    }
-
-    pub fn is_impl_target(&self) -> bool {
-        matches!(self.data, TypeData::Empty | TypeData::Fields(_) | TypeData::Variants(_))
     }
 
     pub fn rc(self) -> TypeRef {

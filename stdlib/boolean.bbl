@@ -12,4 +12,30 @@ impl Boolean {
 
     InternalTest case: "ifTrue:else: pos branch" that: (true  ifTrue: [1] else: [2]) equals: 1.
     InternalTest case: "ifTrue:else: neg branch" that: (false ifTrue: [1] else: [2]) equals: 2.
+
+    func or: other {
+        eitherTrue = false.
+        self  ifTrue: [ eitherTrue = true ].
+        other ifTrue: [ eitherTrue = true ].
+        eitherTrue
+    }
+
+    InternalTest case: "or T/T" that: (true  or: true ) equals: true.
+    InternalTest case: "or F/T" that: (false or: true ) equals: true.
+    InternalTest case: "or T/F" that: (true  or: false) equals: true.
+    InternalTest case: "or F/F" that: (false or: false) equals: false.
+
+    func and: other {
+        self
+            ifTrue: [ other
+                ifTrue: [ true ] 
+                else: [ false ]
+            ]
+            else: [ false ]
+    }
+
+    InternalTest case: "and T/T" that: (true  and: true ) equals: true.
+    InternalTest case: "and F/T" that: (false and: true ) equals: false.
+    InternalTest case: "and T/F" that: (true  and: false) equals: false.
+    InternalTest case: "and F/F" that: (false and: false) equals: false.
 }

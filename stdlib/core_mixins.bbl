@@ -17,7 +17,7 @@ impl Orderable {
     }
 
     func lessThan: other {
-        (self greaterThan: other) not.
+        (self greaterThanOrEquals: other) not.
     }
     func lessThanOrEquals: other {
         (self lessThan: other) or: (self equals: other).

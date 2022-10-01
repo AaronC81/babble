@@ -1,31 +1,32 @@
 use crate::{interpreter::{Type, Method, Value}, parser::{SendMessageComponents, SendMessageParameter}};
 
-use super::{InterpreterError, TypeData, Variant, TypeRef, Interpreter};
+use super::{InterpreterError, TypeData, Variant, TypeRef, Interpreter, mixin_derive::TypeCoreMixinDeriveBuilder};
 
 pub fn instantiate(interpreter: &mut Interpreter) {
     interpreter.parse_and_evaluate(include_str!("../../stdlib/core_mixins.bbl")).unwrap();
-    interpreter.types.extend(core_types());
+    let core_types = core_types(interpreter);
+    interpreter.types.extend(core_types);
     interpreter.parse_and_evaluate(include_str!("../../stdlib/boolean.bbl")).unwrap();
     interpreter.parse_and_evaluate(include_str!("../../stdlib/integer.bbl")).unwrap();
 }
 
-fn core_types() -> Vec<TypeRef> {
+fn core_types(interpreter: &mut Interpreter) -> Vec<TypeRef> {
     vec![
-        null().rc(),
-        integer().rc(),
-        string().rc(),
-        console().rc(),
-        block().rc(),
-        boolean().rc(),
-        internal_test().rc(),
+        null(interpreter).rc(),
+        integer(interpreter).rc(),
+        string(interpreter).rc(),
+        console(interpreter).rc(),
+        block(interpreter).rc(),
+        boolean(interpreter).rc(),
+        internal_test(interpreter).rc(),
     ]
 }
 
-fn null() -> Type {
-    Type::new("Null")
+fn null(interpreter: &mut Interpreter) -> Type {
+    Type::new("Null").with_derived_core_mixins(interpreter)
 }
 
-fn integer() -> Type {
+fn integer(interpreter: &mut Interpreter) -> Type {
     Type {
         methods: vec![
             Method::new_internal("add:", |_, recv, params| {
@@ -48,31 +49,11 @@ fn integer() -> Type {
                 Ok(Value::new_integer(a % b).rc())
             }).rc(),
 
-            // TODO: maybe these should be shared?
+            // For Orderable implementation
             Method::new_internal("greaterThan:", |i, recv, params| {
                 let a = recv.borrow().to_integer()?;
                 let b = params[0].borrow().to_integer()?;
                 Ok(Value::new_boolean(i, a > b).rc())
-            }).rc(),
-            Method::new_internal("greaterThanOrEquals:", |i, recv, params| {
-                let a = recv.borrow().to_integer()?;
-                let b = params[0].borrow().to_integer()?;
-                Ok(Value::new_boolean(i, a >= b).rc())
-            }).rc(),
-            Method::new_internal("lessThan:", |i, recv, params| {
-                let a = recv.borrow().to_integer()?;
-                let b = params[0].borrow().to_integer()?;
-                Ok(Value::new_boolean(i, a < b).rc())
-            }).rc(),
-            Method::new_internal("lessThanOrEquals:", |i, recv, params| {
-                let a = recv.borrow().to_integer()?;
-                let b = params[0].borrow().to_integer()?;
-                Ok(Value::new_boolean(i, a <= b).rc())
-            }).rc(),
-            Method::new_internal("equals:", |i, recv, params| {
-                let a = recv.borrow().to_integer()?;
-                let b = params[0].borrow().to_integer()?;
-                Ok(Value::new_boolean(i, a == b).rc())
             }).rc(),
         ],
 
@@ -83,10 +64,10 @@ fn integer() -> Type {
         ],
 
         ..Type::new("Integer")
-    }
+    }.with_derived_core_mixins(interpreter).with_mixin("Orderable", interpreter)
 }
 
-fn string() -> Type {
+fn string(interpreter: &mut Interpreter) -> Type {
     Type {
         methods: vec![
             Method::new_internal("concat:", |_, recv, params| {
@@ -118,10 +99,10 @@ fn string() -> Type {
         ],
 
         ..Type::new("String")
-    }
+    }.with_derived_core_mixins(interpreter)
 }
 
-fn console() -> Type {
+fn console(interpreter: &mut Interpreter) -> Type {
     Type {
         static_methods: vec![
             Method::new_internal("println:", |_, _, p| {
@@ -136,12 +117,12 @@ fn console() -> Type {
         ],
 
         ..Type::new("Console")
-    }
+    }.with_derived_core_mixins(interpreter)
 }
 
 pub const MAXIMUM_BLOCK_ARITY: usize = 64;
 
-fn block() -> Type {
+fn block(interpreter: &mut Interpreter) -> Type {
     let mut methods = vec![];
     
     for i in 0..=MAXIMUM_BLOCK_ARITY {
@@ -189,10 +170,10 @@ fn block() -> Type {
     Type {
         methods,
         ..Type::new("Block")
-    }
+    }.with_derived_core_mixins(interpreter)
 }
 
-fn boolean() -> Type {
+fn boolean(interpreter: &mut Interpreter) -> Type {
     Type {
         data: TypeData::Variants(vec![
             Variant::new("False", vec![]),
@@ -216,10 +197,10 @@ fn boolean() -> Type {
         ],
 
         ..Type::new("Boolean")
-    }
+    }.with_derived_core_mixins(interpreter)
 }
 
-fn internal_test() -> Type {
+fn internal_test(interpreter: &mut Interpreter) -> Type {
     Type {
         static_methods: vec![
             Method::new_internal("case:that:equals:", |i, _, a| {
@@ -240,5 +221,5 @@ fn internal_test() -> Type {
         ],
 
         ..Type::new("InternalTest")
-    }
+    }.with_derived_core_mixins(interpreter)
 }
