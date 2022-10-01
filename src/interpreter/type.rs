@@ -1,8 +1,8 @@
 use std::{rc::Rc, fmt::Debug, cell::RefCell};
 
-use crate::interpreter::TypeInstance;
+use crate::{interpreter::TypeInstance, parser::Node};
 
-use super::{InterpreterError, Value, Method, MethodRef};
+use super::{InterpreterError, Value, Method, MethodRef, MethodLocality};
 
 #[derive(Debug)]
 pub struct Type {
@@ -10,6 +10,7 @@ pub struct Type {
     pub data: TypeData,
     pub methods: Vec<MethodRef>,
     pub static_methods: Vec<MethodRef>,
+    pub used_mixins: Vec<TypeRef>,
 }
 impl PartialEq for Type { fn eq(&self, other: &Self) -> bool { self.id == other.id } }
 impl Eq for Type {}
@@ -21,15 +22,39 @@ impl Type {
             data: TypeData::Empty,
             methods: vec![],
             static_methods: vec![],
+            used_mixins: vec![],
         }
     }
 
-    pub fn resolve_method(&self, name: &str) -> Option<MethodRef> {
-        self.methods.iter().find(|m| m.name == name).cloned()
+    pub fn resolve_method(&self, name: &str, locality: MethodLocality) -> Option<MethodRef> {
+        let pool = match locality {
+            MethodLocality::Instance => &self.methods,
+            MethodLocality::Static => &self.static_methods,
+        };
+
+        // Try to find methods from this type first
+        if let Some(method) = pool.iter().find(|m| m.name == name).cloned() {
+            return Some(method)
+        }
+
+        // If that didn't work, recurse into mixins
+        // (Reverse order - most recently `use`d mixin should be looked at first)
+        for mixin in self.used_mixins.iter().rev() {
+            if let Some(method) = mixin.borrow().resolve_method(name, locality) {
+                return Some(method)
+            }
+        }
+
+        // Nowhere to be found!
+        None
+    }
+
+    pub fn resolve_instance_method(&self, name: &str) -> Option<MethodRef> {
+        self.resolve_method(name, MethodLocality::Instance)
     }
 
     pub fn resolve_static_method(&self, name: &str) -> Option<MethodRef> {
-        self.static_methods.iter().find(|m| m.name == name).cloned()
+        self.resolve_method(name, MethodLocality::Static)
     }
 
     pub fn resolve_variant(&self, name: &str) -> Result<(usize, &Variant), InterpreterError> {
@@ -95,7 +120,7 @@ impl Type {
                 }
             }
 
-            TypeData::Empty => (),
+            TypeData::Empty | TypeData::Mixin => (),
         }
     }
 
@@ -123,6 +148,10 @@ impl Type {
         }).rc());
     }
 
+    pub fn is_impl_target(&self) -> bool {
+        matches!(self.data, TypeData::Empty | TypeData::Fields(_) | TypeData::Variants(_))
+    }
+
     pub fn rc(self) -> TypeRef {
         Rc::new(RefCell::new(self))
     }
@@ -134,7 +163,8 @@ pub type TypeRef = Rc<RefCell<Type>>;
 pub enum TypeData {
     Empty,
     Fields(Vec<String>),
-    Variants(Vec<Variant>)
+    Variants(Vec<Variant>),
+    Mixin,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

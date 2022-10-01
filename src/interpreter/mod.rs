@@ -195,6 +195,35 @@ impl Interpreter {
                 Ok(Value::new_null().rc())
             },
 
+            NodeKind::Use(mixin) => {
+                // The current stack frame should represent an `impl` block, so we know where to
+                // use this mixin
+                let StackFrame { context: StackFrameContext::Impl(t), .. } = self.current_stack_frame() else {
+                    return Err(InterpreterError::UseInvalidContext);
+                };
+                let t = t.clone();
+                
+                // The given target node should resolve to a mixin type
+                let mixin = self.evaluate(mixin)?.borrow().to_type()?;
+                let TypeData::Mixin = mixin.borrow().data else {
+                    return Err(InterpreterError::UseNonMixin(mixin.borrow().id.clone()));
+                };
+
+                // Insert used mixin
+                t.borrow_mut().used_mixins.push(mixin);
+
+                Ok(Value::new_null().rc())
+            },
+
+            NodeKind::MixinDefinition { name } => {
+                self.types.push(Type {
+                    data: TypeData::Mixin,
+                    ..Type::new(name)
+                }.rc());
+
+                Ok(Value::new_null().rc())
+            },
+
             NodeKind::FuncDefinition { parameters, body, is_static } => {
                 // The current stack frame should represent an `impl` block, so we know where to
                 // put this method
@@ -222,10 +251,8 @@ impl Interpreter {
                 }
 
                 let mut t = Type {
-                    id: name.into(),
                     data: TypeData::Variants(variants.clone()),
-                    methods: vec![],
-                    static_methods: vec![],
+                    ..Type::new(name)
                 };
                 t.generate_accessor_methods();
                 self.types.push(t.rc());
@@ -239,10 +266,8 @@ impl Interpreter {
                 }
 
                 let mut t = Type {
-                    id: name.into(),
                     data: TypeData::Fields(fields.clone()),
-                    methods: vec![],
-                    static_methods: vec![],
+                    ..Type::new(name)
                 };
                 t.generate_accessor_methods();
                 let t = t.rc();
@@ -270,7 +295,7 @@ impl Interpreter {
             if let TypeInstance::Type(t) = &receiver_ref.type_instance {
                 t.borrow().resolve_static_method(&method_name)
             } else {
-                receiver_ref.type_instance.get_type(self).borrow().resolve_method(&method_name)
+                receiver_ref.type_instance.get_type(self).borrow().resolve_instance_method(&method_name)
             };
         if let Some(method) = method {
             drop(receiver_ref);

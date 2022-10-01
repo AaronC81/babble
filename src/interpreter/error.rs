@@ -28,6 +28,8 @@ pub enum InterpreterError {
 
     FuncDefinitionInvalidContext,
     DuplicateTypeDefinition(String),
+    UseInvalidContext,
+    UseNonMixin(String),
 
     InternalTestFailed(String),
 }

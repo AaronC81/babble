@@ -87,3 +87,9 @@ impl Debug for MethodImplementation {
         }
     }
 }
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum MethodLocality {
+    Instance,
+    Static,
+}

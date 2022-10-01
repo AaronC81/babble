@@ -57,6 +57,8 @@ pub enum TokenKeyword {
     Enum,
     Struct,
     Static,
+    Mixin,
+    Use,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -269,6 +271,8 @@ impl<'a> Tokenizer<'a> {
             "enum"    => Some(TokenKeyword::Enum),
             "struct"  => Some(TokenKeyword::Struct),
             "static"  => Some(TokenKeyword::Static),
+            "mixin"   => Some(TokenKeyword::Mixin),
+            "use"     => Some(TokenKeyword::Use),
             _         => None,
         }
     }

@@ -89,9 +89,11 @@ impl<'a> Parser<'a> {
         // Some statements are handled differently, indicated by a keyword
         match self.here().kind {
             TokenKind::Keyword(TokenKeyword::Impl) => self.parse_impl_block(context),
+            TokenKind::Keyword(TokenKeyword::Mixin) => self.parse_mixin_definition(context),
             TokenKind::Keyword(TokenKeyword::Func | TokenKeyword::Static) => self.parse_func_definition(context),
             TokenKind::Keyword(TokenKeyword::Enum) => self.parse_enum_definition(context),
             TokenKind::Keyword(TokenKeyword::Struct) => self.parse_struct_definition(context),
+            TokenKind::Keyword(TokenKeyword::Use) => self.parse_use(context),
 
             // Just a normal node!
             _ => {
@@ -313,7 +315,9 @@ impl<'a> Parser<'a> {
                     | TokenKeyword::Func
                     | TokenKeyword::Struct
                     | TokenKeyword::Enum 
-                    | TokenKeyword::Static =>
+                    | TokenKeyword::Static
+                    | TokenKeyword::Mixin
+                    | TokenKeyword::Use =>
                         return Err(ParserError::UnexpectedToken(self.here().clone())),
                 },
                 context,
@@ -327,16 +331,29 @@ impl<'a> Parser<'a> {
 
     fn parse_impl_block(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
         // Definitions should always begin with `impl`
-        let TokenKind::Keyword(TokenKeyword::Impl) = self.here().kind else {
+        let &Token { kind: TokenKind::Keyword(TokenKeyword::Impl), location } = self.here() else {
             self.token_error()?;
         };
         self.advance();
 
-        // Parse one expression, which will evaluate to the type to implement on
+        // Parse one expression, which will evaluate to the type to implement on, and the body
         let impl_target = self.parse_expression(context.clone())?;
+        let body = self.parse_type_definition_body(context.clone())?;
 
+        // Construct and return node
+        Ok(Node {
+            location,
+            context: body.context.clone(),
+            kind: NodeKind::ImplBlock {
+                target: Box::new(impl_target),
+                body: Box::new(body),
+            },
+        })
+    }
+
+    fn parse_type_definition_body(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
         // Expect an opening brace
-        let TokenKind::LeftBrace = self.here().kind else {
+        let &Token { kind: TokenKind::LeftBrace, location } = self.here() else {
             return Err(ParserError::UnexpectedToken(self.here().clone()))
         };
         self.advance();
@@ -352,19 +369,10 @@ impl<'a> Parser<'a> {
             items.push(self.parse_single_statement(inner_context.clone())?);
         }
 
-        // Construct and return node
-        let location = impl_target.location;
         Ok(Node {
             location,
-            context: inner_context.clone(),
-            kind: NodeKind::ImplBlock {
-                target: Box::new(impl_target),
-                body: Box::new(Node {
-                    location,
-                    context: inner_context,
-                    kind: NodeKind::StatementSequence(items),
-                }),
-            },
+            context: inner_context,
+            kind: NodeKind::StatementSequence(items),
         })
     }
 
@@ -499,6 +507,34 @@ impl<'a> Parser<'a> {
         })
     }
 
+    fn parse_mixin_definition(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
+        // Definitions should always begin with `mixin`
+        let &Token { kind: TokenKind::Keyword(TokenKeyword::Mixin), location } = self.here() else {
+            self.token_error()?;
+        };
+        self.advance();
+
+        // Get an identifier for the name of the mixin
+        let TokenKind::Identifier(ref name) = self.here().kind else {
+            self.token_error()?;
+        };
+        let name = name.clone();
+        self.advance();
+
+        // Expect a terminator
+        let TokenKind::Terminator = self.here().kind else {
+            return Err(ParserError::UnexpectedToken(self.here().clone()))
+        };
+        self.advance();
+
+        // Construct and return node
+        Ok(Node {
+            location,
+            context,
+            kind: NodeKind::MixinDefinition { name },
+        })
+    }
+
     fn parse_data_layout(&mut self) -> Result<(String, Vec<String>), ParserError> {
         // Parse name
         let TokenKind::Identifier(name) = &self.here().kind else {
@@ -524,6 +560,30 @@ impl<'a> Parser<'a> {
         }
 
         Ok((name, fields))
+    }
+
+    fn parse_use(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
+        // Definitions should always begin with `use`
+        let &Token { kind: TokenKind::Keyword(TokenKeyword::Use), location } = self.here() else {
+            self.token_error()?;
+        };
+        self.advance();
+
+        // Parse one expression, which should evaluate to the mixin to use
+        let mixin = self.parse_expression(context.clone())?;
+
+        // Must end with a terminator
+        let TokenKind::Terminator = self.here().kind else {
+            self.token_error()?;
+        };
+        self.advance();
+
+        // Construct and return node
+        Ok(Node {
+            location,
+            context,
+            kind: NodeKind::Use(Box::new(mixin)),
+        })        
     }
     
     fn token_error(&self) -> Result<!, ParserError> {

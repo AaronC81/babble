@@ -283,3 +283,49 @@ fn test_impl_block() {
         Value::new_integer(13).rc(),
     )
 }
+
+#[test]
+fn test_mixin() {
+    // Normal usage
+    assert_eq!(
+        evaluate("
+            mixin XWrapper.
+            impl XWrapper {
+                func xSucc {
+                    self x add: 1
+                }
+            }
+
+            struct Foo x.
+            impl Foo {
+                use XWrapper.
+            }
+
+            (Foo x: 4) xSucc
+        ").unwrap(),
+        Value::new_integer(5).rc(),
+    );
+
+    // Precedence - methods from the type come before methods on the mixin
+    assert_eq!(
+        evaluate("
+            mixin M.
+            impl M {
+                func x {
+                    1
+                }
+            }
+
+            enum X { Var. }
+            impl X {
+                func x {
+                    2
+                }
+                use M.
+            }
+
+            X#Var x
+        ").unwrap(),
+        Value::new_integer(2).rc(),
+    );
+}

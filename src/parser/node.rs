@@ -135,6 +135,10 @@ pub enum NodeKind {
         name: String,
         fields: Vec<String>,
     },
+    MixinDefinition {
+        name: String,
+    },
+    Use(Box<Node>),
 }
 
 pub trait NodeWalk {
@@ -178,6 +182,9 @@ impl NodeWalk for Node {
                 }
                 func(body);
             },
+            NodeKind::Use(mixin) => {
+                func(mixin);
+            }
 
             NodeKind::IntegerLiteral(_)
             | NodeKind::StringLiteral(_) 
@@ -187,6 +194,7 @@ impl NodeWalk for Node {
             | NodeKind::SelfLiteral
             | NodeKind::EnumDefinition { name: _, variants: _ }
             | NodeKind::StructDefinition { name: _, fields: _ }
+            | NodeKind::MixinDefinition { name: _ }
             | NodeKind::Identifier(_) => (),
         }
     }
