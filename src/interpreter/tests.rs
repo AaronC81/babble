@@ -189,18 +189,30 @@ fn test_enum_definition() {
         ")),
         Err(InterpreterError::IncorrectVariantParameters),
     );
+
+    // Field assignment
+    assert_eq!(
+        evaluate(&format!("
+            {enum_def}
+            t = Occupation#Teacher salary: 123 yearGroup: 6.
+            t salary = 456.
+            t yearGroup = 1.
+            (t salary) add: (t yearGroup)
+        ")).unwrap(),
+        Value::new_integer(456 + 1).rc(),
+    );
 }
 
 #[test]
 fn test_struct_definition() {
-    let enum_def = "
+    let struct_def = "
         struct Foo a b.
     ";
 
     // Construction and field access
     assert_eq!(
         evaluate(&format!("
-            {enum_def}
+            {struct_def}
             f = Foo a: 123 b: 456
             (f a) add: (f b)
         ")).unwrap(),
@@ -210,24 +222,36 @@ fn test_struct_definition() {
     // Errors on missing/incorrect/extraneous fields
     assert_matches!(
         evaluate(&format!("
-            {enum_def}
+            {struct_def}
             Foo a: 123
         ")),
         Err(InterpreterError::MissingMethod(_, _)),
     );
     assert_matches!(
         evaluate(&format!("
-            {enum_def}
+            {struct_def}
             Foo a: 123 c: 456
         ")),
         Err(InterpreterError::MissingMethod(_, _)),
     );
     assert_matches!(
         evaluate(&format!("
-            {enum_def}
+            {struct_def}
             Foo a: 123 b: 456 c: 789
         ")),
         Err(InterpreterError::MissingMethod(_, _)),
+    );
+
+    // Field assignment
+    assert_eq!(
+        evaluate(&format!("
+            {struct_def}
+            f = Foo a: 123 b: 456.
+            f a = 789.
+            f b = 1.
+            (f a) add: (f b)
+        ")).unwrap(),
+        Value::new_integer(789 + 1).rc(),
     );
 }
 

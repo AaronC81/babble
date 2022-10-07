@@ -90,7 +90,7 @@ impl Interpreter {
             },
 
             NodeKind::Assignment { target, value } => {
-                // Only supported assignment target currently is a plain identifier
+                // Are we assigning to a local?
                 if let box Node { kind: NodeKind::Identifier(id), .. } = target {
                     // Perform a value copy so that we don't actually mirror the value of the 
                     // assignment value, for example:
@@ -105,6 +105,36 @@ impl Interpreter {
                     } else {
                         self.create_local(&id, value.clone());
                     }
+
+                    Ok(value)
+                // Are we assigning to a field?
+                } else if let box Node {
+                    kind: NodeKind::SendMessage {
+                        receiver,
+                        components: SendMessageComponents::Unary(field_name)
+                    },
+                    ..
+                } = target {
+                    // Evaluate the receiver
+                    let mut target_value = self.evaluate(&*receiver)?;
+
+                    // Check if the receiver has a field with the correct name
+                    let TypeInstance::Fields { source_type, variant, field_values } = &mut target_value.borrow_mut().type_instance else {
+                        return Err(InterpreterError::InvalidAssignmentTarget(target.location));
+                    };
+                    let fields = match source_type.borrow().data {
+                        TypeData::Fields(ref f) => f.clone(),
+                        TypeData::Variants(ref v) => v[variant.unwrap()].fields.clone(),
+                        _ => return Err(InterpreterError::InvalidAssignmentTarget(target.location)),
+                    };
+                    let field_index = fields.iter()
+                        .enumerate()
+                        .find(|(_, x)| x == &field_name).map(|(i, _)| i)
+                        .ok_or(InterpreterError::InvalidAssignmentTarget(target.location))?;
+
+                    // Assign to field
+                    let value = self.evaluate(value)?;
+                    field_values[field_index] = value.clone();
 
                     Ok(value)
                 } else {

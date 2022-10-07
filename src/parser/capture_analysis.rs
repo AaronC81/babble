@@ -38,16 +38,12 @@ fn handle_node(node: &mut Node, stack: &mut Vec<AnalysisStackFrame>) {
 
         // Similarly, assignments write to such a variable
         NodeKind::Assignment { target, .. } => {
-            // The only currently-supported assignment target type is an identifier, so grab that
-            // out of the target
-            let NodeKind::Identifier(id) = &target.kind else {
-                unreachable!("non-identifier assignment target")
+            // If we're assigning to a local variable, grab that out of the target
+            if let NodeKind::Identifier(id) = &target.kind {
+                if !try_propagate_capture(id, stack) {
+                    stack.last_mut().unwrap().assignments.push(id.clone());
+                }
             };
-
-            // Here, if we can't capture the variable, create it instead
-            if !try_propagate_capture(id, stack) {
-                stack.last_mut().unwrap().assignments.push(id.clone());
-            }
         }
 
         // Blocks introduce a new frame onto our stack

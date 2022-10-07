@@ -2,7 +2,7 @@ use std::{rc::Rc, fmt::Debug, cell::RefCell};
 
 use crate::{interpreter::TypeInstance, parser::Node};
 
-use super::{InterpreterError, Value, Method, MethodRef, MethodLocality, mixin_derive, Interpreter};
+use super::{InterpreterError, Value, Method, MethodRef, MethodLocality, mixin_derive, Interpreter, ValueRef};
 
 #[derive(Debug)]
 pub struct Type {
@@ -80,8 +80,6 @@ impl Type {
     }
 
     pub fn generate_accessor_methods(&mut self) {
-        // TODO: setters?
-
         match &self.data {
             TypeData::Fields(fields) => {
                 for (i, field) in fields.clone().iter().enumerate() {
