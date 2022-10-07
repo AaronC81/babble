@@ -32,4 +32,6 @@ pub enum InterpreterError {
     UseNonMixin(String),
 
     InternalTestFailed(String),
+
+    ProgramError(String),
 }

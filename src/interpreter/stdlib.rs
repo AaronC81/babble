@@ -19,6 +19,7 @@ fn core_types(interpreter: &mut Interpreter) -> Vec<TypeRef> {
         block(interpreter).rc(),
         boolean(interpreter).rc(),
         internal_test(interpreter).rc(),
+        program(interpreter).rc(),
     ]
 }
 
@@ -222,4 +223,15 @@ fn internal_test(interpreter: &mut Interpreter) -> Type {
 
         ..Type::new("InternalTest")
     }.with_derived_core_mixins(interpreter)
+}
+
+fn program(interpreter: &mut Interpreter) -> Type {
+    Type {
+        static_methods: vec![
+            Method::new_internal("error:", |_, _, a| {
+                Err(InterpreterError::ProgramError(a[0].borrow().to_string()?))
+            }).rc(),
+        ],
+        ..Type::new("Program")
+    }
 }
