@@ -67,5 +67,5 @@ cargo run -- -f <file>
       `Match#Hit returnValue` or `Match#Miss` depending on whether the pattern was actually matched
 - [ ] Better parser errors
 - [ ] Better runtime errors
-- [ ] Complex assignment targets (e.g struct fields)
+- [x] Complex assignment targets (e.g struct fields)
 - [ ] Collection types and literals
