@@ -1,8 +1,8 @@
 use std::{rc::Rc, fmt::Debug, cell::RefCell};
 
-use crate::{interpreter::TypeInstance, parser::Node};
+use crate::{interpreter::TypeInstance};
 
-use super::{InterpreterError, Value, Method, MethodRef, MethodLocality, mixin_derive, Interpreter, ValueRef};
+use super::{InterpreterError, Value, Method, MethodRef, MethodLocality};
 
 #[derive(Debug)]
 pub struct Type {

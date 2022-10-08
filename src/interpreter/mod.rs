@@ -116,7 +116,7 @@ impl Interpreter {
                     ..
                 } = target {
                     // Evaluate the receiver
-                    let mut target_value = self.evaluate(&*receiver)?;
+                    let target_value = self.evaluate(&*receiver)?;
 
                     // Check if the receiver has a field with the correct name
                     let TypeInstance::Fields { source_type, variant, field_values } = &mut target_value.borrow_mut().type_instance else {

@@ -225,7 +225,7 @@ fn internal_test(interpreter: &mut Interpreter) -> Type {
     }.with_derived_core_mixins(interpreter)
 }
 
-fn program(interpreter: &mut Interpreter) -> Type {
+fn program(_: &mut Interpreter) -> Type {
     Type {
         static_methods: vec![
             Method::new_internal("error:", |_, _, a| {
