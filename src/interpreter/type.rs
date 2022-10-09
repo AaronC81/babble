@@ -123,8 +123,6 @@ impl Type {
     }
 
     pub fn generate_struct_constructor(t: Rc<RefCell<Type>>) {
-        // TODO: how to handle empty structs?
-
         let fields = if let TypeData::Fields(ref fields) = t.as_ref().borrow().data {
             fields.clone()
         } else {

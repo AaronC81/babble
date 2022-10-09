@@ -254,6 +254,21 @@ fn test_struct_definition() {
         ")).unwrap(),
         Value::new_integer(789 + 1).rc(),
     );
+
+    // Blank structs
+    assert_eq!(
+        evaluate("
+            struct Blank.
+            impl Blank {
+                static func something {
+                    3
+                }
+            }
+
+            Blank something
+        ").unwrap(),
+        Value::new_integer(3).rc(),
+    );
 }
 
 #[test]
