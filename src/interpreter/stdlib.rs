@@ -1,6 +1,6 @@
 use crate::{interpreter::{Type, Method, Value}, parser::{SendMessageComponents, SendMessageParameter}, source::SourceFile};
 
-use super::{InterpreterErrorKind, TypeData, Variant, TypeRef, Interpreter, mixin_derive::TypeCoreMixinDeriveBuilder};
+use super::{InterpreterErrorKind, TypeData, Variant, TypeRef, Interpreter, TypeInstance, mixin_derive::TypeCoreMixinDeriveBuilder};
 
 pub fn instantiate(interpreter: &mut Interpreter) {
     interpreter.parse_and_evaluate(SourceFile::new(
@@ -29,6 +29,7 @@ fn core_types(interpreter: &mut Interpreter) -> Vec<TypeRef> {
         boolean(interpreter).rc(),
         internal_test(interpreter).rc(),
         program(interpreter).rc(),
+        reflection(interpreter).rc(),
     ]
 }
 
@@ -242,5 +243,32 @@ fn program(_: &mut Interpreter) -> Type {
             }).rc(),
         ],
         ..Type::new("Program")
+    }
+}
+
+fn reflection(_: &mut Interpreter) -> Type {
+    Type {
+        static_methods: vec![
+            Method::new_internal("type:", |i, _, a| {
+                Ok(Value::new_type(a[0].borrow().type_instance.get_type(i)).rc())
+            }).rc(),
+
+            Method::new_internal("variant:", |i, _, a| {
+                let val = a[0].borrow();
+                let val_type = val.type_instance.get_type(i);
+                let TypeData::Variants(variants) = &val_type.borrow().data else {
+                    return Ok(Value::new_null().rc())
+                };
+                let TypeInstance::Fields { variant, .. } = &val.type_instance else {
+                    return Ok(Value::new_null().rc())
+                };
+                if let Some(v) = variant {
+                    Ok(Value::new_string(&variants[*v].name).rc())
+                } else {
+                    Ok(Value::new_null().rc())
+                }
+            }).rc(),
+        ],
+        ..Type::new("Reflection")
     }
 }
