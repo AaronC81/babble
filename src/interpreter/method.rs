@@ -2,7 +2,7 @@ use std::{rc::Rc, fmt::Debug};
 
 use crate::parser::Node;
 
-use super::{Interpreter, ValueRef, InterpreterResult, InterpreterError, StackFrame, StackFrameContext};
+use super::{Interpreter, ValueRef, InterpreterResult, InterpreterErrorKind, StackFrame, StackFrameContext};
 
 #[derive(Debug)]
 pub struct Method {
@@ -36,13 +36,13 @@ impl Method {
         self.name.matches(':').count()
     }
 
-    pub fn call(&self, interpreter: &mut Interpreter, receiver: ValueRef, parameters: Vec<ValueRef>) -> InterpreterResult {        
+    pub fn call(self: Rc<Self>, interpreter: &mut Interpreter, receiver: ValueRef, parameters: Vec<ValueRef>) -> InterpreterResult {        
         if self.arity() != parameters.len() {
-            return Err(InterpreterError::IncorrectArity {
+            return Err(InterpreterErrorKind::IncorrectArity {
                 name: self.name.clone(),
                 expected: self.arity(),
                 got: parameters.len(),
-            })
+            }.into())
         }
 
         match &self.implementation {
@@ -54,17 +54,20 @@ impl Method {
                 // Create a new stack frame with the relevant parameters
                 interpreter.stack.push(StackFrame {
                     locals: internal_names.iter().cloned().zip(parameters).collect(),
-                    self_value: receiver,
-                    context: StackFrameContext::Block, // TODO: not actually a block
+                    self_value: receiver.clone(),
+                    context: StackFrameContext::Method {
+                        method: self.clone(),
+                        receiver,
+                    },
                 });
 
                 // Run the body
-                let result = interpreter.evaluate(&body);
+                let result = interpreter.evaluate(&body)?;
 
                 // Pop the frame
                 interpreter.stack.pop();
 
-                result
+                Ok(result)
             },
         }
 

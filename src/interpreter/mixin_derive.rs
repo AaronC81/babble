@@ -1,3 +1,5 @@
+use crate::source::SourceFile;
+
 use super::{Type, Method, Value, Interpreter};
 
 pub fn derive_core_mixins(interpreter: &mut Interpreter, target: &mut Type) {
@@ -37,55 +39,55 @@ impl TypeCoreMixinDeriveBuilder for Type {
 #[test]
 fn test_derive_equatable_struct() {
     let mut i = Interpreter::new();
-    i.parse_and_evaluate("struct A x. struct B x.").unwrap();
+    i.parse_and_evaluate(SourceFile::new_temp("struct A x. struct B x.").rc()).unwrap();
 
     assert_eq!(
-        i.parse_and_evaluate("(A x: 3) equals: (A x: 3)"),
-        Ok(Value::new_boolean(&i, true).rc()),
+        i.parse_and_evaluate(SourceFile::new_temp("(A x: 3) equals: (A x: 3)").rc()).unwrap(),
+        Value::new_boolean(&i, true).rc(),
     );
     assert_eq!(
-        i.parse_and_evaluate("(A x: 3) equals: (A x: 4)"),
-        Ok(Value::new_boolean(&i, false).rc()),
+        i.parse_and_evaluate(SourceFile::new_temp("(A x: 3) equals: (A x: 4)").rc()).unwrap(),
+        Value::new_boolean(&i, false).rc(),
     );
     assert_eq!(
-        i.parse_and_evaluate("(A x: 3) notEquals: (A x: 4)"),
-        Ok(Value::new_boolean(&i, true).rc()),
+        i.parse_and_evaluate(SourceFile::new_temp("(A x: 3) notEquals: (A x: 4)").rc()).unwrap(),
+        Value::new_boolean(&i, true).rc(),
     );
 
     assert_eq!(
-        i.parse_and_evaluate("(A x: 3) equals: (B x: 3)"),
-        Ok(Value::new_boolean(&i, false).rc()),
+        i.parse_and_evaluate(SourceFile::new_temp("(A x: 3) equals: (B x: 3)").rc()).unwrap(),
+        Value::new_boolean(&i, false).rc(),
     );
 }
 
 #[test]
 fn test_derive_equatable_enum() {
     let mut i = Interpreter::new();
-    i.parse_and_evaluate("enum A { X x. Y. } enum B { X x. Y. }").unwrap();
+    i.parse_and_evaluate(SourceFile::new_temp("enum A { X x. Y. } enum B { X x. Y. }").rc()).unwrap();
 
     assert_eq!(
-        i.parse_and_evaluate("(A#Y) equals: (A#Y)"),
-        Ok(Value::new_boolean(&i, true).rc()),
+        i.parse_and_evaluate(SourceFile::new_temp("(A#Y) equals: (A#Y)").rc()).unwrap(),
+        Value::new_boolean(&i, true).rc(),
     );
     assert_eq!(
-        i.parse_and_evaluate("(A#X x: 3) equals: (A#X x: 3)"),
-        Ok(Value::new_boolean(&i, true).rc()),
+        i.parse_and_evaluate(SourceFile::new_temp("(A#X x: 3) equals: (A#X x: 3)").rc()).unwrap(),
+        Value::new_boolean(&i, true).rc(),
     );
     assert_eq!(
-        i.parse_and_evaluate("(A#X x: 3) equals: (A#X x: 4)"),
-        Ok(Value::new_boolean(&i, false).rc()),
+        i.parse_and_evaluate(SourceFile::new_temp("(A#X x: 3) equals: (A#X x: 4)").rc()).unwrap(),
+        Value::new_boolean(&i, false).rc(),
     );
     assert_eq!(
-        i.parse_and_evaluate("(A#X x: 3) notEquals: (A#X x: 4)"),
-        Ok(Value::new_boolean(&i, true).rc()),
+        i.parse_and_evaluate(SourceFile::new_temp("(A#X x: 3) notEquals: (A#X x: 4)").rc()).unwrap(),
+        Value::new_boolean(&i, true).rc(),
     );
 
     assert_eq!(
-        i.parse_and_evaluate("(A#Y) equals: (B#Y)"),
-        Ok(Value::new_boolean(&i, false).rc()),
+        i.parse_and_evaluate(SourceFile::new_temp("(A#Y) equals: (B#Y)").rc()).unwrap(),
+        Value::new_boolean(&i, false).rc(),
     );
     assert_eq!(
-        i.parse_and_evaluate("(A#X x: 3) equals: (B#X x: 3)"),
-        Ok(Value::new_boolean(&i, false).rc()),
+        i.parse_and_evaluate(SourceFile::new_temp("(A#X x: 3) equals: (B#X x: 3)").rc()).unwrap(),
+        Value::new_boolean(&i, false).rc(),
     );
 }

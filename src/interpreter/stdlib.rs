@@ -1,13 +1,22 @@
-use crate::{interpreter::{Type, Method, Value}, parser::{SendMessageComponents, SendMessageParameter}};
+use crate::{interpreter::{Type, Method, Value}, parser::{SendMessageComponents, SendMessageParameter}, source::SourceFile};
 
-use super::{InterpreterError, TypeData, Variant, TypeRef, Interpreter, mixin_derive::TypeCoreMixinDeriveBuilder};
+use super::{InterpreterErrorKind, TypeData, Variant, TypeRef, Interpreter, mixin_derive::TypeCoreMixinDeriveBuilder};
 
 pub fn instantiate(interpreter: &mut Interpreter) {
-    interpreter.parse_and_evaluate(include_str!("../../stdlib/core_mixins.bbl")).unwrap();
+    interpreter.parse_and_evaluate(SourceFile::new(
+        "<stdlib>/core_mixins.bbl",
+        include_str!("../../stdlib/core_mixins.bbl")
+    ).rc()).unwrap();
     let core_types = core_types(interpreter);
     interpreter.types.extend(core_types);
-    interpreter.parse_and_evaluate(include_str!("../../stdlib/boolean.bbl")).unwrap();
-    interpreter.parse_and_evaluate(include_str!("../../stdlib/integer.bbl")).unwrap();
+    interpreter.parse_and_evaluate(SourceFile::new(
+        "<stdlib>/boolean.bbl",
+        include_str!("../../stdlib/boolean.bbl")
+    ).rc()).unwrap();
+    interpreter.parse_and_evaluate(SourceFile::new(
+        "<stdlib>/integer.bbl",
+        include_str!("../../stdlib/integer.bbl")
+    ).rc()).unwrap();
 }
 
 fn core_types(interpreter: &mut Interpreter) -> Vec<TypeRef> {
@@ -138,10 +147,10 @@ fn block(interpreter: &mut Interpreter) -> Type {
                 let r = r.borrow();
                 let b = r.to_block()?;
                 if b.arity() != a.len() {
-                    Err(InterpreterError::IncorrectBlockArity {
+                    Err(InterpreterErrorKind::IncorrectBlockArity {
                         expected: b.arity(),
                         got: a.len(),
-                    })
+                    }.into())
                 } else {
                     b.call(i, a)
                 }
@@ -215,7 +224,7 @@ fn internal_test(interpreter: &mut Interpreter) -> Type {
                 if equal.borrow().to_boolean()? {
                     Ok(Value::new_null().rc())
                 } else {
-                    Err(InterpreterError::InternalTestFailed(a[0].borrow().to_string()?))
+                    Err(InterpreterErrorKind::InternalTestFailed(a[0].borrow().to_string()?).into())
                 }
 
             }).rc(),
@@ -229,7 +238,7 @@ fn program(_: &mut Interpreter) -> Type {
     Type {
         static_methods: vec![
             Method::new_internal("error:", |_, _, a| {
-                Err(InterpreterError::ProgramError(a[0].borrow().to_string()?))
+                Err(InterpreterErrorKind::ProgramError(a[0].borrow().to_string()?).into())
             }).rc(),
         ],
         ..Type::new("Program")

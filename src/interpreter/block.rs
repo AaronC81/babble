@@ -1,6 +1,6 @@
 use crate::parser::Node;
 
-use super::{ValueRef, InterpreterResult, Interpreter, InterpreterError, StackFrame, StackFrameContext};
+use super::{ValueRef, InterpreterResult, Interpreter, InterpreterErrorKind, StackFrame, StackFrameContext};
 
 // TODO: more sensible Eq implementation, maybe use some unique ID
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -17,11 +17,11 @@ impl Block {
 
     pub fn call(&self, interpreter: &mut Interpreter, arguments: Vec<ValueRef>) -> InterpreterResult {
         if self.arity() != arguments.len() {
-            return Err(InterpreterError::IncorrectArity {
+            return Err(InterpreterErrorKind::IncorrectArity {
                 name: "anonymous block".into(),
                 expected: arguments.len(),
                 got: self.arity(),
-            })
+            }.into())
         }
 
         // Create a new stack frame with the relevant locals - that is...
@@ -39,11 +39,11 @@ impl Block {
         });
 
         // Run the body
-        let result = interpreter.evaluate(&self.body);
+        let result = interpreter.evaluate(&self.body)?;
 
         // Pop the frame
         interpreter.stack.pop();
 
-        result
+        Ok(result)
     }
 }

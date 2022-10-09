@@ -1,4 +1,6 @@
-use crate::{parser::{NodeKind, Node, SendMessageComponents, Parser}, tokenizer::Tokenizer};
+use std::{fmt::Display, rc::Rc};
+
+use crate::{parser::{NodeKind, Node, SendMessageComponents, Parser}, tokenizer::Tokenizer, source::SourceFile};
 
 mod error;
 
@@ -22,17 +24,37 @@ pub mod mixin_derive;
 #[cfg(test)]
 mod tests;
 
+#[derive(Debug, Clone)]
 pub struct StackFrame {
-    context: StackFrameContext,
+    pub context: StackFrameContext,
     self_value: ValueRef,
     locals: Vec<(String, ValueRef)>,
 }
 
+#[derive(Debug, Clone)]
 pub enum StackFrameContext {
     Root,
     Impl(TypeRef),
-    Method(MethodRef),
+    Method {
+        method: MethodRef,
+        receiver: ValueRef,
+    },
     Block,
+}
+
+impl Display for StackFrameContext {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            StackFrameContext::Root =>
+                f.write_str("root"),
+            StackFrameContext::Impl(t) =>
+                write!(f, "impl block on `{}`", (&**t).borrow().id),
+            StackFrameContext::Method { method, receiver } =>
+                write!(f, "method `{}` on `{}`", method.name, (&**receiver).borrow().to_language_string() ),
+            StackFrameContext::Block =>
+                f.write_str("block"),
+        }
+    }
 }
 
 pub struct Interpreter {
@@ -58,17 +80,21 @@ impl Interpreter {
         result
     }
 
-    pub fn parse_and_evaluate(&mut self, code: &str) -> InterpreterResult {
-        let tokens = Tokenizer::tokenize(code).expect("tokenization failed");
-        let node = Parser::parse_and_analyse(&tokens[..]).expect("parsing failed");
+    pub fn parse_and_evaluate(&mut self, source_file: Rc<SourceFile>) -> InterpreterResult {
+        let tokens = Tokenizer::tokenize(source_file.clone()).expect("tokenization failed");
+        let node = Parser::parse_and_analyse(source_file.clone(), &tokens[..]).expect("parsing failed");
         self.evaluate(&node)
-    } 
+    }
 
     pub fn evaluate(&mut self, node: &Node) -> InterpreterResult {
+        self.evaluate_inner(node).map_err(|e| e.add_details(node, self))
+    }
+
+    fn evaluate_inner(&mut self, node: &Node) -> InterpreterResult {
         match &node.kind {
             NodeKind::IntegerLiteral(i) => (*i).try_into()
                 .map(|i| Value::new_integer(i).rc())
-                .map_err(|_| InterpreterError::IntegerOverflow(node.location)),
+                .map_err(|_| InterpreterErrorKind::IntegerOverflow.into()),
 
             NodeKind::StringLiteral(s) => Ok(Value::new_string(s).rc()),
 
@@ -120,17 +146,17 @@ impl Interpreter {
 
                     // Check if the receiver has a field with the correct name
                     let TypeInstance::Fields { source_type, variant, field_values } = &mut target_value.borrow_mut().type_instance else {
-                        return Err(InterpreterError::InvalidAssignmentTarget(target.location));
+                        return Err(InterpreterErrorKind::InvalidAssignmentTarget.into());
                     };
                     let fields = match source_type.borrow().data {
                         TypeData::Fields(ref f) => f.clone(),
                         TypeData::Variants(ref v) => v[variant.unwrap()].fields.clone(),
-                        _ => return Err(InterpreterError::InvalidAssignmentTarget(target.location)),
+                        _ => return Err(InterpreterErrorKind::InvalidAssignmentTarget.into()),
                     };
                     let field_index = fields.iter()
                         .enumerate()
                         .find(|(_, x)| x == &field_name).map(|(i, _)| i)
-                        .ok_or(InterpreterError::InvalidAssignmentTarget(target.location))?;
+                        .ok_or(InterpreterErrorKind::InvalidAssignmentTarget.into())?;
 
                     // Assign to field
                     let value = self.evaluate(value)?;
@@ -138,7 +164,7 @@ impl Interpreter {
 
                     Ok(value)
                 } else {
-                    Err(InterpreterError::InvalidAssignmentTarget(target.location))
+                    Err(InterpreterErrorKind::InvalidAssignmentTarget.into())
                 }
             },
 
@@ -148,7 +174,7 @@ impl Interpreter {
                 } else if let Some(t) = self.resolve_type(id) {
                     Ok(Value::new_type(t).rc())
                 } else {
-                    Err(InterpreterError::MissingName(id.into(), node.location))
+                    Err(InterpreterErrorKind::MissingName(id.into()).into())
                 }
             },
 
@@ -158,7 +184,7 @@ impl Interpreter {
                     .iter()
                     .map(|name|
                         self.find_local(name)
-                            .ok_or_else(|| InterpreterError::MissingCaptureName(name.clone()))
+                            .ok_or_else(|| InterpreterErrorKind::MissingCaptureName(name.clone()).into())
                             .map(|v| (name.clone(), v))
                     )
                     .collect::<Result<Vec<_>, _>>()?;
@@ -190,7 +216,7 @@ impl Interpreter {
                     SendMessageComponents::Parameterised(params) => params.iter().map(|(n, _)| n.clone()).collect()
                 };
                 if given_field_names != variant.fields {
-                    return Err(InterpreterError::IncorrectVariantParameters)
+                    return Err(InterpreterErrorKind::IncorrectVariantParameters.into())
                 }
 
                 // Evaluate and value-copy fields
@@ -230,14 +256,14 @@ impl Interpreter {
                 // The current stack frame should represent an `impl` block, so we know where to
                 // use this mixin
                 let StackFrame { context: StackFrameContext::Impl(t), .. } = self.current_stack_frame() else {
-                    return Err(InterpreterError::UseInvalidContext);
+                    return Err(InterpreterErrorKind::UseInvalidContext.into());
                 };
                 let t = t.clone();
                 
                 // The given target node should resolve to a mixin type
                 let mixin = self.evaluate(mixin)?.borrow().to_type()?;
                 let TypeData::Mixin = mixin.borrow().data else {
-                    return Err(InterpreterError::UseNonMixin(mixin.borrow().id.clone()));
+                    return Err(InterpreterErrorKind::UseNonMixin(mixin.borrow().id.clone()).into());
                 };
 
                 // Insert used mixin
@@ -259,7 +285,7 @@ impl Interpreter {
                 // The current stack frame should represent an `impl` block, so we know where to
                 // put this method
                 let StackFrame { context: StackFrameContext::Impl(t), .. } = self.current_stack_frame() else {
-                    return Err(InterpreterError::FuncDefinitionInvalidContext);
+                    return Err(InterpreterErrorKind::FuncDefinitionInvalidContext.into());
                 };
                 let body = body.clone();
 
@@ -278,7 +304,7 @@ impl Interpreter {
 
             NodeKind::EnumDefinition { name, variants } => {
                 if self.resolve_type(name).is_some() {
-                    return Err(InterpreterError::DuplicateTypeDefinition(name.into()));
+                    return Err(InterpreterErrorKind::DuplicateTypeDefinition(name.into()).into());
                 }
 
                 let mut t = Type {
@@ -294,7 +320,7 @@ impl Interpreter {
 
             NodeKind::StructDefinition { name, fields } => {
                 if self.resolve_type(name).is_some() {
-                    return Err(InterpreterError::DuplicateTypeDefinition(name.into()));
+                    return Err(InterpreterErrorKind::DuplicateTypeDefinition(name.into()).into());
                 }
 
                 let mut t = Type {
@@ -336,18 +362,11 @@ impl Interpreter {
             // Evaluate and value-copy parameters
             let parameters = components.evaluate_parameters(self)?;
 
-            // Create a new stack frame, call the method within it, and pop the frame
-            self.stack.push(StackFrame {
-                context: StackFrameContext::Method(method.clone()),
-                self_value: self.current_stack_frame().self_value.clone(),
-                locals: vec![],
-            });
-            let result = method.call(self, receiver, parameters);
-            self.stack.pop();
-
-            result
+            // Call the method
+            // (This creates a frame if necessary)
+            method.call(self, receiver, parameters)
         } else {
-            Err(InterpreterError::MissingMethod(receiver.clone(), method_name))
+            Err(InterpreterErrorKind::MissingMethod(receiver.clone(), method_name).into())
         }
     }
 

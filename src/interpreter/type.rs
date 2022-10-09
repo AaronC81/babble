@@ -2,7 +2,7 @@ use std::{rc::Rc, fmt::Debug, cell::RefCell};
 
 use crate::{interpreter::TypeInstance};
 
-use super::{InterpreterError, Value, Method, MethodRef, MethodLocality};
+use super::{InterpreterErrorKind, Value, Method, MethodRef, MethodLocality, InterpreterError};
 
 #[derive(Debug)]
 pub struct Type {
@@ -59,13 +59,13 @@ impl Type {
 
     pub fn resolve_variant(&self, name: &str) -> Result<(usize, &Variant), InterpreterError> {
         let TypeData::Variants(variants) = &self.data else {
-            return Err(InterpreterError::VariantAccessOnNonEnum);
+            return Err(InterpreterErrorKind::VariantAccessOnNonEnum.into());
         };
 
         if let Some(variant) = variants.iter().enumerate().find(|(_, v)| v.name == name) {
             Ok(variant)
         } else {
-            Err(InterpreterError::MissingVariant(name.into()))
+            Err(InterpreterErrorKind::MissingVariant(self.id.clone(), name.into()).into())
         }
     }
 
@@ -85,7 +85,7 @@ impl Type {
                 for (i, field) in fields.clone().iter().enumerate() {
                     self.add_method(Method::new_internal(field, move |_, r, _| {
                         let TypeInstance::Fields { field_values, .. } = &(*r).borrow().type_instance else {
-                            return Err(InterpreterError::IncorrectType);
+                            return Err(InterpreterErrorKind::IncorrectType.into());
                         };
 
                         Ok(field_values[i].clone())
@@ -105,14 +105,14 @@ impl Type {
                     let variants_copy = variants.clone();
                     self.add_method(Method::new_internal(&field.clone(), move |_, r, _| {
                         let TypeInstance::Fields { variant, field_values, .. } = &(*r).borrow().type_instance else {
-                            return Err(InterpreterError::IncorrectType);
+                            return Err(InterpreterErrorKind::IncorrectType.into());
                         };
                         let variant = &variants_copy[variant.unwrap()];
 
                         if let Some(index) = variant.field_index(&field) {
                             Ok(field_values[index].clone())
                         } else {
-                            Err(InterpreterError::MissingMethod(r.clone(), field.clone()))
+                            Err(InterpreterErrorKind::MissingMethod(r.clone(), field.clone()).into())
                         }
                     }).rc());
                 }

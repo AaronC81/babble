@@ -1,4 +1,6 @@
 mod node;
+use std::rc::Rc;
+
 pub use node::*;
 
 mod lexical_context;
@@ -9,7 +11,7 @@ pub mod capture_analysis;
 #[cfg(test)]
 mod tests;
 
-use crate::{tokenizer::{Token, TokenKind, TokenKeyword}, source::Location, interpreter::Variant};
+use crate::{tokenizer::{Token, TokenKind, TokenKeyword}, source::{Location, SourceFile}, interpreter::Variant};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ParserError {
@@ -19,13 +21,15 @@ pub enum ParserError {
 
 #[derive(Debug, Clone)]
 pub struct Parser<'a> {
+    source_file: Rc<SourceFile>,
     tokens: &'a [Token],
     current_index: usize,
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(tokens: &'a [Token]) -> Self {
+    pub fn new(source_file: Rc<SourceFile>, tokens: &'a [Token]) -> Self {
         let mut s = Self {
+            source_file,
             tokens,
             current_index: 0,
         };
@@ -53,9 +57,9 @@ impl<'a> Parser<'a> {
         || self.tokens.get(self.current_index).map(|t| t.kind.clone()) == Some(TokenKind::EndOfFile)
     }
 
-    pub fn parse(tokens: &'a [Token]) -> Result<Node, ParserError> {
+    pub fn parse(source_file: Rc<SourceFile>, tokens: &'a [Token]) -> Result<Node, ParserError> {
         let context = LexicalContext::new_top_level().rc();
-        let mut parser = Self::new(tokens);
+        let mut parser = Self::new(source_file, tokens);
         let result = parser.parse_top_level(context)?;
 
         if !parser.all_tokens_consumed() {
@@ -65,8 +69,8 @@ impl<'a> Parser<'a> {
         Ok(result)
     }
 
-    pub fn parse_and_analyse(tokens: &'a [Token]) -> Result<Node, ParserError> {
-        let mut parsed = Self::parse(tokens)?;
+    pub fn parse_and_analyse(source_file: Rc<SourceFile>, tokens: &'a [Token]) -> Result<Node, ParserError> {
+        let mut parsed = Self::parse(source_file, tokens)?;
         capture_analysis::populate_captures(&mut parsed);
         Ok(parsed)
     }
@@ -80,7 +84,9 @@ impl<'a> Parser<'a> {
         // TODO: calculate location properly
         Ok(Node {
             kind: NodeKind::StatementSequence(seq),
-            location: self.tokens.first().map(|t| t.location).unwrap_or_else(|| Location::new_single(0)),
+            location: self.tokens.first()
+                .map(|t| t.location.clone())
+                .unwrap_or_else(|| Location::new_single(self.source_file.clone(), 0)),
             context,
         })
     }
@@ -133,7 +139,7 @@ impl<'a> Parser<'a> {
     fn parse_parameterised_send(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
         let mut result = self.parse_unary_send(context.clone())?;
         if let Some(components) = self.try_parse_only_send_parameters(context.clone())? {
-            let location = result.location;
+            let location = result.location.clone();
             result = Node {
                 kind: NodeKind::SendMessage {
                     receiver: Box::new(result),
@@ -172,7 +178,7 @@ impl<'a> Parser<'a> {
                     receiver: Box::new(result),
                     components: SendMessageComponents::Unary(id.clone()),
                 },
-                location: *location,
+                location: location.clone(),
                 context: context.clone(),
             };
             self.advance();
@@ -185,7 +191,7 @@ impl<'a> Parser<'a> {
         if let Token { kind: TokenKind::IntegerLiteral(value), location } = self.here() {
             let node = Node {
                 kind: NodeKind::IntegerLiteral(*value),
-                location: *location,
+                location: location.clone(),
                 context,
             };
             self.advance();
@@ -193,7 +199,7 @@ impl<'a> Parser<'a> {
         } else if let Token { kind: TokenKind::StringLiteral(value), location } = self.here() {
             let node = Node {
                 kind: NodeKind::StringLiteral(value.clone()),
-                location: *location,
+                location: location.clone(),
                 context,
             };
             self.advance();
@@ -201,7 +207,7 @@ impl<'a> Parser<'a> {
         } else if let Token { kind: TokenKind::Identifier(id), location } = self.here() {
             let mut node = Node {
                 kind: NodeKind::Identifier(id.clone()),
-                location: *location,
+                location: location.clone(),
                 context: context.clone(),
             };
             self.advance();
@@ -289,10 +295,10 @@ impl<'a> Parser<'a> {
             let new_context = LexicalContext::new_with_parent(context).rc();
             Ok(Node {
                 // TODO
-                location: body[0].location,
+                location: body[0].location.clone(),
                 kind: NodeKind::Block {
                     body: Box::new(Node {
-                        location: body[0].location,
+                        location: body[0].location.clone(),
                         kind: NodeKind::StatementSequence(body),
                         context: new_context.clone(),
                     }),
@@ -303,7 +309,7 @@ impl<'a> Parser<'a> {
             })
         } else if let Token { kind: TokenKind::Keyword(kw), location } = self.here() {
             let node = Node {
-                location: *location,
+                location: location.clone(),
                 kind: match kw {
                     TokenKeyword::True => NodeKind::TrueLiteral,
                     TokenKeyword::False => NodeKind::FalseLiteral,
@@ -331,9 +337,10 @@ impl<'a> Parser<'a> {
 
     fn parse_impl_block(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
         // Definitions should always begin with `impl`
-        let &Token { kind: TokenKind::Keyword(TokenKeyword::Impl), location } = self.here() else {
+        let &Token { kind: TokenKind::Keyword(TokenKeyword::Impl), ref location } = self.here() else {
             self.token_error()?;
         };
+        let location = location.clone();
         self.advance();
 
         // Parse one expression, which will evaluate to the type to implement on, and the body
@@ -353,9 +360,10 @@ impl<'a> Parser<'a> {
 
     fn parse_type_definition_body(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
         // Expect an opening brace
-        let &Token { kind: TokenKind::LeftBrace, location } = self.here() else {
+        let &Token { kind: TokenKind::LeftBrace, ref location } = self.here() else {
             return Err(ParserError::UnexpectedToken(self.here().clone()))
         };
+        let location = location.clone();
         self.advance();
 
         // Collect a list of items within the impl, until we hit a closing brace
@@ -387,9 +395,10 @@ impl<'a> Parser<'a> {
             };
 
         // After this, definitions should always begin with `func`
-        let &Token { location, kind: TokenKind::Keyword(TokenKeyword::Func) } = self.here() else {
+        let &Token { ref location, kind: TokenKind::Keyword(TokenKeyword::Func) } = self.here() else {
             self.token_error()?;
         };
+        let location = location.clone();
         self.advance();
 
         // Parse message parameters, but ensure that the values are identifiers and transform them
@@ -436,12 +445,12 @@ impl<'a> Parser<'a> {
 
         // Construct definition
         Ok(Node {
-            location,
+            location: location.clone(),
             context: inner_context.clone(),
             kind: NodeKind::FuncDefinition {
                 parameters,
                 body: Box::new(Node {
-                    location,
+                    location: location.clone(),
                     context: inner_context,
                     kind: NodeKind::StatementSequence(items),
                 }),
@@ -452,9 +461,10 @@ impl<'a> Parser<'a> {
 
     fn parse_enum_definition(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
         // Definitions should always begin with `enum`
-        let &Token { location, kind: TokenKind::Keyword(TokenKeyword::Enum) } = self.here() else {
+        let &Token { ref location, kind: TokenKind::Keyword(TokenKeyword::Enum) } = self.here() else {
             self.token_error()?;
         };
+        let location = location.clone();
         self.advance();
 
         // Parse the name and opening brace
@@ -489,9 +499,10 @@ impl<'a> Parser<'a> {
 
     fn parse_struct_definition(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
         // Definitions should always begin with `struct`
-        let &Token { location, kind: TokenKind::Keyword(TokenKeyword::Struct) } = self.here() else {
+        let &Token { ref location, kind: TokenKind::Keyword(TokenKeyword::Struct) } = self.here() else {
             self.token_error()?;
         };
+        let location = location.clone();
         self.advance();
         
         // Parse its contents
@@ -509,9 +520,10 @@ impl<'a> Parser<'a> {
 
     fn parse_mixin_definition(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
         // Definitions should always begin with `mixin`
-        let &Token { kind: TokenKind::Keyword(TokenKeyword::Mixin), location } = self.here() else {
+        let &Token { kind: TokenKind::Keyword(TokenKeyword::Mixin), ref location } = self.here() else {
             self.token_error()?;
         };
+        let location = location.clone();
         self.advance();
 
         // Get an identifier for the name of the mixin
@@ -564,9 +576,10 @@ impl<'a> Parser<'a> {
 
     fn parse_use(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
         // Definitions should always begin with `use`
-        let &Token { kind: TokenKind::Keyword(TokenKeyword::Use), location } = self.here() else {
+        let &Token { kind: TokenKind::Keyword(TokenKeyword::Use), ref location } = self.here() else {
             self.token_error()?;
         };
+        let location = location.clone();
         self.advance();
 
         // Parse one expression, which should evaluate to the mixin to use

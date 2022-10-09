@@ -1,11 +1,12 @@
 use std::assert_matches::assert_matches;
 
-use crate::{parser::Parser, tokenizer::Tokenizer, interpreter::{Interpreter, InterpreterError, Value}};
+use crate::{parser::Parser, tokenizer::Tokenizer, interpreter::{Interpreter, InterpreterErrorKind, Value}, source::SourceFile};
 
-use super::{ValueRef};
+use super::{ValueRef, InterpreterError};
 
 fn evaluate(input: &str) -> Result<ValueRef, InterpreterError> {
-    let node = Parser::parse_and_analyse(&Tokenizer::tokenize(input).unwrap()[..]).unwrap();
+    let src = SourceFile::new_temp(input).rc();
+    let node = Parser::parse_and_analyse(src.clone(), &Tokenizer::tokenize(src.clone()).unwrap()[..]).unwrap();
     let mut interpreter = Interpreter::new();
     interpreter.evaluate(&node)
 }
@@ -24,7 +25,7 @@ fn test_integer_overflow_on_token_conversion() {
         //   One more than the maximum i64
         //        vvvvvvvvvvvvvvvvvvv
         evaluate("9223372036854775808."),
-        Err(InterpreterError::IntegerOverflow(..)),
+        Err(InterpreterError { kind: InterpreterErrorKind::IntegerOverflow, .. }),
     ));
 }
 
@@ -173,21 +174,21 @@ fn test_enum_definition() {
             {enum_def}
             Occupation#Teacher salary: 123
         ")),
-        Err(InterpreterError::IncorrectVariantParameters),
+        Err(InterpreterError { kind: InterpreterErrorKind::IncorrectVariantParameters, .. }),
     );
     assert_matches!(
         evaluate(&format!("
             {enum_def}
             Occupation#Teacher salary: 123 department: \"Health\"
         ")),
-        Err(InterpreterError::IncorrectVariantParameters),
+        Err(InterpreterError { kind: InterpreterErrorKind::IncorrectVariantParameters, .. }),
     );
     assert_matches!(
         evaluate(&format!("
             {enum_def}
             Occupation#Teacher salary: 123 yearGroup: 6 department: \"Health\"
         ")),
-        Err(InterpreterError::IncorrectVariantParameters),
+        Err(InterpreterError { kind: InterpreterErrorKind::IncorrectVariantParameters, .. }),
     );
 
     // Field assignment
@@ -225,21 +226,21 @@ fn test_struct_definition() {
             {struct_def}
             Foo a: 123
         ")),
-        Err(InterpreterError::MissingMethod(_, _)),
+        Err(InterpreterError { kind: InterpreterErrorKind::MissingMethod(_, _), .. }),
     );
     assert_matches!(
         evaluate(&format!("
             {struct_def}
             Foo a: 123 c: 456
         ")),
-        Err(InterpreterError::MissingMethod(_, _)),
+        Err(InterpreterError { kind: InterpreterErrorKind::MissingMethod(_, _), .. }),
     );
     assert_matches!(
         evaluate(&format!("
             {struct_def}
             Foo a: 123 b: 456 c: 789
         ")),
-        Err(InterpreterError::MissingMethod(_, _)),
+        Err(InterpreterError { kind: InterpreterErrorKind::MissingMethod(_, _), .. }),
     );
 
     // Field assignment

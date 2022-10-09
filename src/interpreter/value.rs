@@ -1,6 +1,6 @@
 use std::{rc::Rc, cell::RefCell};
 
-use super::{Interpreter, InterpreterError, Block, TypeData, Variant, TypeRef};
+use super::{Interpreter, InterpreterErrorKind, Block, TypeData, Variant, TypeRef, InterpreterError};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Value {
@@ -52,7 +52,7 @@ impl Value {
         if let TypeInstance::PrimitiveInteger(i) = self.type_instance {
             Ok(i)
         } else {
-            Err(InterpreterError::IncorrectType)
+            Err(InterpreterErrorKind::IncorrectType.into())
         }
     }
 
@@ -60,7 +60,7 @@ impl Value {
         if let TypeInstance::PrimitiveString(string) = &self.type_instance {
             Ok(string.clone())
         } else {
-            Err(InterpreterError::IncorrectType)
+            Err(InterpreterErrorKind::IncorrectType.into())
         }
     }
 
@@ -74,7 +74,7 @@ impl Value {
                 _ => unreachable!()
             }
         } else {
-            Err(InterpreterError::IncorrectType)
+            Err(InterpreterErrorKind::IncorrectType.into())
         }
     }
 
@@ -82,7 +82,7 @@ impl Value {
         if let TypeInstance::Block(b) = &self.type_instance {
             Ok(b)
         } else {
-            Err(InterpreterError::IncorrectType)
+            Err(InterpreterErrorKind::IncorrectType.into())
         }
     }
 
@@ -90,7 +90,7 @@ impl Value {
         if let TypeInstance::Type(t) = &self.type_instance {
             Ok(t.clone())
         } else {
-            Err(InterpreterError::IncorrectType)
+            Err(InterpreterErrorKind::IncorrectType.into())
         }
     }
 

@@ -1,4 +1,4 @@
-use crate::{source::Location, interpreter::{ValueRef, InterpreterError, Interpreter, Variant}};
+use crate::{source::Location, interpreter::{ValueRef, Interpreter, Variant, InterpreterError}};
 
 use super::LexicalContextRef;
 

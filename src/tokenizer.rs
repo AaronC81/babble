@@ -1,4 +1,6 @@
-use crate::source::Location;
+use std::rc::Rc;
+
+use crate::source::{Location, SourceFile};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Token {
@@ -76,6 +78,7 @@ pub enum TokenizerState {
 
 #[derive(Debug, Clone)]
 pub struct Tokenizer<'a> {
+    source_file: Rc<SourceFile>,
     chars: &'a [char],
     current_index: usize,
     state: TokenizerState,
@@ -83,8 +86,9 @@ pub struct Tokenizer<'a> {
 }
 
 impl<'a> Tokenizer<'a> {
-    fn new(chars: &'a [char]) -> Self {
+    fn new(source_file: Rc<SourceFile>, chars: &'a [char]) -> Self {
         Self {
+            source_file,
             chars,
             current_index: 0,
             state: TokenizerState::Idle,
@@ -97,7 +101,7 @@ impl<'a> Tokenizer<'a> {
     }
 
     fn here_loc(&self) -> Location {
-        Location::new_single(self.current_index)
+        Location::new_single(self.source_file.clone(), self.current_index)
     }
 
     fn peek(&self) -> char {
@@ -211,7 +215,7 @@ impl<'a> Tokenizer<'a> {
                                     .and_then(|x| x.checked_add(here.to_string().parse().unwrap()));
 
                                 *value = maybe_value.ok_or(
-                                    TokenizerError::IntegerLiteralOverflow(token.location)
+                                    TokenizerError::IntegerLiteralOverflow(token.location.clone())
                                 )?;
 
                                 token.location.length += 1;
@@ -277,9 +281,9 @@ impl<'a> Tokenizer<'a> {
         }
     }
 
-    pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenizerError> {
-        let chars = input.chars().collect::<Vec<_>>();
-        let mut tokenizer = Tokenizer::new(&chars[..]);
+    pub fn tokenize(source_file: Rc<SourceFile>) -> Result<Vec<Token>, TokenizerError> {
+        let chars = source_file.contents.chars().collect::<Vec<_>>();
+        let mut tokenizer = Tokenizer::new(source_file.clone(), &chars[..]);
 
         while tokenizer.current_index < chars.len() {
             tokenizer.step()?;
@@ -301,18 +305,4 @@ impl<'a> Tokenizer<'a> {
 
         Ok(tokenizer.tokens)
     }
-}
-
-#[test]
-fn test_simple_tokenize() {
-    assert_eq!(
-        Tokenizer::tokenize("32 add: 24."),
-        Ok(vec![
-            Token::new(TokenKind::IntegerLiteral(32), Location::new(0, 2)),
-            Token::new(TokenKind::LabelIdentifier("add".into()), Location::new(3, 4)),
-            Token::new(TokenKind::IntegerLiteral(24), Location::new(8, 2)),
-            Token::new(TokenKind::Terminator, Location::new_single(10)),
-            Token::new(TokenKind::EndOfFile, Location::new_single(11)),
-        ])
-    )
 }
