@@ -1,6 +1,7 @@
 #![feature(box_patterns)]
 #![feature(never_type)]
 #![feature(assert_matches)]
+#![feature(result_flattening)]
 
 use std::{env::args, fs::read_to_string};
 
@@ -24,7 +25,7 @@ fn main() {
         input_contents = arg.clone();
     }
     let src = SourceFile::new(&input_name, &input_contents).rc();
-    if let Err(e) = Interpreter::new().map(|mut i| i.parse_and_evaluate(src)) {
+    if let Err(e) = Interpreter::new().map(|mut i| i.parse_and_evaluate(src)).flatten() {
         println!("Fatal error:\n  {}\n", e.kind);
         if let Some(details) = e.details {
             if let Some(location) = details.location {
