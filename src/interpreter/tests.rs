@@ -7,7 +7,7 @@ use super::{ValueRef, InterpreterError};
 fn evaluate(input: &str) -> Result<ValueRef, InterpreterError> {
     let src = SourceFile::new_temp(input).rc();
     let node = Parser::parse_and_analyse(src.clone(), &Tokenizer::tokenize(src.clone()).unwrap()[..]).unwrap();
-    let mut interpreter = Interpreter::new();
+    let mut interpreter = Interpreter::new()?;
     interpreter.evaluate(&node)
 }
 

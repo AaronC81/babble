@@ -24,7 +24,7 @@ fn main() {
         input_contents = arg.clone();
     }
     let src = SourceFile::new(&input_name, &input_contents).rc();
-    if let Err(e) = Interpreter::new().parse_and_evaluate(src) {
+    if let Err(e) = Interpreter::new().map(|mut i| i.parse_and_evaluate(src)) {
         println!("Fatal error:\n  {}\n", e.kind);
         if let Some(details) = e.details {
             if let Some(location) = details.location {

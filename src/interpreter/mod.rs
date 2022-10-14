@@ -65,7 +65,7 @@ pub struct Interpreter {
 pub type InterpreterResult = Result<ValueRef, InterpreterError>;
 
 impl Interpreter {
-    pub fn new() -> Self {
+    pub fn new() -> Result<Self, InterpreterError> {
         let mut result = Self {
             types: vec![],
             stack: vec![
@@ -76,8 +76,8 @@ impl Interpreter {
                 }
             ],
         };
-        stdlib::instantiate(&mut result);
-        result
+        stdlib::instantiate(&mut result)?;
+        Ok(result)
     }
 
     pub fn parse_and_evaluate(&mut self, source_file: Rc<SourceFile>) -> InterpreterResult {

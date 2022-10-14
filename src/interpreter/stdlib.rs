@@ -1,22 +1,24 @@
 use crate::{interpreter::{Type, Method, Value}, parser::{SendMessageComponents, SendMessageParameter}, source::SourceFile};
 
-use super::{InterpreterErrorKind, TypeData, Variant, TypeRef, Interpreter, TypeInstance, mixin_derive::TypeCoreMixinDeriveBuilder};
+use super::{InterpreterErrorKind, TypeData, Variant, TypeRef, Interpreter, TypeInstance, mixin_derive::TypeCoreMixinDeriveBuilder, InterpreterError};
 
-pub fn instantiate(interpreter: &mut Interpreter) {
+pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError> {
     interpreter.parse_and_evaluate(SourceFile::new(
         "<stdlib>/core_mixins.bbl",
         include_str!("../../stdlib/core_mixins.bbl")
-    ).rc()).unwrap();
+    ).rc())?;
     let core_types = core_types(interpreter);
     interpreter.types.extend(core_types);
     interpreter.parse_and_evaluate(SourceFile::new(
         "<stdlib>/boolean.bbl",
         include_str!("../../stdlib/boolean.bbl")
-    ).rc()).unwrap();
+    ).rc())?;
     interpreter.parse_and_evaluate(SourceFile::new(
         "<stdlib>/integer.bbl",
         include_str!("../../stdlib/integer.bbl")
-    ).rc()).unwrap();
+    ).rc())?;
+
+    Ok(())
 }
 
 fn core_types(interpreter: &mut Interpreter) -> Vec<TypeRef> {
