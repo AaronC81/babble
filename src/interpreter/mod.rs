@@ -1,4 +1,4 @@
-use std::{fmt::Display, rc::Rc};
+use std::{fmt::Display, rc::Rc, cell::RefCell};
 
 use crate::{parser::{NodeKind, Node, SendMessageComponents, Parser}, tokenizer::Tokenizer, source::SourceFile};
 
@@ -24,11 +24,25 @@ pub mod mixin_derive;
 #[cfg(test)]
 mod tests;
 
+#[derive(Debug)]
+pub struct LocalVariable {
+    name: String,
+    value: ValueRef,
+}
+
+impl LocalVariable {
+    pub fn rc(self) -> LocalVariableRef {
+        Rc::new(RefCell::new(self))
+    }
+}
+
+pub type LocalVariableRef = Rc<RefCell<LocalVariable>>;
+
 #[derive(Debug, Clone)]
 pub struct StackFrame {
     pub context: StackFrameContext,
     self_value: ValueRef,
-    locals: Vec<(String, ValueRef)>,
+    locals: Vec<LocalVariableRef>,
 }
 
 #[derive(Debug, Clone)]
@@ -124,10 +138,10 @@ impl Interpreter {
                     //   b = 5.
                     //   a = 10. // b should remain 5
                     let value = self.evaluate(value)?;
-                    let value = value.borrow().value_copy().rc();
+                    let value = Value::soft_copy(value);
 
                     if let Some(target) = self.find_local(&id) {
-                        *target.borrow_mut() = value.borrow().clone();
+                        target.borrow_mut().value = value.clone();
                     } else {
                         self.create_local(&id, value.clone());
                     }
@@ -169,8 +183,8 @@ impl Interpreter {
             },
 
             NodeKind::Identifier(id) => {
-                if let Some(value) = self.find_local(id) {
-                    Ok(value)
+                if let Some(var) = self.find_local(id) {
+                    Ok(var.borrow().value.clone())
                 } else if let Some(t) = self.resolve_type(id) {
                     Ok(Value::new_type(t).rc())
                 } else {
@@ -185,7 +199,6 @@ impl Interpreter {
                     .map(|name|
                         self.find_local(name)
                             .ok_or_else(|| InterpreterErrorKind::MissingCaptureName(name.clone()).into())
-                            .map(|v| (name.clone(), v))
                     )
                     .collect::<Result<Vec<_>, _>>()?;
 
@@ -378,14 +391,18 @@ impl Interpreter {
         self.stack.last_mut().unwrap()
     }
 
-    pub fn find_local(&self, name: &str) -> Option<ValueRef> {
+    pub fn find_local(&self, name: &str) -> Option<LocalVariableRef> {
         self.current_stack_frame()
             .locals
             .iter()
-            .find_map(|(n, v)| if n == name { Some(v.clone()) } else { None })
+            .find(|l| l.borrow().name == name)
+            .cloned()
     }
 
     pub fn create_local(&mut self, name: &str, value: ValueRef) {
-        self.current_stack_frame_mut().locals.push((name.into(), value))
+        self.current_stack_frame_mut().locals.push(LocalVariable {
+            name: name.into(),
+            value,
+        }.rc())
     }
 }

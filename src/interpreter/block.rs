@@ -1,14 +1,21 @@
 use crate::parser::Node;
 
-use super::{ValueRef, InterpreterResult, Interpreter, InterpreterErrorKind, StackFrame, StackFrameContext};
+use super::{ValueRef, InterpreterResult, Interpreter, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariableRef, LocalVariable};
 
-// TODO: more sensible Eq implementation, maybe use some unique ID
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Block {
     pub body: Node,
     pub parameters: Vec<String>,
-    pub captures: Vec<(String, ValueRef)>,
+    pub captures: Vec<LocalVariableRef>,
 }
+
+// TODO: more sensible Eq implementation, maybe use some unique ID
+impl PartialEq for Block {
+    fn eq(&self, other: &Self) -> bool {
+        false
+    }
+}
+impl Eq for Block {}
 
 impl Block {
     pub fn arity(&self) -> usize {
@@ -31,6 +38,7 @@ impl Block {
                 self.parameters.iter()
                     .cloned()
                     .zip(arguments)
+                    .map(|(name, value)| LocalVariable { name, value }.rc())
                     // ...and captures.
                     .chain(self.captures.iter().cloned())
                     .collect(),

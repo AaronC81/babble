@@ -141,8 +141,16 @@ impl Value {
         }
     }
 
-    pub fn value_copy(&self) -> Value {
-        self.clone()
+    pub fn soft_copy(value: Rc<RefCell<Self>>) -> Rc<RefCell<Value>> {
+        match value.borrow().type_instance {
+            TypeInstance::Fields { .. }
+            | TypeInstance::Type(_)
+            | TypeInstance::Block(_) => value.clone(),
+
+            TypeInstance::PrimitiveInteger(i) => Value::new_integer(i).rc(),
+            TypeInstance::PrimitiveString(ref s) => Value::new_string(s).rc(),
+            TypeInstance::PrimitiveNull => Value::new_null().rc(),
+        }
     }
 }
 

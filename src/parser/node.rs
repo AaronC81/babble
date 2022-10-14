@@ -1,4 +1,4 @@
-use crate::{source::Location, interpreter::{ValueRef, Interpreter, Variant, InterpreterError}};
+use crate::{source::Location, interpreter::{ValueRef, Interpreter, Variant, InterpreterError, Value}};
 
 use super::LexicalContextRef;
 
@@ -76,7 +76,7 @@ impl SendMessageComponents {
                     })
                     .collect::<Result<Vec<_>, _>>()?
                     .iter()
-                    .map(|v| v.borrow().value_copy().rc())
+                    .map(|v| Value::soft_copy(v.clone()))
                     .collect::<Vec<_>>()
         })
     }

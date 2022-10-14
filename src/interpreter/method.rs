@@ -2,7 +2,7 @@ use std::{rc::Rc, fmt::Debug};
 
 use crate::parser::Node;
 
-use super::{Interpreter, ValueRef, InterpreterResult, InterpreterErrorKind, StackFrame, StackFrameContext};
+use super::{Interpreter, ValueRef, InterpreterResult, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariable};
 
 #[derive(Debug)]
 pub struct Method {
@@ -53,7 +53,11 @@ impl Method {
             MethodImplementation::Parsed { body, internal_names } => {
                 // Create a new stack frame with the relevant parameters
                 interpreter.stack.push(StackFrame {
-                    locals: internal_names.iter().cloned().zip(parameters).collect(),
+                    locals: internal_names.iter()
+                        .cloned()
+                        .zip(parameters)
+                        .map(|(name, value)| LocalVariable { name, value }.rc())
+                        .collect(),
                     self_value: receiver.clone(),
                     context: StackFrameContext::Method {
                         method: self.clone(),
