@@ -205,7 +205,8 @@ impl Interpreter {
                 Ok(Value::new_block(Block {
                     body: *body.clone(),
                     parameters: parameters.clone(),
-                    captures: capture_values,
+                    captured_locals: capture_values,
+                    captured_self: self.current_stack_frame().self_value.clone(),
                 }).rc())
             },
 

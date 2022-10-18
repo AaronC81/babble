@@ -6,7 +6,8 @@ use super::{ValueRef, InterpreterResult, Interpreter, InterpreterErrorKind, Stac
 pub struct Block {
     pub body: Node,
     pub parameters: Vec<String>,
-    pub captures: Vec<LocalVariableRef>,
+    pub captured_locals: Vec<LocalVariableRef>,
+    pub captured_self: ValueRef,
 }
 
 // TODO: more sensible Eq implementation, maybe use some unique ID
@@ -40,9 +41,9 @@ impl Block {
                     .zip(arguments)
                     .map(|(name, value)| LocalVariable { name, value }.rc())
                     // ...and captures.
-                    .chain(self.captures.iter().cloned())
+                    .chain(self.captured_locals.iter().cloned())
                     .collect(),
-            self_value: interpreter.current_stack_frame().self_value.clone(),
+            self_value: self.captured_self.clone(),
             context: StackFrameContext::Block,
         });
 
