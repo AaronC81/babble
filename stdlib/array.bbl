@@ -1,0 +1,18 @@
+impl Array {
+    func forEach: fn {
+        i = 0.
+        [ i lessThan: self length ] whileTrue: [
+            fn call: (self get: i).
+            i = i add: 1.
+        ].
+        null
+    }
+
+    func reversed {
+        result = Array new.
+        self forEach: [ |x| result insert: x at: 0 ].
+        result
+    }
+
+    // TODO: can't write tests easily until we have literals
+}

@@ -18,6 +18,10 @@ impl Value {
         Self { type_instance: TypeInstance::PrimitiveString(value.into()) }
     }
 
+    pub fn new_array(values: &[ValueRef]) -> Self {
+        Self { type_instance: TypeInstance::PrimitiveArray(values.iter().cloned().collect()) }
+    }
+
     pub fn new_type(t: TypeRef) -> Self {
         Self { type_instance: TypeInstance::Type(t) }
     }
@@ -59,6 +63,14 @@ impl Value {
     pub fn to_string(&self) -> Result<String, InterpreterError> {
         if let TypeInstance::PrimitiveString(string) = &self.type_instance {
             Ok(string.clone())
+        } else {
+            Err(InterpreterErrorKind::IncorrectType.into())
+        }
+    }
+
+    pub fn to_array(&mut self) -> Result<&mut Vec<ValueRef>, InterpreterError> {
+        if let TypeInstance::PrimitiveArray(ref mut array) = &mut self.type_instance {
+            Ok(array)
         } else {
             Err(InterpreterErrorKind::IncorrectType.into())
         }
@@ -137,6 +149,7 @@ impl Value {
             TypeInstance::Type(t) => t.borrow().id.clone(),
             TypeInstance::PrimitiveInteger(i) => i.to_string(),
             TypeInstance::PrimitiveString(s) => s.clone(),
+            TypeInstance::PrimitiveArray(a) => "(array)".into(), // TODO: decide how to lay these out
             TypeInstance::PrimitiveNull => "null".into(),
         }
     }
@@ -149,6 +162,7 @@ impl Value {
 
             TypeInstance::PrimitiveInteger(i) => Value::new_integer(i).rc(),
             TypeInstance::PrimitiveString(ref s) => Value::new_string(s).rc(),
+            TypeInstance::PrimitiveArray(ref a) => Value::new_array(a).rc(),
             TypeInstance::PrimitiveNull => Value::new_null().rc(),
         }
     }
@@ -165,6 +179,7 @@ pub enum TypeInstance {
     Block(Block),
     PrimitiveInteger(i64),
     PrimitiveString(String),
+    PrimitiveArray(Vec<ValueRef>),
     PrimitiveNull,
 }
 
@@ -176,6 +191,7 @@ impl TypeInstance {
             TypeInstance::Block(_) => interpreter.resolve_stdlib_type("Block"), 
             TypeInstance::PrimitiveInteger(_) => interpreter.resolve_stdlib_type("Integer"),
             TypeInstance::PrimitiveString(_) => interpreter.resolve_stdlib_type("String"),
+            TypeInstance::PrimitiveArray(_) => interpreter.resolve_stdlib_type("Array"),
             TypeInstance::PrimitiveNull => interpreter.resolve_stdlib_type("Null"),
         }
     }

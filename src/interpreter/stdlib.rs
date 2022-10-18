@@ -17,6 +17,10 @@ pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError
         "<stdlib>/integer.bbl",
         include_str!("../../stdlib/integer.bbl")
     ).rc())?;
+    interpreter.parse_and_evaluate(SourceFile::new(
+        "<stdlib>/array.bbl",
+        include_str!("../../stdlib/array.bbl")
+    ).rc())?;
 
     Ok(())
 }
@@ -26,6 +30,7 @@ fn core_types(interpreter: &mut Interpreter) -> Vec<TypeRef> {
         null(interpreter).rc(),
         integer(interpreter).rc(),
         string(interpreter).rc(),
+        array(interpreter).rc(),
         console(interpreter).rc(),
         block(interpreter).rc(),
         boolean(interpreter).rc(),
@@ -112,6 +117,42 @@ fn string(interpreter: &mut Interpreter) -> Type {
         ],
 
         ..Type::new("String")
+    }.with_derived_core_mixins(interpreter)
+}
+
+fn array(interpreter: &mut Interpreter) -> Type {
+    Type {
+        methods: vec![
+            Method::new_internal("get:", |_, recv, params| {
+                let i = params[0].borrow().to_integer()?;
+                Ok(recv.borrow_mut().to_array()?[i as usize].clone())
+            }).rc(),
+
+            Method::new_internal("append:", |_, recv, params| {
+                let item = params[0].clone();
+                recv.borrow_mut().to_array()?.push(item);
+                Ok(Value::new_null().rc())
+            }).rc(),
+
+            Method::new_internal("insert:at:", |_, recv, params| {
+                let item = params[0].clone();
+                let index = params[1].borrow().to_integer()?;
+                recv.borrow_mut().to_array()?.insert(index as usize, item);
+                Ok(Value::new_null().rc())
+            }).rc(),
+
+            Method::new_internal("length", |_, recv, _| {
+                Ok(Value::new_integer(recv.borrow_mut().to_array()?.len() as i64).rc())
+            }).rc(),
+        ],
+
+        static_methods: vec![
+            Method::new_internal("new", |_, _, _| {
+                Ok(Value::new_array(&[]).rc())
+            }).rc(),
+        ],
+
+        ..Type::new("Array")
     }.with_derived_core_mixins(interpreter)
 }
 
