@@ -161,7 +161,11 @@ impl Interpreter {
                     },
                     ..
                 } = target {
-                    // Evaluate the receiver
+                    // Evaluate value and then receiver
+                    // This order is important for code like `self value = self value add: 1`, which
+                    // would otherwise hold a borrow of `self` for too long and cause the
+                    // `Rc<RefCell<Value>>` to panic
+                    let value = self.evaluate(value)?;
                     let target_value = self.evaluate(&*receiver)?;
 
                     // Check if the receiver has a field with the correct name
@@ -177,9 +181,7 @@ impl Interpreter {
                         .enumerate()
                         .find(|(_, x)| x == &field_name).map(|(i, _)| i)
                         .ok_or(InterpreterErrorKind::InvalidAssignmentTarget.into())?;
-
-                    // Assign to field
-                    let value = self.evaluate(value)?;
+                    
                     field_values[field_index] = value.clone();
 
                     Ok(value)
