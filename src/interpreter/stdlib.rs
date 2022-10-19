@@ -1,9 +1,17 @@
+//! Definitions for Babble's standard library.
+//! 
+//! This Rust module only includes types and methods which must be defined intrinsically, for one
+//! reason or another. Where possible, Babble's standard library is defined _in Babble_, with these
+//! files imported and executed by [`instantiate`].
+
 use std::process::exit;
 
 use crate::{interpreter::{Type, Method, Value}, parser::{SendMessageComponents, SendMessageParameter}, source::SourceFile};
 
 use super::{InterpreterErrorKind, TypeData, Variant, TypeRef, Interpreter, TypeInstance, mixin_derive::TypeCoreMixinDeriveBuilder, InterpreterError};
 
+/// Instantiates a set of core standard library types, by building them from intrinsics, executing
+/// bundled Babble code to define them, or a combination of the two.
 pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError> {
     interpreter.parse_and_evaluate(SourceFile::new(
         "<stdlib>/core_mixins.bbl",

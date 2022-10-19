@@ -1,7 +1,10 @@
+//! Implements the syntax tree built by the parser.
+
 use crate::{source::Location, interpreter::{ValueRef, Interpreter, Variant, InterpreterError, Value}};
 
 use super::LexicalContextRef;
 
+/// A node in the parse tree.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Node {
     pub kind: NodeKind,
@@ -9,13 +12,20 @@ pub struct Node {
     pub context: LexicalContextRef,
 }
 
+/// A sequence of arguments (or lack thereof) describing which method is called, and with what
+/// parameters.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SendMessageComponents {
+    /// The method call has no arguments.
     Unary(String),
+
+    /// The method call has a sequence of named parameters and arguments.
     Parameterised(Vec<(String, SendMessageParameter)>),
 }
 
 impl SendMessageComponents {
+    /// Converts this set of components to the method which they will call. For example, a call like
+    /// `x set: 2 value: "Hello"` calls the method `set:hello:`.
     pub fn to_method_name(&self) -> String {
         match self {
             SendMessageComponents::Unary(s) => s.clone(),
@@ -29,6 +39,7 @@ impl SendMessageComponents {
         }
     }
 
+    /// Returns references to each child node.
     #[allow(unused)]
     pub fn child_nodes(&self) -> Vec<&Node> {
         match self {
@@ -42,6 +53,7 @@ impl SendMessageComponents {
         }
     }
 
+    /// Returns mutable references to each child node.
     pub fn child_nodes_mut(&mut self) -> Vec<&mut Node> {
         match self {
             SendMessageComponents::Parameterised(params) => {
@@ -54,6 +66,10 @@ impl SendMessageComponents {
         }
     }
 
+    /// Assuming that this set of components is used as part of a method definition, gets the
+    /// internal names used within the definition body.
+    /// 
+    /// **Panics** if any parameters are not [`SendMessageParameter::Defined`].
     pub fn defined_internal_names(&self) -> Vec<String> {
         match self {
             SendMessageComponents::Unary(_) => vec![],
@@ -64,6 +80,8 @@ impl SendMessageComponents {
         }
     }
 
+    /// Evaluates the parameters in this set of components, or returns them if they are already
+    /// evaluated.
     pub fn evaluate_parameters(&self, interpreter: &mut Interpreter) -> Result<Vec<ValueRef>, InterpreterError> {
         Ok(match self {
             SendMessageComponents::Unary(_) => vec![],
@@ -82,13 +100,22 @@ impl SendMessageComponents {
     }
 }
 
+/// A parameter passed to a message send.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SendMessageParameter {
+    /// The parameter has been parsed, but not yet evaluated.
     Parsed(Box<Node>),
+
+    /// The parameter has already been evaluated.
+    /// 
+    /// Exists to allow intrinsic methods to call methods easily.
     Evaluated(ValueRef),
+
+    /// The parameter is part of a method definition, not a call.
     Defined(String),
 }
 
+/// The kind of this node.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NodeKind {
     IntegerLiteral(u64),
@@ -143,6 +170,7 @@ pub enum NodeKind {
 }
 
 pub trait NodeWalk {
+    /// Calls `func` on this node and all child nodes.
     fn walk_children(&mut self, func: &mut impl FnMut(&mut Node));
 }
 

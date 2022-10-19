@@ -1,3 +1,7 @@
+//! **Currently unused**, as a hold-over from how local variables used to be implemented.
+//! 
+//! Kept around in case it might be needed later!
+
 use std::{rc::Rc, cell::RefCell};
 
 #[derive(Debug, Clone, PartialEq, Eq)]

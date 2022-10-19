@@ -1,3 +1,8 @@
+//! Implements the main Babble interpreter.
+//! 
+//! Babble does not use bytecode - instead, nodes are executed using their parse tree and some 
+//! surrounding context. This is pretty slow, but works well enough!
+
 use std::{fmt::Display, rc::Rc, cell::RefCell};
 
 use crate::{parser::{NodeKind, Node, SendMessageComponents, Parser}, tokenizer::Tokenizer, source::SourceFile};
@@ -24,6 +29,7 @@ pub mod mixin_derive;
 #[cfg(test)]
 mod tests;
 
+/// A named local variable with a value.
 #[derive(Debug)]
 pub struct LocalVariable {
     name: String,
@@ -31,6 +37,7 @@ pub struct LocalVariable {
 }
 
 impl LocalVariable {
+    /// Transforms this into a [LocalVariableRef].
     pub fn rc(self) -> LocalVariableRef {
         Rc::new(RefCell::new(self))
     }
@@ -38,6 +45,8 @@ impl LocalVariable {
 
 pub type LocalVariableRef = Rc<RefCell<LocalVariable>>;
 
+/// A stack frame, which provides a value for `self`, and may hold the definition (or captures, in
+/// the case of a block) of a set of local variables.
 #[derive(Debug, Clone)]
 pub struct StackFrame {
     pub context: StackFrameContext,
@@ -45,14 +54,22 @@ pub struct StackFrame {
     locals: Vec<LocalVariableRef>,
 }
 
+/// A description of the context which created a stack frame.
 #[derive(Debug, Clone)]
 pub enum StackFrameContext {
+    /// The stack frame is the root of the main source file. 
     Root,
+
+    /// The stack frame is an `impl` block on a type.
     Impl(TypeRef),
+
+    /// The stack frame is a call to a [`Method`].
     Method {
         method: MethodRef,
         receiver: ValueRef,
     },
+
+    /// The stack frame is a call to a [`Block`].
     Block,
 }
 
@@ -71,6 +88,8 @@ impl Display for StackFrameContext {
     }
 }
 
+/// The main interpreter context, which holds the current execution stack, and a repository of all
+/// defined types.
 pub struct Interpreter {
     types: Vec<TypeRef>,
     stack: Vec<StackFrame>,
@@ -79,6 +98,8 @@ pub struct Interpreter {
 pub type InterpreterResult = Result<ValueRef, InterpreterError>;
 
 impl Interpreter {
+    /// Creates a new interpreter, with a stack containing only a root frame, and an instance of
+    /// the standard library in its type repository.
     pub fn new() -> Result<Self, InterpreterError> {
         let mut result = Self {
             types: vec![],
@@ -94,16 +115,20 @@ impl Interpreter {
         Ok(result)
     }
 
+    /// Tokenize and parse a source file, **panicking** if this fails, and then evaluate it within
+    /// this interpreter.
     pub fn parse_and_evaluate(&mut self, source_file: Rc<SourceFile>) -> InterpreterResult {
         let tokens = Tokenizer::tokenize(source_file.clone()).expect("tokenization failed");
         let node = Parser::parse_and_analyse(source_file.clone(), &tokens[..]).expect("parsing failed");
         self.evaluate(&node)
     }
 
+    /// Evaluate a single node within this interpreter.
     pub fn evaluate(&mut self, node: &Node) -> InterpreterResult {
         self.evaluate_inner(node).map_err(|e| e.add_details(node, self))
     }
 
+    /// The inner implementation of `evaluate`.
     fn evaluate_inner(&mut self, node: &Node) -> InterpreterResult {
         match &node.kind {
             NodeKind::IntegerLiteral(i) => (*i).try_into()
@@ -360,14 +385,23 @@ impl Interpreter {
         }
     }
 
+    /// Retrieve a type by name, or return `None` if it does not exist.
     pub fn resolve_type(&self, id: &str) -> Option<TypeRef> {
         self.types.iter().find(|t| t.borrow().id == id).cloned()
     }
 
+    /// A stricter strategy for resolving types, which instead panics if the type does not exist.
+    /// 
+    /// Should only be used for types which are guaranteed to exist under normal circumstances, such
+    /// as `Boolean`.
     pub fn resolve_stdlib_type(&self, id: &str) -> TypeRef {
         self.resolve_type(id).unwrap_or_else(|| panic!("internal error: stdlib type {} missing", id))
     }
 
+    /// Sends a message (i.e. calls a method), given a receiver and a set of parameters with values
+    /// (named the _components_ of the message).
+    /// 
+    /// Returns an error if the method does not exist on the receiver.
     pub fn send_message(&mut self, receiver: ValueRef, components: &SendMessageComponents) -> InterpreterResult {
         let receiver_ref = receiver.borrow();
 
@@ -392,14 +426,22 @@ impl Interpreter {
         }
     }
 
+    /// Returns a reference to the current top-most stack frame.
     pub fn current_stack_frame(&self) -> &StackFrame {
         self.stack.last().unwrap()
     }
 
+    /// Returns a mutable reference to the current top-most stack frame.
     pub fn current_stack_frame_mut(&mut self) -> &mut StackFrame {
         self.stack.last_mut().unwrap()
     }
 
+    /// Finds a local variable within the current stack frame, and returns a reference to it if it
+    /// exists, or `None` if it doesn't.
+    /// 
+    /// Babble's only additional form of scoping within methods are blocks, which will capture
+    /// locals when necessary and bring them into the current frame's locals. As such, this does not
+    /// recurse into deeper frames than the current top-most one.
     pub fn find_local(&self, name: &str) -> Option<LocalVariableRef> {
         self.current_stack_frame()
             .locals
@@ -408,6 +450,7 @@ impl Interpreter {
             .cloned()
     }
 
+    /// Creates a new local variable on the current top-most stack frame.
     pub fn create_local(&mut self, name: &str, value: ValueRef) {
         self.current_stack_frame_mut().locals.push(LocalVariable {
             name: name.into(),

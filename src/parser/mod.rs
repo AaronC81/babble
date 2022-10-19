@@ -1,3 +1,8 @@
+//! Babble's parser.
+//! 
+//! This is a bit of a hand-rolled mess, but it works surprisingly well. The methods are scarcely
+//! documented since they are currently changing regularly due to the recursive-descent nature.
+
 mod node;
 use std::rc::Rc;
 
@@ -13,12 +18,19 @@ mod tests;
 
 use crate::{tokenizer::{Token, TokenKind, TokenKeyword}, source::{Location, SourceFile}, interpreter::Variant};
 
+/// An error found while parsing.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ParserError {
+    /// A token was unexpected at this time.
     UnexpectedToken(Token),
+
+    /// A parameter name in a function definition was not an identifier.
+    /// 
+    /// This can occur because call parsing logic is re-used for definitions.
     InvalidFuncDefinitionParameter,
 }
 
+/// The parser state.
 #[derive(Debug, Clone)]
 pub struct Parser<'a> {
     source_file: Rc<SourceFile>,
@@ -27,6 +39,7 @@ pub struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
+    /// Constructs a parser, from metadata about a source file, and a sequence of its tokens.
     pub fn new(source_file: Rc<SourceFile>, tokens: &'a [Token]) -> Self {
         let mut s = Self {
             source_file,
@@ -37,21 +50,26 @@ impl<'a> Parser<'a> {
         s
     }
 
+    /// Returns the token at the parser's current position.
     fn here(&self) -> &Token {
         &self.tokens[self.current_index]
     }
 
+    /// Advances the parser's current position.
     fn advance(&mut self) {
         self.current_index += 1;
         self.skip_newlines()
     }
 
+    /// Skips over any newline tokens, as these are currently unused.
     fn skip_newlines(&mut self) {
         while !self.all_tokens_consumed() && self.here().kind == TokenKind::NewLine {
             self.current_index += 1;
         }
     }
 
+    /// Returns true if the parser has consumed every token, except the [`TokenKind::EndOfFile`]
+    /// token which the stream ends with.
     fn all_tokens_consumed(&self) -> bool {
         self.current_index >= self.tokens.len()
         || self.tokens.get(self.current_index).map(|t| t.kind.clone()) == Some(TokenKind::EndOfFile)

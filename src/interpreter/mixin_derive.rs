@@ -1,11 +1,18 @@
+//! Babble has a set of "core mixins", which every type should implement for convenience.
+//! 
+//! This module provides [`derive_core_mixins`], which automatically defines instrinsic methods
+//! and then `use`-s each core mixin, to provide a working definition.
+
 use crate::source::SourceFile;
 
 use super::{Type, Method, Value, Interpreter};
 
+/// Provides core mixins for a given type.
 pub fn derive_core_mixins(interpreter: &mut Interpreter, target: &mut Type) {
     derive_equatable(interpreter, target);
 }
 
+/// Provides an implementation of `Equatable` for a given type.
 pub fn derive_equatable(interpreter: &mut Interpreter, target: &mut Type) {
     target.add_method(Method::new_internal("equals:", |i, recv, params| {
         let this = recv.borrow();
@@ -16,6 +23,7 @@ pub fn derive_equatable(interpreter: &mut Interpreter, target: &mut Type) {
     target.used_mixins.push(interpreter.resolve_stdlib_type("Equatable"));
 }
 
+/// An extension trait for `Type` which allows for easy derivation of core mixins.
 pub trait TypeCoreMixinDeriveBuilder where Self: Sized {
     fn get_self_as_type(self) -> Type;
 

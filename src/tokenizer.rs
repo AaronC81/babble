@@ -1,7 +1,13 @@
+//! Babble's tokenizer, which is a prerequisite step to parsing.
+//! 
+//! The tokenizer removes all whitespace except newlines, which are preserved as special tokens,
+//! although the parser currently skips over them.
+
 use std::rc::Rc;
 
 use crate::source::{Location, SourceFile};
 
+/// A token from the source file.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Token {
     pub kind: TokenKind,
@@ -14,6 +20,7 @@ impl Token {
     }
 }
 
+/// The kind of a token.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TokenKind {
     Terminator,
@@ -63,19 +70,30 @@ pub enum TokenKeyword {
     Use,
 }
 
+/// An error encountered while tokenizing.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TokenizerError {
+    /// A character did not correspond to any valid token.
     UnexpectedCharacter(char, Location),
+
+    /// While tokenizing, an integer literal would have overflown.
     IntegerLiteralOverflow(Location),
 }
 
+/// The current state of the tokenizer.
 #[derive(Debug, Clone)]
 pub enum TokenizerState {
+    /// No token is currently being collected.
     Idle,
+
+    /// A token is being collected which will end when whitespace is encountered.
     CollectingWhitespaceSeparated(Token),
+
+    /// A comment is being collected, which will end on a newline.
     Comment,
 }
 
+/// The current tokenizer state.
 #[derive(Debug, Clone)]
 pub struct Tokenizer<'a> {
     source_file: Rc<SourceFile>,
@@ -96,22 +114,27 @@ impl<'a> Tokenizer<'a> {
         }
     }
 
+    /// The character at the current position.
     fn here(&self) -> char {
         self.chars[self.current_index]
     }
 
+    /// A single-character [`Location`] referencing the current position. 
     fn here_loc(&self) -> Location {
         Location::new_single(self.source_file.clone(), self.current_index)
     }
 
+    /// The character at the next position, or whitespace if at the end.
     fn peek(&self) -> char {
         *self.chars.get(self.current_index + 1).unwrap_or(&' ')
     }
 
+    /// Advances the current character.
     fn advance(&mut self) {
         self.current_index += 1;
     }
 
+    /// Performs one step of the tokenizer.
     fn step(&mut self) -> Result<(), TokenizerError> {
         let here = self.here();
 
@@ -264,6 +287,7 @@ impl<'a> Tokenizer<'a> {
         Ok(())
     }
 
+    /// Converts the given string to a corresponding [`TokenKeyword`], or `None` if none exists.
     pub fn to_keyword(keyword: &str) -> Option<TokenKeyword> {
         match keyword {
             "true"    => Some(TokenKeyword::True),
@@ -281,6 +305,8 @@ impl<'a> Tokenizer<'a> {
         }
     }
 
+    /// Steps the tokenizer until the entire source file has been tokenized (or an error occurs),
+    /// then returns the tokens.
     pub fn tokenize(source_file: Rc<SourceFile>) -> Result<Vec<Token>, TokenizerError> {
         let chars = source_file.contents.chars().collect::<Vec<_>>();
         let mut tokenizer = Tokenizer::new(source_file.clone(), &chars[..]);

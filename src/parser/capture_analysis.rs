@@ -1,13 +1,18 @@
+//! Provides _capture analysis_, a phase after parsing which determines which local variables are
+//! captured by blocks.
+
 use crate::parser::NodeKind;
 
 use super::{Node, NodeWalk};
 
+/// A frame used in the capture analysis stack.
 struct AnalysisStackFrame {
     assignments: Vec<String>,
     captures: Vec<String>,
 }
 
 impl AnalysisStackFrame {
+    /// Creates a blank stack frame.
     fn new() -> Self {
         Self {
             assignments: vec![],
@@ -15,16 +20,23 @@ impl AnalysisStackFrame {
         }
     }
 
+    /// Checks whether this frame _provides_ a local, such that it can accessed with the given name
+    /// - either by creating it with an assignment, or by capturing it from an outer scope.
     fn provides(&self, id: &String) -> bool {
         self.assignments.contains(id) || self.captures.contains(id)
     }
 }
 
+/// The entry point for capture analysis.
+/// 
+/// Given a root parsed node, constructs a new analysis stack, searches it for variable captures,
+/// and populates capture information on any blocks found.
 pub fn populate_captures(root: &mut Node) {
     let mut stack = vec![AnalysisStackFrame::new()];
     handle_node(root, &mut stack)
 }
 
+/// The recursive method which analyses nodes for captures.
 fn handle_node(node: &mut Node, stack: &mut Vec<AnalysisStackFrame>) {
     // Before iterating into the children, look at what this node is
     match &node.kind {
@@ -80,6 +92,13 @@ fn handle_node(node: &mut Node, stack: &mut Vec<AnalysisStackFrame>) {
     }
 }
 
+/// Given an identifier and an analysis stack, seek up the stack for something which provides a
+/// local variable with that name.
+/// 
+/// If one is found, adds captures to each frame recursively between the top-most and the frame
+/// which provides the variable, then returns `true`.
+/// 
+/// Otherwise, returns `false`.
 fn try_propagate_capture(id: &String, stack: &mut [AnalysisStackFrame]) -> bool {
     // If the variable is already available in the last (i.e. current) stack frame, we don't need to
     // do anything

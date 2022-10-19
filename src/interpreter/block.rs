@@ -1,7 +1,17 @@
+//! Provides an implementation of _blocks_, anonymous functions which Babble uses to implement
+//! control flow.
+//! 
+//! See [`Block`] for more details.
+
 use crate::parser::Node;
 
 use super::{ValueRef, InterpreterResult, Interpreter, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariableRef, LocalVariable};
 
+/// An anonymous function which can take a given number of unnamed parameters and return a value.
+/// 
+/// Blocks act as closures by capturing local variables and `self` from the context they are created
+/// in. The names of the variables which a block must capture are determined during a
+/// [special analysis step after parsing](crate::parser::capture_analysis).
 #[derive(Debug, Clone)]
 pub struct Block {
     pub body: Node,
@@ -19,10 +29,18 @@ impl PartialEq for Block {
 impl Eq for Block {}
 
 impl Block {
+    /// The number of parameters which this block takes.
     pub fn arity(&self) -> usize {
         self.parameters.len()
     }
 
+    /// Call this block, passing it a given set of arguments, and returning the result of executing
+    /// the block's body.
+    /// 
+    /// The block is evaluated within a new stack frame, with captured locals referenced as locals
+    /// within that frame. Arguments are also created as locals.
+    /// 
+    /// Returns an error if the number of arguments does not match the expected arity.
     pub fn call(&self, interpreter: &mut Interpreter, arguments: Vec<ValueRef>) -> InterpreterResult {
         if self.arity() != arguments.len() {
             return Err(InterpreterErrorKind::IncorrectArity {
