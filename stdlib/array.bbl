@@ -8,6 +8,13 @@ impl Array {
         x
     ] call equals: #{ 1 2 3 4 }.
 
+    static func newOf: item length: length {
+        result = #{}.
+        length times: [ result append: item. ].
+        result
+    }
+    InternalTest case: "newOf" that: (Array newOf: 4 length: 3) equals: #{ 4 4 4 }.
+
     func forEach: fn {
         i = 0.
         [ i lessThan: self length ] whileTrue: [

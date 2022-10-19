@@ -1,0 +1,11 @@
+impl String {
+    func chars {
+        result = #{}.
+        self length times: [ |i|
+            result append: (self charAt: i).
+            i = i add: 1.
+        ].
+        result
+    }
+    InternalTest case: "chars" that: "hello" chars equals: #{ "h" "e" "l" "l" "o" }.
+}

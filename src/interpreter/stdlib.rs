@@ -21,6 +21,10 @@ pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError
         "<stdlib>/array.bbl",
         include_str!("../../stdlib/array.bbl")
     ).rc())?;
+    interpreter.parse_and_evaluate(SourceFile::new(
+        "<stdlib>/string.bbl",
+        include_str!("../../stdlib/string.bbl")
+    ).rc())?;
 
     Ok(())
 }
