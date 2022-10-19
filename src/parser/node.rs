@@ -93,6 +93,7 @@ pub enum SendMessageParameter {
 pub enum NodeKind {
     IntegerLiteral(u64),
     StringLiteral(String),
+    ArrayLiteral(Vec<Box<Node>>),
     TrueLiteral,
     FalseLiteral,
     NullLiteral,
@@ -184,6 +185,11 @@ impl NodeWalk for Node {
             },
             NodeKind::Use(mixin) => {
                 func(mixin);
+            }
+            NodeKind::ArrayLiteral(items) => {
+                for node in items {
+                    func(node)
+                }
             }
 
             NodeKind::IntegerLiteral(_)

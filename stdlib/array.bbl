@@ -1,4 +1,13 @@
 impl Array {
+    // Tests for core methods
+    InternalTest case: "new" that: Array new equals: #{}.
+    InternalTest case: "length" that: #{ 1 2 3 } length equals: 3.
+    InternalTest case: "append:" that: [
+        x = #{ 1 2 3 }.
+        x append: 4.
+        x
+    ] call equals: #{ 1 2 3 4 }.
+
     func forEach: fn {
         i = 0.
         [ i lessThan: self length ] whileTrue: [
@@ -8,11 +17,30 @@ impl Array {
         null
     }
 
-    func reversed {
-        result = Array new.
+    func reverse {
+        result = #{}.
         self forEach: [ |x| result insert: x at: 0 ].
         result
     }
+    InternalTest case: "reverse" that: #{ 1 2 3 } reverse equals: #{ 3 2 1 }.
 
-    // TODO: can't write tests easily until we have literals
+    func map: fn {
+        result = #{}.
+        self forEach: [ |x| result append: (fn call: x) ].
+        result
+    }
+    InternalTest case: "map" that: (#{ 1 2 3 } map: [ |x| x add: 1 ]) equals: #{ 2 3 4 }.
+
+    func filter: fn {
+        result = #{}.
+        self forEach: [ |x| (fn call: x) ifTrue: [ result append: x ] ].
+        result
+    }
+    InternalTest case: "filter" that: (#{ 1 2 3 } filter: [ |x| x lessThan: 3 ]) equals: #{ 1 2 }.
+
+    func isEmpty {
+        self length equals: 0
+    }
+    InternalTest case: "isEmpty pos" that: #{} isEmpty    equals: true.
+    InternalTest case: "isEmpty neg" that: #{ 1 } isEmpty equals: false.
 }

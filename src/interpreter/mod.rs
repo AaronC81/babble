@@ -112,6 +112,12 @@ impl Interpreter {
 
             NodeKind::StringLiteral(s) => Ok(Value::new_string(s).rc()),
 
+            NodeKind::ArrayLiteral(items) => Ok(Value::new_array(
+                &items.iter()
+                    .map(|item| self.evaluate(&*item))
+                    .collect::<Result<Vec<_>, _>>()?
+            ).rc()),
+
             NodeKind::SendMessage { receiver, components } => {
                 // Evaluate the receiver
                 let receiver = self.evaluate(receiver)?;

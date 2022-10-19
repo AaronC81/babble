@@ -307,6 +307,32 @@ impl<'a> Parser<'a> {
                 },
                 context: new_context,
             })
+        } else if let Token { kind: TokenKind::Hash, location } = self.here() {
+            let location = location.clone();
+            self.advance();
+
+            // This is a collection literal
+            let Token { kind: TokenKind::LeftBrace, .. } = self.here() else {
+                return Err(ParserError::UnexpectedToken(self.here().clone()))
+            };
+            self.advance();
+
+            // Parse expressions until the closing brace
+            let mut items = vec![];
+            loop {
+                if let Token { kind: TokenKind::RightBrace, .. } = self.here() {
+                    self.advance();
+                    break;
+                }
+
+                items.push(Box::new(self.parse_expression(context.clone())?));
+            }
+
+            Ok(Node {
+                kind: NodeKind::ArrayLiteral(items),
+                location,
+                context,
+            })
         } else if let Token { kind: TokenKind::Keyword(kw), location } = self.here() {
             let node = Node {
                 location: location.clone(),
