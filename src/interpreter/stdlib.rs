@@ -1,3 +1,5 @@
+use std::process::exit;
+
 use crate::{interpreter::{Type, Method, Value}, parser::{SendMessageComponents, SendMessageParameter}, source::SourceFile};
 
 use super::{InterpreterErrorKind, TypeData, Variant, TypeRef, Interpreter, TypeInstance, mixin_derive::TypeCoreMixinDeriveBuilder, InterpreterError};
@@ -120,6 +122,17 @@ fn string(interpreter: &mut Interpreter) -> Type {
             }).rc(),
         ],
 
+        static_methods: vec![
+            Method::new_internal("charFromAsciiCode:", |_, _, params| {
+                let code = params[0].borrow().to_integer()?;
+                if code >= 0 && code <= 0xFF {
+                    Ok(Value::new_string(&(code as u8 as char).to_string()).rc())
+                } else {
+                    Ok(Value::new_null().rc())
+                }
+            }).rc(),
+        ],
+
         ..Type::new("String")
     }.with_derived_core_mixins(interpreter)
 }
@@ -149,6 +162,11 @@ fn array(interpreter: &mut Interpreter) -> Type {
                 let index = params[1].borrow().to_integer()?;
                 recv.borrow_mut().to_array()?.insert(index as usize, item);
                 Ok(Value::new_null().rc())
+            }).rc(),
+            Method::new_internal("delete:", |_, recv, params| {
+                let i = params[0].borrow().to_integer()?;
+                let item = recv.borrow_mut().to_array()?.remove(i as usize);
+                Ok(item)
             }).rc(),
 
             Method::new_internal("length", |_, recv, _| {
@@ -293,6 +311,10 @@ fn program(_: &mut Interpreter) -> Type {
         static_methods: vec![
             Method::new_internal("error:", |_, _, a| {
                 Err(InterpreterErrorKind::ProgramError(a[0].borrow().to_string()?).into())
+            }).rc(),
+
+            Method::new_internal("exit", |_, _, _| {
+                exit(0)
             }).rc(),
         ],
         ..Type::new("Program")
