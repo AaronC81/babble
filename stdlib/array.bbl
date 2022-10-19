@@ -7,6 +7,11 @@ impl Array {
         x append: 4.
         x
     ] call equals: #{ 1 2 3 4 }.
+    InternalTest case: "set:value:" that: [
+        x = #{ 1 2 3 }.
+        x set: 1 value: 5.
+        x
+    ] call equals: #{ 1 5 3 }.
 
     static func newOf: item length: length {
         result = #{}.

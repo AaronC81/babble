@@ -127,9 +127,15 @@ fn string(interpreter: &mut Interpreter) -> Type {
 fn array(interpreter: &mut Interpreter) -> Type {
     Type {
         methods: vec![
+            // TODO: decide how we cope with out-of-range items
             Method::new_internal("get:", |_, recv, params| {
                 let i = params[0].borrow().to_integer()?;
                 Ok(recv.borrow_mut().to_array()?[i as usize].clone())
+            }).rc(),
+            Method::new_internal("set:value:", |_, recv, params| {
+                let i = params[0].borrow().to_integer()?;
+                recv.borrow_mut().to_array()?[i as usize] = params[1].clone();
+                Ok(Value::new_null().rc())
             }).rc(),
 
             Method::new_internal("append:", |_, recv, params| {
