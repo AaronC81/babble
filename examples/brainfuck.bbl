@@ -19,13 +19,13 @@ impl Tape {
         (self index greaterThanOrEquals: self size) ifTrue: [
             Program error: "tape out of range".
         ].
-	}
-	func prev {
-		self index = self index sub: 1.
+    }
+    func prev {
+        self index = self index sub: 1.
         (self index lessThan: 0) ifTrue: [
             Program error: "tape out of range".
         ].
-	}
+    }
 }
 
 struct Interpreter instructions index tape.
