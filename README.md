@@ -31,6 +31,9 @@ i = 0.
 Rather than a `while` construct built-in, the type `Block` has a method named `whileTrue:`, where 
 the block repeatedly evaluates itself and calls another block while it remains true.
 
+> If you'd like a longer example, there is a [Brainfuck interpreter](examples/brainfuck.bbl) in the
+> _examples_ directory!
+
 ## Data Types
 
 Unlike Smalltalk, Babble isn't object-oriented; data is expressed with sum and product types like
@@ -66,6 +69,9 @@ cargo run -- -f <file>
 - [ ] Pattern matching - implemented with match-blocks, which take patterns as parameters and return
       `Match#Hit returnValue` or `Match#Miss` depending on whether the pattern was actually matched
 - [ ] Better parser errors
-- [ ] Better runtime errors
+- [x] Better runtime errors
 - [x] Complex assignment targets (e.g struct fields)
 - [ ] Collection types and literals
+    - [x] Arrays
+    - [ ] Dictionaries
+    - [ ] Sets
