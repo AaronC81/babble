@@ -1,0 +1,86 @@
+struct Tape contents index size.
+impl Tape {
+    static func new: size {
+        Tape contents: (Array newOf: 0 length: size)
+             index: 0
+             size: size
+    }
+
+    func read {
+        self contents get: self index
+    }
+    func write: value {
+        self contents set: self index
+                      value: value
+    }
+    
+    func next {
+        self index = self index add: 1.
+        (self index greaterThanOrEquals: self size) ifTrue: [
+            Program error: "tape out of range".
+        ].
+	}
+	func prev {
+		self index = self index sub: 1.
+        (self index lessThan: 0) ifTrue: [
+            Program error: "tape out of range".
+        ].
+	}
+}
+
+struct Interpreter instructions index tape.
+impl Interpreter {
+    static func new: instructions {
+        Interpreter instructions: instructions chars
+                    index: 0
+                    tape: (Tape new: 1000)
+    }
+
+    func step {
+        // Exit if the instruction pointer has gone off the end of the tape
+        (self index greaterThanOrEquals: self instructions length) ifTrue: [ Program exit. ].
+
+        // Otherwise, execute the current instruction
+        ins = self currentInstruction.
+        (ins equals: "+") ifTrue: [ self tape write: (self tape read add: 1) ].
+        (ins equals: "-") ifTrue: [ self tape write: (self tape read sub: 1) ].
+        (ins equals: ">") ifTrue: [ self tape next ].
+        (ins equals: "<") ifTrue: [ self tape prev ].
+        (ins equals: "[") ifTrue: [
+            (self tape read equals: 0) ifTrue: [
+                // Seek the matching ] and jump past it
+                bracketDepth = 1
+                [ bracketDepth greaterThan: 0 ] whileTrue: [
+                    self index = self index add: 1.
+                    (self currentInstruction equals: "[") ifTrue: [ bracketDepth = bracketDepth add: 1 ].
+                    (self currentInstruction equals: "]") ifTrue: [ bracketDepth = bracketDepth sub: 1 ].
+                ]
+            ]
+        ].
+        (ins equals: "]") ifTrue: [
+            (self tape read notEquals: 0) ifTrue: [
+                // Seek the matching [ and jump to it
+                bracketDepth = 1
+                [ bracketDepth greaterThan: 0 ] whileTrue: [
+                    self index = self index sub: 1.
+                    (self currentInstruction equals: "[") ifTrue: [ bracketDepth = bracketDepth sub: 1 ].
+                    (self currentInstruction equals: "]") ifTrue: [ bracketDepth = bracketDepth add: 1 ].
+                ]
+            ]
+        ].
+        (ins equals: ".") ifTrue: [ Console print: (String charFromAsciiCode: self tape read) ].
+        // TODO: , command
+
+        // Move onto the next instruction
+        self index = self index add: 1.
+    }
+
+    func currentInstruction {
+        self instructions get: self index
+    }
+}
+
+// Program from: https://esolangs.org/wiki/Brainfuck
+helloWorld = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.".
+interpreter = Interpreter new: helloWorld.
+[ true ] whileTrue: [ interpreter step ].
