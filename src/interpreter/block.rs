@@ -65,10 +65,11 @@ impl Block {
             context: StackFrameContext::Block,
         });
 
-        // Run the body
+        // Run the body, bail if it errored, and then pop the stack frame
+        // This order may seem unintuitive - but errors are always fatal, and we want the stack
+        // trace from the error to be as correct as possible, so we leave the frames which errored
+        // on the stack
         let result = interpreter.evaluate(&self.body)?;
-
-        // Pop the frame
         interpreter.stack.pop();
 
         Ok(result)
