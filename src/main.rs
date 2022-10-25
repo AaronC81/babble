@@ -2,6 +2,7 @@
 #![feature(never_type)]
 #![feature(assert_matches)]
 #![feature(result_flattening)]
+#![feature(let_chains)]
 
 use std::{env::args, fs::read_to_string};
 

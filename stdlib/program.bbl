@@ -1,0 +1,32 @@
+impl Program {
+    [
+        result = 0.
+        Program catchIfTrue: [ |x| x equals: 3 ] in: [
+            result = result add: 1.
+            Program catchIfTrue: [ |x| x equals: 2 ] in: [
+                result = result add: 1.
+                Program throw: 3.
+                result = result add: 1.
+            ].
+            result = result add: 1.
+        ].
+        InternalTest case: "catchIfTrue:in:" that: result equals: 2.
+    ] call.
+
+    static func catchEquals: value in: block {
+        Program catchIfTrue: [ |x| x equals: value ] in: block
+    }
+    [
+        result = 0.
+        Program catchEquals: 3 in: [
+            result = result add: 1.
+            Program catchEquals: 2 in: [
+                result = result add: 1.
+                Program throw: 3.
+                result = result add: 1.
+            ].
+            result = result add: 1.
+        ].
+        InternalTest case: "catchEquals:in:" that: result equals: 2.
+    ] call.
+}

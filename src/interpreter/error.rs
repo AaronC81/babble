@@ -111,6 +111,18 @@ pub enum InterpreterErrorKind {
 
     /// Code executed by the interpreter called `Program error: "something"`.
     ProgramError(String),
+
+    /// Not really an error - used by `Program throw: ...` to unwind the stack
+    Throw(ValueRef),
+}
+
+impl InterpreterErrorKind {
+    pub fn is_fatal(&self) -> bool {
+        match self {
+            InterpreterErrorKind::Throw(_) => false,
+            _ => true,
+        }
+    }
 }
 
 impl Into<InterpreterError> for InterpreterErrorKind {
@@ -164,6 +176,9 @@ impl Display for InterpreterErrorKind {
 
             InterpreterErrorKind::ProgramError(message) =>
                 f.write_str(message),
+
+            InterpreterErrorKind::Throw(value) =>
+                write!(f, "uncaught throw of `{}`", value.borrow().to_language_string()),
         }
     }
 }

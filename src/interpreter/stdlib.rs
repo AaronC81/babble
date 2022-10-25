@@ -35,6 +35,10 @@ pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError
         "<stdlib>/string.bbl",
         include_str!("../../stdlib/string.bbl")
     ).rc())?;
+    interpreter.parse_and_evaluate(SourceFile::new(
+        "<stdlib>/string.bbl",
+        include_str!("../../stdlib/program.bbl")
+    ).rc())?;
 
     Ok(())
 }
@@ -323,6 +327,28 @@ fn program(_: &mut Interpreter) -> Type {
 
             Method::new_internal("exit", |_, _, _| {
                 exit(0)
+            }).rc(),
+
+            Method::new_internal("throw:", |_, _, a| {
+                Err(InterpreterErrorKind::Throw(a[0].clone()).into())
+            }).rc(),
+
+            Method::new_internal("catchIfTrue:in:", |i, _, a| {
+                let predicate = a[0].borrow().to_block()?.clone();
+                let block = a[1].borrow().to_block()?.clone();
+                let result = block.call(i, vec![]);
+                match result {
+                    Err(InterpreterError { kind: InterpreterErrorKind::Throw(ref v), .. }) => {
+                        if predicate.call(i, vec![v.clone()])?.borrow().to_boolean()? {
+                            Ok(v.clone())
+                        } else {
+                            Err(InterpreterErrorKind::Throw(v.clone()).into())
+                        }
+                    }
+
+                    Ok(v) => Ok(v),
+                    Err(e) => Err(e),
+                }
             }).rc(),
         ],
         ..Type::new("Program")

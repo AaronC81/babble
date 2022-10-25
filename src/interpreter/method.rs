@@ -78,13 +78,16 @@ impl Method {
                     },
                 });
 
-                // Run the body
-                let result = interpreter.evaluate(&body)?;
-
-                // Pop the frame
+                // Run the body, bail if it fatally errored, and then pop the stack frame
+                // This order may seem unintuitive - but when an error is fatal, then we want the
+                // stack trace from the error to be as correct as possible, so we leave the frames
+                // which errored on the stack
+                let result = interpreter.evaluate(&body);
+                if let Err(error) = &result && error.kind.is_fatal() {
+                    return Err(error.clone());
+                }
                 interpreter.stack.pop();
-
-                Ok(result)
+                Ok(result?)
             },
         }
     }
