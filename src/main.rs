@@ -13,6 +13,7 @@ mod source;
 mod tokenizer;
 mod parser;
 mod interpreter;
+mod doc_gen;
 
 fn main() {
     let arg = args().nth(1).expect("no code passed");
@@ -21,6 +22,11 @@ fn main() {
     if arg == "--file" || arg == "-f" {
         input_name = args().nth(2).expect("no file passed");
         input_contents = read_to_string(input_name.clone()).unwrap();
+    } else if arg == "--doc-gen" {
+        let interpreter = Interpreter::new().unwrap();
+        let output = doc_gen::generate_documentation(&interpreter);
+        println!("{}", output);
+        return;
     } else {
         input_name = "command-line".to_string();
         input_contents = arg.clone();

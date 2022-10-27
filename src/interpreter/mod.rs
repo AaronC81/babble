@@ -91,8 +91,8 @@ impl Display for StackFrameContext {
 /// The main interpreter context, which holds the current execution stack, and a repository of all
 /// defined types.
 pub struct Interpreter {
-    types: Vec<TypeRef>,
-    stack: Vec<StackFrame>,
+    pub types: Vec<TypeRef>,
+    pub stack: Vec<StackFrame>,
 }
 
 pub type InterpreterResult = Result<ValueRef, InterpreterError>;
