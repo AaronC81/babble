@@ -11,6 +11,7 @@ use super::{Interpreter, ValueRef, InterpreterResult, InterpreterErrorKind, Stac
 pub struct Method {
     pub name: String,
     pub implementation: MethodImplementation,
+    pub documentation: Option<String>,
 }
 
 pub type MethodRef = Rc<Method>;
@@ -22,6 +23,7 @@ impl Method {
         Self {
             name: name.into(),
             implementation: MethodImplementation::Internal(Box::new(function)),
+            documentation: None,
         }
     }
 
@@ -30,7 +32,13 @@ impl Method {
         Self {
             name: name.into(),
             implementation: MethodImplementation::Parsed { body, internal_names },
+            documentation: None,
         }
+    }
+
+    /// Adds documentation to this method definition.
+    pub fn add_documentation(&mut self, documentation: &str) {
+        self.documentation = Some(documentation.into());
     }
     
     /// Transforms this [Method] in a [MethodRef].

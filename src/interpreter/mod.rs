@@ -328,7 +328,7 @@ impl Interpreter {
                 Ok(Value::new_null().rc())
             },
 
-            NodeKind::FuncDefinition { parameters, body, is_static } => {
+            NodeKind::FuncDefinition { parameters, body, is_static, documentation } => {
                 // The current stack frame should represent an `impl` block, so we know where to
                 // put this method
                 let StackFrame { context: StackFrameContext::Impl(t), .. } = self.current_stack_frame() else {
@@ -339,7 +339,11 @@ impl Interpreter {
                 let name = parameters.to_method_name();
                 let internal_names = parameters.defined_internal_names();
                 
-                let method = Method::new_parsed(&name, *body, internal_names).rc();
+                let mut method = Method::new_parsed(&name, *body, internal_names);
+                if let Some(documentation) = documentation {
+                    method.add_documentation(documentation);
+                }
+                let method = method.rc();
                 if *is_static {
                     t.borrow_mut().add_static_method(method);
                 } else {

@@ -154,6 +154,7 @@ pub enum NodeKind {
         parameters: SendMessageComponents,
         body: Box<Node>,
         is_static: bool,
+        documentation: Option<String>,
     },
     EnumDefinition {
         name: String,
@@ -205,7 +206,7 @@ impl NodeWalk for Node {
                 func(target);
                 func(body);
             },
-            NodeKind::FuncDefinition { parameters, body, is_static: _ } => {
+            NodeKind::FuncDefinition { parameters, body, is_static: _, documentation: _ } => {
                 for node in parameters.child_nodes_mut() {
                     func(node);
                 }

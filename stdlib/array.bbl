@@ -13,6 +13,11 @@ impl Array {
         x
     ] call equals: #{ 1 5 3 }.
 
+    /// Constructs a new array by repeating one element.
+    ///
+    /// @param newOf: The element to repeat.
+    /// @param length: The number of times to repeat the element.
+    /// @returns A new array.
     static func newOf: item length: length {
         result = #{}.
         length times: [ result append: item. ].
@@ -20,6 +25,9 @@ impl Array {
     }
     InternalTest case: "newOf" that: (Array newOf: 4 length: 3) equals: #{ 4 4 4 }.
 
+    /// Calls a function for each element of the array, passing it as a parameter.
+    ///
+    /// @param forEach: The block to call, which should accept one parameter.
     func forEach: fn {
         i = 0.
         [ i lessThan: self length ] whileTrue: [
@@ -29,6 +37,9 @@ impl Array {
         null
     }
 
+    /// Returns an element-wise copy of this array, reversed. The original is not modified.
+    ///
+    /// @returns The reversed array.
     func reverse {
         result = #{}.
         self forEach: [ |x| result insert: x at: 0 ].
@@ -36,6 +47,10 @@ impl Array {
     }
     InternalTest case: "reverse" that: #{ 1 2 3 } reverse equals: #{ 3 2 1 }.
 
+    /// Constructs a new array by applying a block to each element of this one, in order.
+    ///
+    /// @param map: The block to apply, which should accept one parameter.
+    /// @returns The new array.
     func map: fn {
         result = #{}.
         self forEach: [ |x| result append: (fn call: x) ].
@@ -43,13 +58,20 @@ impl Array {
     }
     InternalTest case: "map" that: (#{ 1 2 3 } map: [ |x| x add: 1 ]) equals: #{ 2 3 4 }.
 
+    /// Constructs a new array by retaining elements from this one where a block returns `true`.
+    ///
+    /// @param map: The block to use as a condition, which should accept one parameter.
+    /// @returns The new array.
     func filter: fn {
         result = #{}.
-        self forEach: [ |x| (fn call: x) ifTrue: [ result append: x ] ].
+        self forEach: [ |x| (fn  call: x) ifTrue: [ result append: x ] ].
         result
     }
     InternalTest case: "filter" that: (#{ 1 2 3 } filter: [ |x| x lessThan: 3 ]) equals: #{ 1 2 }.
 
+    /// Checks if this array is empty.
+    ///
+    /// @returns `true` if this array is empty, or `false` otherwise.
     func isEmpty {
         self length equals: 0
     }

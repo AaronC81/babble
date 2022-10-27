@@ -46,7 +46,7 @@ impl<'a> Parser<'a> {
             tokens,
             current_index: 0,
         };
-        s.skip_newlines();
+        s.skip_unused();
         s
     }
 
@@ -58,13 +58,18 @@ impl<'a> Parser<'a> {
     /// Advances the parser's current position.
     fn advance(&mut self) {
         self.current_index += 1;
-        self.skip_newlines()
+        self.skip_unused()
     }
 
-    /// Skips over any newline tokens, as these are currently unused.
-    fn skip_newlines(&mut self) {
-        while !self.all_tokens_consumed() && self.here().kind == TokenKind::NewLine {
-            self.current_index += 1;
+    /// Skips over any:
+    ///   - Newline tokens, as these are currently unused.
+    ///   - Documentation comments, as these will be collected by backtracking if necessary.
+    fn skip_unused(&mut self) {
+        while !self.all_tokens_consumed() {
+            match self.here().kind {
+                TokenKind::NewLine | TokenKind::DocComment(_) => self.current_index += 1,
+                _ => break,
+            }
         }
     }
 
@@ -73,6 +78,11 @@ impl<'a> Parser<'a> {
     fn all_tokens_consumed(&self) -> bool {
         self.current_index >= self.tokens.len()
         || self.tokens.get(self.current_index).map(|t| t.kind.clone()) == Some(TokenKind::EndOfFile)
+    }
+
+    /// Returns an iterator of the tokens which have already been consumed, most recent first.
+    fn backtrack(&self) -> impl Iterator<Item = &Token> {
+        self.tokens[..self.current_index].iter().rev()
     }
 
     pub fn parse(source_file: Rc<SourceFile>, tokens: &'a [Token]) -> Result<Node, ParserError> {
@@ -445,6 +455,28 @@ impl<'a> Parser<'a> {
         let location = location.clone();
         self.advance();
 
+        // At this point, we can be pretty confident that we've found a function definition. As a
+        // result, iterate backwards through tokens to collect documentation comments.
+        let mut doc_comments = vec![];
+        for token in self.backtrack() {
+            match &token.kind {
+                // Guaranteed to appear, or inconsequential, so just ignore them
+                TokenKind::Keyword(TokenKeyword::Static | TokenKeyword::Func) => (),
+                TokenKind::NewLine => (),
+
+                // Gather doc comments - remember we're encountering them in reverse order
+                TokenKind::DocComment(comment) => doc_comments.insert(0, comment.trim().clone()),
+
+                // Anything else represents a break in our comments
+                _ => break,
+            }
+        }
+        let documentation = if doc_comments.is_empty() {
+            None
+        } else {
+            Some(doc_comments.join("\n"))
+        };
+
         // Parse message parameters, but ensure that the values are identifiers and transform them
         // (These will be used as the names of locals for each parameter)
         let inner_context = LexicalContext::new_with_parent(context).rc();
@@ -499,6 +531,7 @@ impl<'a> Parser<'a> {
                     kind: NodeKind::StatementSequence(items),
                 }),
                 is_static,
+                documentation,
             },
         })
     }

@@ -1,5 +1,7 @@
-// Requirements:
-//   - `equals:`
+/// Implemented by all type automatically to provide by-value equality comparisons.
+///
+/// Requirements (provided automatically):
+///   - `equals:`
 mixin Equatable.
 impl Equatable {
     func notEquals: other {
@@ -7,9 +9,10 @@ impl Equatable {
     }
 }
 
-// Requirements:
-//   - `greaterThan:`
-//   - Use of `Equatable`
+/// Indicates that a type is orderable.
+///
+/// Requirements:
+///   - `greaterThan:`
 mixin Orderable.
 impl Orderable {
     func greaterThanOrEquals: other {

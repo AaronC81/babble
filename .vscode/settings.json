@@ -21,6 +21,13 @@
                 { "color": "lightsalmon" }
             ]
         },
+        "(///.*)": {
+            "regexFlags": "g",
+            "filterFileRegex": ".*\\.bbl",
+            "decorations": [
+                { "color": "yellow" }
+            ]
+        },
         "(//.*)": {
             "regexFlags": "g",
             "filterFileRegex": ".*\\.bbl",

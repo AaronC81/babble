@@ -46,6 +46,8 @@ pub enum TokenKind {
     IntegerLiteral(u64),
     StringLiteral(String),
 
+    DocComment(String),
+
     EndOfFile,
 }
 
@@ -91,6 +93,9 @@ pub enum TokenizerState {
 
     /// A comment is being collected, which will end on a newline.
     Comment,
+
+    /// A documentation comment is being collected, which will end on a newline.
+    DocComment(Token),
 }
 
 /// The current tokenizer state.
@@ -184,7 +189,16 @@ impl<'a> Tokenizer<'a> {
                     // Start of a comment
                     '/' if self.peek() == '/' => {
                         self.advance();
-                        self.state = TokenizerState::Comment;
+                        // ...or a doc-comment!
+                        if self.peek() == '/' {
+                            self.advance();
+                            self.state = TokenizerState::DocComment(Token {
+                                kind: TokenKind::DocComment("".into()),
+                                location: self.here_loc(),
+                            });
+                        } else {
+                            self.state = TokenizerState::Comment;
+                        }
                     }
 
                     _ => return Err(TokenizerError::UnexpectedCharacter(here, self.here_loc())),
@@ -279,6 +293,18 @@ impl<'a> Tokenizer<'a> {
                 if here == '\n' {
                     self.tokens.push(TokenKind::NewLine.at(self.here_loc()));
                     self.state = TokenizerState::Idle
+                }
+            }
+
+            TokenizerState::DocComment(token) => {
+                if here == '\n' {
+                    self.tokens.push(token.clone());
+                    self.state = TokenizerState::Idle
+                } else {
+                    let TokenKind::DocComment(ref mut s) = token.kind else {
+                        unreachable!();
+                    };
+                    s.push(here);
                 }
             }
         }
