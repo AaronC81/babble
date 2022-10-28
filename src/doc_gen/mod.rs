@@ -42,8 +42,8 @@ pub fn generate_documentation(interpreter: &Interpreter) -> String {
     let mut types = interpreter.types.clone();
     types.sort_by_key(|t| t.borrow().id.clone());
 
-    let mut output = "# Standard Library\n\n".to_string();
-    output.push_str("## Table of Contents\n\n");
+    let mut output = "".to_string();
+    output.push_str("# Table of Contents\n\n");
     for t in &types {
         let t = t.borrow();
 
@@ -54,7 +54,7 @@ pub fn generate_documentation(interpreter: &Interpreter) -> String {
 
     for t in &types {
         let t = t.borrow();
-        output.push_str(&format!("## {}\n\n", t.id));
+        output.push_str(&format!("# {}\n\n", t.id));
 
         // Output some info about the type itself
         match &t.data {
@@ -101,8 +101,8 @@ pub fn generate_documentation(interpreter: &Interpreter) -> String {
             };
 
             output.push_str(&match l {
-                MethodLocality::Instance => format!("### `{}`\n\n", m.name),
-                MethodLocality::Static => format!("### `static {}`\n\n", m.name),
+                MethodLocality::Instance => format!("## `{}`\n\n", m.name),
+                MethodLocality::Static => format!("## `static {}`\n\n", m.name),
             });
             if let Some(doc) = doc {
                 let parsed = ParsedDocumentationComments::parse(doc);
