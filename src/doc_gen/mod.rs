@@ -1,4 +1,4 @@
-use crate::interpreter::{Interpreter, MethodLocality, TypeData};
+use crate::interpreter::{Interpreter, MethodLocality, TypeData, DocumentationState};
 
 struct ParsedDocumentationComments {
     pub description: String,
@@ -94,11 +94,17 @@ pub fn generate_documentation(interpreter: &Interpreter) -> String {
 
         // Generate documentation for each
         for (m, l) in all_methods {
+            let doc = match m.documentation {
+                DocumentationState::Documented(ref docs) => Some(docs),
+                DocumentationState::Undocumented => None,
+                DocumentationState::Hidden => continue,
+            };
+
             output.push_str(&match l {
                 MethodLocality::Instance => format!("### `{}`\n\n", m.name),
                 MethodLocality::Static => format!("### `static {}`\n\n", m.name),
             });
-            if let Some(doc) = &m.documentation {
+            if let Some(doc) = doc {
                 let parsed = ParsedDocumentationComments::parse(doc);
 
                 output.push_str(&format!("{}\n\n", parsed.description));

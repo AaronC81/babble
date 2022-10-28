@@ -6,12 +6,26 @@ use crate::parser::Node;
 
 use super::{Interpreter, ValueRef, InterpreterResult, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariable};
 
+/// How a method is documented.
+#[derive(Debug, Clone)]
+pub enum DocumentationState {
+    /// The method has documentation comments.
+    Documented(String),
+
+    /// The method does not have documentation comments, but is still visible when generating
+    /// documentation.
+    Undocumented,
+
+    /// The method explicitly should not appear in documentation.
+    Hidden,
+}
+
 /// A named method, defined on a type for use in code.
 #[derive(Debug)]
 pub struct Method {
     pub name: String,
     pub implementation: MethodImplementation,
-    pub documentation: Option<String>,
+    pub documentation: DocumentationState,
 }
 
 pub type MethodRef = Rc<Method>;
@@ -23,7 +37,7 @@ impl Method {
         Self {
             name: name.into(),
             implementation: MethodImplementation::Internal(Box::new(function)),
-            documentation: None,
+            documentation: DocumentationState::Undocumented,
         }
     }
 
@@ -32,13 +46,13 @@ impl Method {
         Self {
             name: name.into(),
             implementation: MethodImplementation::Parsed { body, internal_names },
-            documentation: None,
+            documentation: DocumentationState::Undocumented,
         }
     }
 
     /// Adds documentation to this method definition.
     pub fn add_documentation(&mut self, documentation: &str) {
-        self.documentation = Some(documentation.into());
+        self.documentation = DocumentationState::Documented(documentation.into());
     }
 
     /// Consumes this method definition and returns a new one with documentation added.

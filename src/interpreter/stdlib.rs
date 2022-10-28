@@ -8,7 +8,7 @@ use std::process::exit;
 
 use crate::{interpreter::{Type, Method, Value}, parser::{SendMessageComponents, SendMessageParameter}, source::SourceFile};
 
-use super::{InterpreterErrorKind, TypeData, Variant, TypeRef, Interpreter, TypeInstance, mixin_derive::TypeCoreMixinDeriveBuilder, InterpreterError};
+use super::{InterpreterErrorKind, TypeData, Variant, TypeRef, Interpreter, TypeInstance, mixin_derive::TypeCoreMixinDeriveBuilder, InterpreterError, DocumentationState};
 
 /// Instantiates a set of core standard library types, by building them from intrinsics, executing
 /// bundled Babble code to define them, or a combination of the two.
@@ -345,20 +345,34 @@ fn block(interpreter: &mut Interpreter) -> Type {
             "call:".repeat(i)
         };
 
-        methods.push(
-            Method::new_internal(&method_name, |i, r, a| {
-                let r = r.borrow();
-                let b = r.to_block()?;
-                if b.arity() != a.len() {
-                    Err(InterpreterErrorKind::IncorrectBlockArity {
-                        expected: b.arity(),
-                        got: a.len(),
-                    }.into())
-                } else {
-                    b.call(i, a)
-                }
-            }).rc(),
-        );
+        let mut method = Method::new_internal(&method_name, |i, r, a| {
+            let r = r.borrow();
+            let b = r.to_block()?;
+            if b.arity() != a.len() {
+                Err(InterpreterErrorKind::IncorrectBlockArity {
+                    expected: b.arity(),
+                    got: a.len(),
+                }.into())
+            } else {
+                b.call(i, a)
+            }
+        });
+        if i == 0 {
+            method.add_documentation("
+                Calls this block. Additional variants of this method exist for calling blocks with
+                any number of parameters, using the form `call:call:...`, where `call:` can be
+                repeated for each additional parameter.
+
+                If the number of arguments passed does not match the number expected by this block,
+                a fatal error occurs.
+
+                @returns The result of the block.
+            ");
+        } else {
+            method.documentation = DocumentationState::Hidden;
+        }
+
+        methods.push(method.rc());
     }
 
     methods.extend([
