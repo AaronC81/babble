@@ -15,6 +15,8 @@ impl ParsedDocumentationComments {
         };
 
         for line in string.split("\n") {
+            let line = line.trim();
+
             if line.starts_with("@param") {
                 let line = line.trim_start_matches("@param").trim();
                 let mut parts = line.splitn(2, " ");
@@ -26,6 +28,7 @@ impl ParsedDocumentationComments {
                 result.return_value = Some(line.into());
             } else {
                 result.description.push_str(line);
+                result.description.push_str("\n");
             }
         }
 

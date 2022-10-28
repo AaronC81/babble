@@ -69,34 +69,65 @@ fn integer(interpreter: &mut Interpreter) -> Type {
                 let a = recv.borrow().to_integer()?;
                 let b = params[0].borrow().to_integer()?;
                 Ok(Value::new_integer(a + b).rc())
-            }).rc(),
+            }).with_documentation("
+                Adds the given integer to this one.
+
+                @param add: The integer to add.
+                @returns The two integers, added.
+            ").rc(),
+
             Method::new_internal("sub:", |_, recv, params| {
                 let a = recv.borrow().to_integer()?;
                 let b = params[0].borrow().to_integer()?;
                 Ok(Value::new_integer(a - b).rc())
-            }).rc(),
+            }).with_documentation("
+                Subtracts the given integer to this one.
+
+                @param sub: The integer to subtract.
+                @returns The two integers, subtracted.
+            ").rc(),
+
             Method::new_internal("negate", |_, recv, _| {
                 let a = recv.borrow().to_integer()?;
                 Ok(Value::new_integer(-a).rc())
-            }).rc(),
+            }).with_documentation("
+                Flips the sign of this integer.
+
+                @returns If this integer is positive, the same integer but negative, and vice versa.
+            ").rc(),
+
             Method::new_internal("modulo:", |_, recv, params| {
                 let a = recv.borrow().to_integer()?;
                 let b = params[0].borrow().to_integer()?;
                 Ok(Value::new_integer(a % b).rc())
-            }).rc(),
+            }).with_documentation("
+                Computes the remainder of integer division with a given divisor.
+
+                @param modulo: The divisor.
+                @returns The remainder of dividing this integer with the divisor.
+            ").rc(),
 
             // For Orderable implementation
             Method::new_internal("greaterThan:", |i, recv, params| {
                 let a = recv.borrow().to_integer()?;
                 let b = params[0].borrow().to_integer()?;
                 Ok(Value::new_boolean(i, a > b).rc())
-            }).rc(),
+            }).with_documentation("
+                Returns true if the given integer is strictly larger than this one.
+
+                @param greaterThan: The other integer.
+                @returns `true` if the other integer is larger than this one, otherwise `false`.
+            ").rc(),
         ],
 
         static_methods: vec![
             Method::new_internal("zero", |_, _, _| {
                 Ok(Value::new_integer(0).rc())
-            }).rc(),
+            }).with_documentation("
+                The constant integer 0.
+
+                @returns 0.
+            ").rc(),
         ],
 
         ..Type::new("Integer")
@@ -110,11 +141,20 @@ fn string(interpreter: &mut Interpreter) -> Type {
                 let a = recv.borrow().to_string()?;
                 let b = params[0].borrow().to_string()?;
                 Ok(Value::new_string(&format!("{}{}", a, b)).rc())
-            }).rc(),
+            }).with_documentation("
+                Appends another string to this one, and returns the concatenated string.
+
+                @param concat: The other string.
+                @returns A new string, with the given string appearing after this one.
+            ").rc(),
 
             Method::new_internal("length", |_, recv, _| {
                 Ok(Value::new_integer(recv.borrow().to_string()?.len() as i64).rc())
-            }).rc(),
+            }).with_documentation("
+                The length of this string.
+
+                @returns The number of characters in this string.
+            ").rc(),
 
             Method::new_internal("charAt:", |_, recv, params| {
                 let s = recv.borrow().to_string()?;
@@ -124,14 +164,12 @@ fn string(interpreter: &mut Interpreter) -> Type {
                 } else {
                     Ok(Value::new_null().rc())
                 }
-            }).rc(),
+            }).with_documentation("
+                Gets a single character from this string.
 
-            // TODO: should be shared
-            Method::new_internal("equals:", |i, recv, params| {
-                let a = recv.borrow().to_string()?;
-                let b = params[0].borrow().to_string()?;
-                Ok(Value::new_boolean(i, a == b).rc())
-            }).rc(),
+                @param charAt: The index of the character to get.
+                @returns A substring of a single character, or `null` if the index is out of bounds.
+            ").rc(),
         ],
 
         static_methods: vec![
@@ -142,7 +180,12 @@ fn string(interpreter: &mut Interpreter) -> Type {
                 } else {
                     Ok(Value::new_null().rc())
                 }
-            }).rc(),
+            }).with_documentation("
+                Constructs a new single-character string from an ASCII character code.
+
+                @param charsFromAsciiCode: The character code as an integer.
+                @returns A single-character string, or `null` if the code is out of bounds.
+            ").rc(),
         ],
 
         ..Type::new("String")
@@ -152,44 +195,112 @@ fn string(interpreter: &mut Interpreter) -> Type {
 fn array(interpreter: &mut Interpreter) -> Type {
     Type {
         methods: vec![
-            // TODO: decide how we cope with out-of-range items
+            // TODO: deal with negative indexes
+
             Method::new_internal("get:", |_, recv, params| {
                 let i = params[0].borrow().to_integer()?;
-                Ok(recv.borrow_mut().to_array()?[i as usize].clone())
-            }).rc(),
+                Ok(
+                    recv.borrow_mut().to_array()?
+                        .get(i as usize)
+                        .map(|x| x.clone())
+                        .unwrap_or_else(|| Value::new_null().rc())
+                )
+            }).with_documentation("
+                Gets an item from this array.
+
+                @param get: The zero-indexed index of the item to get.
+                @returns The item, or `null` if the index is out of bounds.
+            ").rc(),
+
             Method::new_internal("set:value:", |_, recv, params| {
                 let i = params[0].borrow().to_integer()?;
-                recv.borrow_mut().to_array()?[i as usize] = params[1].clone();
+
+                // Extend the array if it's not long enough
+                let mut recv = recv.borrow_mut();
+                let array = recv.to_array()?;
+                if i as usize >= array.len() {
+                    array.resize((i as usize) + 1, Value::new_null().rc());
+                }
+                array[i as usize] = params[1].clone();
+
                 Ok(Value::new_null().rc())
-            }).rc(),
+            }).with_documentation("
+                Sets an item in this array. If the given index does not already exist in the array,
+                it is extended with `null`s to match the required length.
+
+                @param set: The zero-indexed index of the item to set.
+                @param value: The value to write into the array.
+            ").rc(),
 
             Method::new_internal("append:", |_, recv, params| {
                 let item = params[0].clone();
                 recv.borrow_mut().to_array()?.push(item);
                 Ok(Value::new_null().rc())
-            }).rc(),
+            }).with_documentation("
+                Adds a new item to the end of this array.
+
+                @param append: The new item to add.
+            ").rc(),
 
             Method::new_internal("insert:at:", |_, recv, params| {
                 let item = params[0].clone();
                 let index = params[1].borrow().to_integer()?;
-                recv.borrow_mut().to_array()?.insert(index as usize, item);
+
+                // Resize the array if it's not long enough
+                let mut recv = recv.borrow_mut();
+                let array = recv.to_array()?;
+                if index as usize >= array.len() {
+                    array.resize(index as usize, Value::new_null().rc());
+                }
+                array.insert(index as usize, item);
+
                 Ok(Value::new_null().rc())
-            }).rc(),
+            }).with_documentation("
+                Inserts a new item at a specific index within this array. If the array is not long
+                enough, it is extended with `null`s so that the new item is at the end of the array.
+
+                @param insert: The new item to add.
+                @param at: The zero-indexed index at which to insert it.
+            ").rc(),
+
+
             Method::new_internal("delete:", |_, recv, params| {
                 let i = params[0].borrow().to_integer()?;
-                let item = recv.borrow_mut().to_array()?.remove(i as usize);
+
+                let mut recv = recv.borrow_mut();
+                let array = recv.to_array()?;
+                let item;
+                if (i as usize) < array.len() {
+                    item = array.remove(i as usize);
+                } else {
+                    item = Value::new_null().rc();
+                }
                 Ok(item)
-            }).rc(),
+            }).with_documentation("
+                Deletes an item at a specific index, and shifts the array elements down to
+                compensate. If the array does not cover the index, returns `null`.
+
+                @param delete: The zero-indexed index to delete.
+                @returns The deleted item, or `null` if there was no item at that index.
+            ").rc(),
 
             Method::new_internal("length", |_, recv, _| {
                 Ok(Value::new_integer(recv.borrow_mut().to_array()?.len() as i64).rc())
-            }).rc(),
+            }).with_documentation("
+                The length of the array.
+
+                @returns The number of items in the array.
+            ").rc(),
         ],
 
         static_methods: vec![
             Method::new_internal("new", |_, _, _| {
                 Ok(Value::new_array(&[]).rc())
-            }).rc(),
+            }).with_documentation("
+                Constructs a new array.
+
+                @returns A new array with length 0.
+            ").rc(),
         ],
 
         ..Type::new("Array")
@@ -202,16 +313,24 @@ fn console(interpreter: &mut Interpreter) -> Type {
             Method::new_internal("println:", |_, _, p| {
                 println!("{}", p[0].borrow().to_language_string());
                 Ok(Value::new_null().rc())
-            }).rc(),
+            }).with_documentation("
+                Prints an object to the console, followed by a newline.
+
+                @param println: The object to print.
+            ").rc(),
 
             Method::new_internal("print:", |_, _, p| {
                 print!("{}", p[0].borrow().to_language_string());
                 Ok(Value::new_null().rc())
-            }).rc(),
+            }).with_documentation("
+                Prints an object to the console, with no trailing newline.
+
+                @param print: The object to print.
+            ").rc(),
         ],
 
         ..Type::new("Console")
-    }.with_derived_core_mixins(interpreter)
+    }
 }
 
 pub const MAXIMUM_BLOCK_ARITY: usize = 64;
@@ -245,7 +364,11 @@ fn block(interpreter: &mut Interpreter) -> Type {
     methods.extend([
         Method::new_internal("arity", |_, r, _| {
             Ok(Value::new_integer(r.borrow().to_block()?.arity() as i64).rc())
-        }).rc(),
+        }).with_documentation("
+            How many arguments this block takes.
+
+            @returns An integer representing the number of arguments this block takes.
+        ").rc(),
 
         Method::new_internal("whileTrue:", |i, r, a| {
             let r = r.borrow();
@@ -258,7 +381,13 @@ fn block(interpreter: &mut Interpreter) -> Type {
             }
 
             Ok(Value::new_null().rc())
-        }).rc(),
+        }).with_documentation("
+            Repeatedly executes another block (the _body_) while this block (the _condition_)
+            continues to return `true`. If the condition returns `false` the first time it is
+            executed, the body is never executed.
+
+            @param whileTrue: The block to execute as a condition.
+        ").rc(),
     ]);
 
     Type {
@@ -277,7 +406,11 @@ fn boolean(interpreter: &mut Interpreter) -> Type {
         methods: vec![
             Method::new_internal("not", |i, r, _| {
                 Ok(Value::new_boolean(i, !r.borrow().to_boolean()?).rc())
-            }).rc(),
+            }).with_documentation("
+                Logically negates this boolean.
+
+                @returns `true` if this is `false`, or `false` if this is `true`.
+            ").rc(),
 
             Method::new_internal("ifTrue:", |i, r, a| {
                 if r.borrow().to_boolean()? {
@@ -287,7 +420,12 @@ fn boolean(interpreter: &mut Interpreter) -> Type {
                 }
 
                 Ok(r)
-            }).rc(),
+            }).with_documentation("
+                Executes a block if this is `true`.
+
+                @param ifTrue: The block to execute if this is `true`.
+                @returns This boolean.
+            ").rc(),
         ],
 
         ..Type::new("Boolean")
@@ -315,7 +453,7 @@ fn internal_test(interpreter: &mut Interpreter) -> Type {
         ],
 
         ..Type::new("InternalTest")
-    }.with_derived_core_mixins(interpreter)
+    }
 }
 
 fn program(_: &mut Interpreter) -> Type {
@@ -323,15 +461,35 @@ fn program(_: &mut Interpreter) -> Type {
         static_methods: vec![
             Method::new_internal("error:", |_, _, a| {
                 Err(InterpreterErrorKind::ProgramError(a[0].borrow().to_string()?).into())
-            }).rc(),
+            }).with_documentation("
+                Exits the interpreter immediately, with a fatal error.
+
+                @param error: The error message to exit with.
+                @returns This method will never return.
+            ").rc(),
 
             Method::new_internal("exit", |_, _, _| {
                 exit(0)
-            }).rc(),
+            }).with_documentation("
+                Exits the interpreter immediately, with a success exit code.
+
+                @returns This method will never return.
+            ").rc(),
 
             Method::new_internal("throw:", |_, _, a| {
                 Err(InterpreterErrorKind::Throw(a[0].clone()).into())
-            }).rc(),
+            }).with_documentation("
+                Throws an object up the call stack. This can be used to implement complex control
+                flow mechanisms, such as loop breaks.
+                
+                This must be executed inside a block called by a catch method, such as
+                `catchIfTrue:in:`. (There may be additional blocks or method calls between the throw
+                and catch.) If the thrown object reaches the top of the call stack and is uncaught,
+                the interpreter exits with a fatal error.
+
+                @param throw: The object to throw.
+                @returns This method will never return.
+            ").rc(),
 
             Method::new_internal("catchIfTrue:in:", |i, _, a| {
                 let predicate = a[0].borrow().to_block()?.clone();
@@ -349,7 +507,15 @@ fn program(_: &mut Interpreter) -> Type {
                     Ok(v) => Ok(v),
                     Err(e) => Err(e),
                 }
-            }).rc(),
+            }).with_documentation("
+                Runs the given body block, and exits if an object is thrown in it with `throw:` and
+                the predicate block returns `true` for that thrown object. If the predicate block
+                returns `false`, the object is rethrown.
+
+                @param catchIfTrue: The predicate.
+                @param in: The body to execute.
+                @returns The value returned by the block, or the thrown value if the block exits early.
+            ").rc(),
         ],
         ..Type::new("Program")
     }
@@ -360,7 +526,12 @@ fn reflection(_: &mut Interpreter) -> Type {
         static_methods: vec![
             Method::new_internal("type:", |i, _, a| {
                 Ok(Value::new_type(a[0].borrow().type_instance.get_type(i)).rc())
-            }).rc(),
+            }).with_documentation("
+                Gets the type of an object.
+
+                @param type: The object whose type to fetch.
+                @returns The object's type.
+            ").rc(),
 
             Method::new_internal("variant:", |i, _, a| {
                 let val = a[0].borrow();
@@ -376,7 +547,12 @@ fn reflection(_: &mut Interpreter) -> Type {
                 } else {
                     Ok(Value::new_null().rc())
                 }
-            }).rc(),
+            }).with_documentation("
+                Gets the name of the variant of an enum instance.
+
+                @param variant: The enum instance.
+                @returns The variant's name as a string, or `null` if it is not an enum variant.
+            ").rc(),
         ],
         ..Type::new("Reflection")
     }

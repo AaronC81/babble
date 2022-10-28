@@ -40,6 +40,12 @@ impl Method {
     pub fn add_documentation(&mut self, documentation: &str) {
         self.documentation = Some(documentation.into());
     }
+
+    /// Consumes this method definition and returns a new one with documentation added.
+    pub fn with_documentation(mut self, documentation: &str) -> Self {
+        self.add_documentation(documentation);
+        self
+    }
     
     /// Transforms this [Method] in a [MethodRef].
     pub fn rc(self) -> MethodRef {

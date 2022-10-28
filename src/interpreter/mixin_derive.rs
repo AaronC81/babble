@@ -19,7 +19,12 @@ pub fn derive_equatable(interpreter: &mut Interpreter, target: &mut Type) {
         let other = params[0].borrow();
 
         Ok(Value::new_boolean(i, this.type_instance == other.type_instance).rc())
-    }).rc());
+    }).with_documentation("
+        Determines whether this object is value-equal to another object.
+
+        @param equals: The other object.
+        @returns `true` if the two objects are equal, or `false` otherwise.
+    ").rc());
     target.used_mixins.push(interpreter.resolve_stdlib_type("Equatable"));
 }
 
