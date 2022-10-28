@@ -1,8 +1,16 @@
 impl Boolean {
+    /// Executes the block if this boolean is `false`.
+    ///
+    /// @param ifFalse: The block to execute.
     func ifFalse: action {
         (self not) ifTrue: action
     }
 
+    /// Executes one block if this boolean is `true`, or another if it is `false`.
+    ///
+    /// @param ifTrue: The block to execute in the `true` case.
+    /// @param ifFalse: The block to execute in the `false` case.
+    /// @returns The result of whichever block was executed.
     func ifTrue: trueAction else: falseAction {
         result = null.
         self ifTrue: [ result = trueAction call. ].
@@ -13,6 +21,10 @@ impl Boolean {
     InternalTest case: "ifTrue:else: pos branch" that: (true  ifTrue: [1] else: [2]) equals: 1.
     InternalTest case: "ifTrue:else: neg branch" that: (false ifTrue: [1] else: [2]) equals: 2.
 
+    /// Computes boolean OR with another boolean.
+    ///
+    /// @param or: The other boolean.
+    /// @returns `true` if either boolean is `true`, otherwise `false`.
     func or: other {
         eitherTrue = false.
         self  ifTrue: [ eitherTrue = true ].
@@ -25,6 +37,10 @@ impl Boolean {
     InternalTest case: "or T/F" that: (true  or: false) equals: true.
     InternalTest case: "or F/F" that: (false or: false) equals: false.
 
+    /// Computes boolean AND with another boolean.
+    ///
+    /// @param and: The other boolean.
+    /// @returns `true` if both booleans are `true`, otherwise `false`.
     func and: other {
         self
             ifTrue: [ other

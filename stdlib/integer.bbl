@@ -5,6 +5,9 @@ impl Integer {
     InternalTest case: "negation"    that: ((3 negate) add: 5) equals: 2.
     InternalTest case: "modulo"      that: (11 modulo: 3)      equals: 2.
 
+    /// Executes the block the number of times equal to this integer.
+    /// 
+    /// @param times: The block to execute, which may optionally take a parameter for a counter.
     func times: action {
         counter = 0.
         [ counter lessThan: self ] whileTrue: [

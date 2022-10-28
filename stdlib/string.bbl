@@ -1,4 +1,7 @@
 impl String {
+    /// Gets the characters within this string.
+    ///
+    /// @returns An array of this string's characters.
     func chars {
         result = #{}.
         self length times: [ |i|

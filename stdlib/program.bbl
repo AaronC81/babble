@@ -13,6 +13,12 @@ impl Program {
         InternalTest case: "catchIfTrue:in:" that: result equals: 2.
     ] call.
 
+    /// Runs a block, but jumps back to this point if the block throws an object which is equal to
+    /// the given value, according to `equals:`.
+    ///
+    /// @param catchEquals: The value to compare against.
+    /// @param in: The block to execute.
+    /// @returns The value returned by the block, or the thrown value if the block exits early.
     static func catchEquals: value in: block {
         Program catchIfTrue: [ |x| x equals: value ] in: block
     }
