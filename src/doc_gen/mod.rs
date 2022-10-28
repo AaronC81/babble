@@ -99,11 +99,12 @@ pub fn generate_documentation(interpreter: &Interpreter) -> String {
                 let parsed = ParsedDocumentationComments::parse(doc);
 
                 output.push_str(&format!("{}\n\n", parsed.description));
-                if parsed.parameters.is_empty() {
+                if !parsed.parameters.is_empty() {
                     output.push_str(&format!("**Parameters:**\n\n"));
                     for (name, description) in parsed.parameters {
                         output.push_str(&format!("- `{}` {}\n", name, description));
                     }
+                    output.push_str(&format!("\n"));
                 }
 
                 if let Some(return_value) = parsed.return_value {
