@@ -194,15 +194,34 @@ impl Interpreter {
                     let target_value = self.evaluate(&*receiver)?;
 
                     // Check if the receiver has a field with the correct name
-                    let TypeInstance::Fields { source_type, variant, field_values } = &mut target_value.borrow_mut().type_instance else {
-                        return Err(InterpreterErrorKind::InvalidAssignmentTarget.into());
-                    };
-                    let (fields, static_fields) = match source_type.borrow().data {
-                        TypeData::Fields { ref instance_fields, ref static_fields } =>
-                            (instance_fields.clone(), static_fields.clone()),
-                        TypeData::Variants(ref v) => (v[variant.unwrap()].fields.clone(), vec![]),
+                    let mut target_value = target_value.borrow_mut();
+                    let mut type_borrow;
+                    let fields;
+                    let field_values;
+                    match &mut target_value.type_instance {
+                        TypeInstance::Fields { source_type, variant, field_values: fv } => {
+                            fields = match source_type.borrow().data {
+                                TypeData::Fields { ref instance_fields, .. } =>
+                                    instance_fields.clone(),
+                                TypeData::Variants(ref v) => v[variant.unwrap()].fields.clone(),
+                                _ => return Err(InterpreterErrorKind::InvalidAssignmentTarget.into()),
+                            };
+                            field_values = fv;
+                        },
+
+                        TypeInstance::Type(source_type) => {
+                            fields = match source_type.borrow().data {
+                                TypeData::Fields { ref static_fields, .. } =>
+                                    static_fields.clone(),
+                                _ => return Err(InterpreterErrorKind::InvalidAssignmentTarget.into()),
+                            };
+                            type_borrow = source_type.borrow_mut();
+                            field_values = &mut type_borrow.static_fields;
+                        },
+
                         _ => return Err(InterpreterErrorKind::InvalidAssignmentTarget.into()),
                     };
+                    
                     let field_index = fields.iter()
                         .enumerate()
                         .find(|(_, x)| x == &field_name).map(|(i, _)| i)
