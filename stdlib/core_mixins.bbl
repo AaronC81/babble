@@ -26,3 +26,68 @@ impl Orderable {
         (self lessThan: other) or: (self equals: other).
     }
 }
+
+/// Extends a type which represents a container of ordered items to provide various functional
+/// programming methods.
+///
+/// Requirements:
+///   - `forEach:`
+mixin Enumerable.
+impl Enumerable {
+    /// Converts the contents of this enumerable into an array.
+    ///
+    /// @returns The array.
+    func toArray {
+        result = #{}.
+        self forEach: [ |x| result append: x ].
+        result
+    }
+
+    /// Returns an element-wise copy of this enumerable, reversed, as an array. The original is not 
+    /// modified.
+    ///
+    /// @returns The reversed array.
+    func reverse {
+        result = #{}.
+        self forEach: [ |x| result insert: x at: 0 ].
+        result
+    }
+
+    /// Constructs a new array by applying a block to each element of this enumerable, in order.
+    ///
+    /// @param map: The block to apply, which should accept one parameter.
+    /// @returns The new array.
+    func map: fn {
+        result = #{}.
+        self forEach: [ |x| result append: (fn call: x) ].
+        result
+    }
+
+    /// Constructs a new array by retaining elements from this enumerable where a block returns
+    /// `true`.
+    ///
+    /// @param map: The block to use as a condition, which should accept one parameter.
+    /// @returns The new array.
+    func filter: fn {
+        result = #{}.
+        self forEach: [ |x| (fn  call: x) ifTrue: [ result append: x ] ].
+        result
+    }
+
+    /// Find the first value in the enumerable matching a predicate.
+    ///
+    /// @param find: The predicate to use, which should accept one parameter.
+    /// @returns The first value matching the predicate, or `null` if none is found.
+    func find: fn {
+        foundItem = null.
+        Program catchTag: [ |tag|
+            self forEach: [ |x|
+                (fn call: x) ifTrue: [
+                    foundItem = x.
+                    Program throw: tag.
+                ].
+            ].
+        ].
+        foundItem
+    }
+}

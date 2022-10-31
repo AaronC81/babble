@@ -25,6 +25,15 @@ impl Array {
     }
     InternalTest case: "newOf" that: (Array newOf: 4 length: 3) equals: #{ 4 4 4 }.
 
+    /// Checks if this array is empty.
+    ///
+    /// @returns `true` if this array is empty, or `false` otherwise.
+    func isEmpty {
+        self length equals: 0
+    }
+    InternalTest case: "isEmpty pos" that: #{} isEmpty    equals: true.
+    InternalTest case: "isEmpty neg" that: #{ 1 } isEmpty equals: false.
+
     /// Calls a function for each element of the array, passing it as a parameter.
     ///
     /// @param forEach: The block to call, which should accept one parameter.
@@ -37,63 +46,11 @@ impl Array {
         null
     }
 
-    /// Returns an element-wise copy of this array, reversed. The original is not modified.
-    ///
-    /// @returns The reversed array.
-    func reverse {
-        result = #{}.
-        self forEach: [ |x| result insert: x at: 0 ].
-        result
-    }
+    use Enumerable.
+    InternalTest case: "toArray" that: #{ 1 2 3 } toArray equals: #{ 1 2 3 }.
     InternalTest case: "reverse" that: #{ 1 2 3 } reverse equals: #{ 3 2 1 }.
-
-    /// Constructs a new array by applying a block to each element of this one, in order.
-    ///
-    /// @param map: The block to apply, which should accept one parameter.
-    /// @returns The new array.
-    func map: fn {
-        result = #{}.
-        self forEach: [ |x| result append: (fn call: x) ].
-        result
-    }
     InternalTest case: "map" that: (#{ 1 2 3 } map: [ |x| x add: 1 ]) equals: #{ 2 3 4 }.
-
-    /// Constructs a new array by retaining elements from this one where a block returns `true`.
-    ///
-    /// @param map: The block to use as a condition, which should accept one parameter.
-    /// @returns The new array.
-    func filter: fn {
-        result = #{}.
-        self forEach: [ |x| (fn  call: x) ifTrue: [ result append: x ] ].
-        result
-    }
     InternalTest case: "filter" that: (#{ 1 2 3 } filter: [ |x| x lessThan: 3 ]) equals: #{ 1 2 }.
-
-    /// Checks if this array is empty.
-    ///
-    /// @returns `true` if this array is empty, or `false` otherwise.
-    func isEmpty {
-        self length equals: 0
-    }
-    InternalTest case: "isEmpty pos" that: #{} isEmpty    equals: true.
-    InternalTest case: "isEmpty neg" that: #{ 1 } isEmpty equals: false.
-
-    /// Find the first value in the array matching a predicate.
-    ///
-    /// @param find: The predicate to use, which should accept one parameter.
-    /// @returns The first value matching the predicate, or `null` if none is found.
-    func find: fn {
-        foundItem = null.
-        Program catchTag: [ |tag|
-            self forEach: [ |x|
-                (fn call: x) ifTrue: [
-                    foundItem = x.
-                    Program throw: tag.
-                ].
-            ].
-        ].
-        foundItem
-    }
     InternalTest case: "find pos" that: (#{ 1 8 3 } find: [ |x| (x modulo: 2) equals: 0 ]) equals: 8.
     InternalTest case: "find neg" that: (#{ 1 7 3 } find: [ |x| (x modulo: 2) equals: 0 ]) equals: null.
 }

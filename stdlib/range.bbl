@@ -1,0 +1,26 @@
+struct Range start end.
+
+impl Range {
+    /// Constructs a new range with a start of 0 and a given end.
+    ///
+    /// @param upTo: The end integer to use.
+    /// @returns The new range.
+    static func upTo: i {
+        Range start: 0 end: i
+    }
+
+    /// Calls a function for each integer within the range, passing it as a parameter.
+    ///
+    /// @param forEach: The block to call, which should accept one parameter.
+    func forEach: fn {
+        i = self start.
+        [ i lessThan: self end ] whileTrue: [
+            fn call: i.
+            i = i add: 1.
+        ].
+    }
+
+    use Enumerable.
+    InternalTest case: "range toArray" that: (Range upTo: 5) toArray equals: #{ 0 1 2 3 4 }.
+    InternalTest case: "range filter" that: ((Range upTo: 5) filter: [ |x| x greaterThan: 2 ]) equals: #{ 3 4 }.
+}

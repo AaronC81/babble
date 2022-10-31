@@ -39,6 +39,11 @@ pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError
         "<stdlib>/string.bbl",
         include_str!("../../stdlib/string.bbl")
     ).rc())?;
+    interpreter.parse_and_evaluate(SourceFile::new(
+        "<stdlib>/range.bbl",
+        include_str!("../../stdlib/range.bbl")
+    ).rc())?;
+
 
     Ok(())
 }
