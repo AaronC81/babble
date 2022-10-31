@@ -162,7 +162,8 @@ pub enum NodeKind {
     },
     StructDefinition {
         name: String,
-        fields: Vec<String>,
+        instance_fields: Vec<String>,
+        static_fields: Vec<String>,
     },
     MixinDefinition {
         name: String,
@@ -228,7 +229,7 @@ impl NodeWalk for Node {
             | NodeKind::NullLiteral 
             | NodeKind::SelfLiteral
             | NodeKind::EnumDefinition { name: _, variants: _ }
-            | NodeKind::StructDefinition { name: _, fields: _ }
+            | NodeKind::StructDefinition { name: _, instance_fields: _, static_fields: _ }
             | NodeKind::MixinDefinition { name: _ }
             | NodeKind::Identifier(_) => (),
         }

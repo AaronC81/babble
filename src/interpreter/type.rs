@@ -6,7 +6,7 @@ use std::{rc::Rc, fmt::Debug, cell::RefCell};
 
 use crate::{interpreter::TypeInstance};
 
-use super::{InterpreterErrorKind, Value, Method, MethodRef, MethodLocality, InterpreterError};
+use super::{InterpreterErrorKind, Value, Method, MethodRef, MethodLocality, InterpreterError, ValueRef};
 
 /// A type which can be instantiated to create a [`Value`].
 #[derive(Debug)]
@@ -15,6 +15,7 @@ pub struct Type {
     pub data: TypeData,
     pub methods: Vec<MethodRef>,
     pub static_methods: Vec<MethodRef>,
+    pub static_fields: Vec<ValueRef>,
     pub used_mixins: Vec<TypeRef>,
 }
 impl PartialEq for Type { fn eq(&self, other: &Self) -> bool { self.id == other.id } }
@@ -28,6 +29,7 @@ impl Type {
             data: TypeData::Empty,
             methods: vec![],
             static_methods: vec![],
+            static_fields: vec![],
             used_mixins: vec![],
         }
     }
@@ -98,7 +100,8 @@ impl Type {
 
     /// Generates methods which allow fields of this type to be accessed.
     /// 
-    /// For structs, this generates one method for each field, which returns that field.
+    /// For structs, this generates one method for each field, which returns that field. For static
+    /// structs, these are instance methods instead.
     /// 
     /// For enums, this computes the union of fields across all variants, and generates a method for
     /// each. The method returns the field if it exists for the current variant, otherwise it
@@ -108,14 +111,32 @@ impl Type {
     /// For other types, generates nothing.
     pub fn generate_accessor_methods(&mut self) {
         match &self.data {
-            TypeData::Fields(fields) => {
-                for (i, field) in fields.clone().iter().enumerate() {
+            TypeData::Fields { instance_fields, static_fields } => {
+                // While we're here, ensure that values exist for the static fields
+                if static_fields.len() != self.static_fields.len() {
+                    self.static_fields.resize(static_fields.len(), Value::new_null().rc());
+                }
+
+                let instance_fields = instance_fields.clone();
+                let static_fields = static_fields.clone();
+                for (i, field) in instance_fields.iter().enumerate() {
                     self.add_method(Method::new_internal(field, move |_, r, _| {
                         let TypeInstance::Fields { field_values, .. } = &(*r).borrow().type_instance else {
                             return Err(InterpreterErrorKind::IncorrectType.into());
                         };
 
                         Ok(field_values[i].clone())
+                    }).rc());
+                }
+
+                for (i, field) in static_fields.iter().enumerate() {
+                    self.add_static_method(Method::new_internal(field, move |_, r, _| {
+                        let TypeInstance::Type(ref t) = r.borrow().type_instance else {
+                            return Err(InterpreterErrorKind::IncorrectType.into());
+                        };
+
+                        let value = t.borrow().static_fields[i].clone();
+                        Ok(value)
                     }).rc());
                 }
             },
@@ -154,8 +175,8 @@ impl Type {
     /// 
     /// **Panics** if this type is not a struct.
     pub fn generate_struct_constructor(t: Rc<RefCell<Type>>) {
-        let fields = if let TypeData::Fields(ref fields) = t.as_ref().borrow().data {
-            fields.clone()
+        let fields = if let TypeData::Fields { ref instance_fields, .. } = t.as_ref().borrow().data {
+            instance_fields.clone()
         } else {
             panic!("can only generate constructor for structs");
         };
@@ -190,7 +211,10 @@ pub enum TypeData {
     Empty,
 
     /// The type is a struct, and its inner data is a sequence of named fields.
-    Fields(Vec<String>),
+    Fields {
+        instance_fields: Vec<String>,
+        static_fields: Vec<String>,
+    },
 
     /// The type is an enum, and its inner data may be one of a set of variants.
     Variants(Vec<Variant>),

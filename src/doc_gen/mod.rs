@@ -58,9 +58,9 @@ pub fn generate_documentation(interpreter: &Interpreter) -> String {
 
         // Output some info about the type itself
         match &t.data {
-            TypeData::Fields(fields) => {
+            TypeData::Fields { instance_fields, .. } => {
                 output.push_str("**Definition**: Struct with fields:\n\n");
-                for name in fields {
+                for name in instance_fields {
                     output.push_str(&format!("- `{}`\n", name));
                 }
             },

@@ -28,6 +28,10 @@ pub enum ParserError {
     /// 
     /// This can occur because call parsing logic is re-used for definitions.
     InvalidFuncDefinitionParameter,
+
+    /// Fields used inside an enum variant are not permitted to be static - only fields within 
+    /// structs are.
+    StaticEnumVariantField,
 }
 
 /// The parser state.
@@ -563,8 +567,13 @@ impl<'a> Parser<'a> {
                 self.advance();
                 break
             }
-            let (name, fields) = self.parse_data_layout()?;
-            variants.push(Variant { name, fields });
+            let (name, instance_fields, static_fields) = self.parse_data_layout()?;
+
+            if !static_fields.is_empty() {
+                return Err(ParserError::StaticEnumVariantField);
+            }
+
+            variants.push(Variant { name, fields: instance_fields });
         }
         
         Ok(Node {
@@ -583,14 +592,15 @@ impl<'a> Parser<'a> {
         self.advance();
         
         // Parse its contents
-        let (name, fields) = self.parse_data_layout()?;
+        let (name, instance_fields, static_fields) = self.parse_data_layout()?;
         
         Ok(Node {
             location,
             context,
             kind: NodeKind::StructDefinition {
                 name,
-                fields,
+                instance_fields,
+                static_fields,
             }
         })
     }
@@ -624,7 +634,7 @@ impl<'a> Parser<'a> {
         })
     }
 
-    fn parse_data_layout(&mut self) -> Result<(String, Vec<String>), ParserError> {
+    fn parse_data_layout(&mut self) -> Result<(String, Vec<String>, Vec<String>), ParserError> {
         // Parse name
         let TokenKind::Identifier(name) = &self.here().kind else {
             self.token_error()?;
@@ -633,22 +643,36 @@ impl<'a> Parser<'a> {
         self.advance();
 
         // Parse fields, each as a name
-        let mut fields = vec![];
+        let mut instance_fields = vec![];
+        let mut static_fields = vec![];
+        let mut next_field_is_static = false;
         loop {
-            if let TokenKind::Terminator = self.here().kind {
-                self.advance();
-                break
-            }
-
-            if let TokenKind::Identifier(name) = &self.here().kind {
-                fields.push(name.clone());
-                self.advance();
-            } else {
-                self.token_error()?;
+            match self.here().kind {
+                TokenKind::Keyword(TokenKeyword::Static) => {
+                    if next_field_is_static {
+                        self.token_error()?;
+                    }
+                    next_field_is_static = true;
+                    self.advance();
+                },
+                TokenKind::Identifier(ref name) => {
+                    if next_field_is_static {
+                        static_fields.push(name.clone());
+                    } else {
+                        instance_fields.push(name.clone());
+                    }
+                    next_field_is_static = false;
+                    self.advance();
+                },
+                TokenKind::Terminator => {
+                    self.advance();
+                    break
+                },
+                _ => self.token_error()?,
             }
         }
 
-        Ok((name, fields))
+        Ok((name, instance_fields, static_fields))
     }
 
     fn parse_use(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {

@@ -197,9 +197,10 @@ impl Interpreter {
                     let TypeInstance::Fields { source_type, variant, field_values } = &mut target_value.borrow_mut().type_instance else {
                         return Err(InterpreterErrorKind::InvalidAssignmentTarget.into());
                     };
-                    let fields = match source_type.borrow().data {
-                        TypeData::Fields(ref f) => f.clone(),
-                        TypeData::Variants(ref v) => v[variant.unwrap()].fields.clone(),
+                    let (fields, static_fields) = match source_type.borrow().data {
+                        TypeData::Fields { ref instance_fields, ref static_fields } =>
+                            (instance_fields.clone(), static_fields.clone()),
+                        TypeData::Variants(ref v) => (v[variant.unwrap()].fields.clone(), vec![]),
                         _ => return Err(InterpreterErrorKind::InvalidAssignmentTarget.into()),
                     };
                     let field_index = fields.iter()
@@ -369,13 +370,16 @@ impl Interpreter {
                 Ok(Value::new_null().rc())
             },
 
-            NodeKind::StructDefinition { name, fields } => {
+            NodeKind::StructDefinition { name, instance_fields, static_fields } => {
                 if self.resolve_type(name).is_some() {
                     return Err(InterpreterErrorKind::DuplicateTypeDefinition(name.into()).into());
                 }
 
                 let mut t = Type {
-                    data: TypeData::Fields(fields.clone()),
+                    data: TypeData::Fields {
+                        instance_fields: instance_fields.clone(),
+                        static_fields: static_fields.clone(),
+                    },
                     ..Type::new(name)
                 };
                 t.generate_accessor_methods();

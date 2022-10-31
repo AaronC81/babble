@@ -146,8 +146,8 @@ impl Value {
                     } else {
                         unreachable!()
                     }
-                } else if let TypeData::Fields(f) = &source_type_ref.data {
-                    (f, None)
+                } else if let TypeData::Fields { instance_fields, .. } = &source_type_ref.data {
+                    (instance_fields, None)
                 } else {
                     unreachable!()
                 };
