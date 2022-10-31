@@ -20,6 +20,10 @@ pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError
     let core_types = core_types(interpreter);
     interpreter.types.extend(core_types);
     interpreter.parse_and_evaluate(SourceFile::new(
+        "<stdlib>/program.bbl",
+        include_str!("../../stdlib/program.bbl")
+    ).rc())?;
+    interpreter.parse_and_evaluate(SourceFile::new(
         "<stdlib>/boolean.bbl",
         include_str!("../../stdlib/boolean.bbl")
     ).rc())?;
@@ -34,10 +38,6 @@ pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError
     interpreter.parse_and_evaluate(SourceFile::new(
         "<stdlib>/string.bbl",
         include_str!("../../stdlib/string.bbl")
-    ).rc())?;
-    interpreter.parse_and_evaluate(SourceFile::new(
-        "<stdlib>/string.bbl",
-        include_str!("../../stdlib/program.bbl")
     ).rc())?;
 
     Ok(())
