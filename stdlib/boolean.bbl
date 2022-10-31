@@ -9,7 +9,7 @@ impl Boolean {
     /// Executes one block if this boolean is `true`, or another if it is `false`.
     ///
     /// @param ifTrue: The block to execute in the `true` case.
-    /// @param ifFalse: The block to execute in the `false` case.
+    /// @param else: The block to execute in the `false` case.
     /// @returns The result of whichever block was executed.
     func ifTrue: trueAction else: falseAction {
         result = null.

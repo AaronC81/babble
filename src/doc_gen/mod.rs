@@ -63,6 +63,7 @@ pub fn generate_documentation(interpreter: &Interpreter) -> String {
                 for name in instance_fields {
                     output.push_str(&format!("- `{}`\n", name));
                 }
+                output.push_str("\n");
             },
             TypeData::Variants(variants) => {
                 output.push_str("**Definition**: Enum with variants:\n\n");
@@ -76,10 +77,20 @@ pub fn generate_documentation(interpreter: &Interpreter) -> String {
                         }
                     }
                 }
+                output.push_str("\n");
             },
             TypeData::Mixin => output.push_str("**Definition**: Mixin\n\n"),
             TypeData::Empty => output.push_str("**Definition**: Primitive\n\n"),
         };
+
+        if !t.used_mixins.is_empty() {
+            output.push_str("**Uses mixins**: \n");
+            for mixin in &t.used_mixins {
+                let mixin = mixin.borrow();
+                output.push_str(&format!("- [{}](#{})\n", mixin.id, mixin.id.to_lowercase()));
+            }
+            output.push_str("\n\n");
+        }
 
         // Gather all instance and static methods
         let mut all_methods = t.methods.iter().cloned()

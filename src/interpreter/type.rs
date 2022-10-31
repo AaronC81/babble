@@ -126,7 +126,11 @@ impl Type {
                         };
 
                         Ok(field_values[i].clone())
-                    }).rc());
+                    }).with_documentation(&format!("
+                        **Field accessor.**
+
+                        @returns The value of `{}`.
+                    ", field)).rc());
                 }
 
                 for (i, field) in static_fields.iter().enumerate() {
@@ -137,7 +141,11 @@ impl Type {
 
                         let value = t.borrow().static_fields[i].clone();
                         Ok(value)
-                    }).rc());
+                    }).with_documentation(&format!("
+                        **Static field accessor.**
+
+                        @returns The value of `{}`.
+                    ", field)).rc());
                 }
             },
 
@@ -182,6 +190,7 @@ impl Type {
         };
         if fields.is_empty() { return }
 
+        let type_name = t.borrow().id.clone();
         let constructor_name = fields.iter()
             .map(|f| format!("{}:", f))
             .collect::<String>();
@@ -193,7 +202,11 @@ impl Type {
                     field_values: a,
                 }
             }.rc())
-        }).rc());
+        }).with_documentation(&format!("
+            **Constructor.**
+
+            @returns A new instance of `{}`.
+        ", type_name)).rc());
     }
 
     /// Transforms this into a [`TypeRef`].
