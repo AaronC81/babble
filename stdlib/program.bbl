@@ -1,3 +1,13 @@
+struct ThrowTag id static next.
+ThrowTag next = 1.
+impl ThrowTag {
+    static func new {
+        result = ThrowTag id: self next.
+        self next = self next add: 1.
+        result
+    }
+}
+
 impl Program {
     [
         result = 0.
@@ -36,4 +46,14 @@ impl Program {
         ].
         InternalTest case: "catchEquals:in:" that: result equals: 2.
     ] call.
+
+    /// Runs the given body block, passing it a unique instance of `ThrowTag`, and exits if the tag
+    /// is thrown with `throw:`.
+    ///
+    /// @param catchTag: The block to execute, accepting one parameter, the tag.
+    /// @returns The value returned by the block, or the tag if the block exits early.
+    static func catchTag: block {
+        tag = ThrowTag new.
+        Program catchEquals: tag in: [ block call: tag ].
+    }
 }

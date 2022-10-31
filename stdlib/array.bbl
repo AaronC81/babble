@@ -77,4 +77,23 @@ impl Array {
     }
     InternalTest case: "isEmpty pos" that: #{} isEmpty    equals: true.
     InternalTest case: "isEmpty neg" that: #{ 1 } isEmpty equals: false.
+
+    /// Find the first value in the array matching a predicate.
+    ///
+    /// @param find: The predicate to use, which should accept one parameter.
+    /// @returns The first value matching the predicate, or `null` if none is found.
+    func find: fn {
+        foundItem = null.
+        Program catchTag: [ |tag|
+            self forEach: [ |x|
+                (fn call: x) ifTrue: [
+                    foundItem = x.
+                    Program throw: tag.
+                ].
+            ].
+        ].
+        foundItem
+    }
+    InternalTest case: "find pos" that: (#{ 1 8 3 } find: [ |x| (x modulo: 2) equals: 0 ]) equals: 8.
+    InternalTest case: "find neg" that: (#{ 1 7 3 } find: [ |x| (x modulo: 2) equals: 0 ]) equals: null.
 }
