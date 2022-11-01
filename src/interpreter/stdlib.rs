@@ -312,7 +312,7 @@ fn array(interpreter: &mut Interpreter) -> Type {
     }.with_derived_core_mixins(interpreter)
 }
 
-fn console(interpreter: &mut Interpreter) -> Type {
+fn console(_: &mut Interpreter) -> Type {
     Type {
         static_methods: vec![
             Method::new_internal("println:", |_, _, p| {
@@ -451,7 +451,7 @@ fn boolean(interpreter: &mut Interpreter) -> Type {
     }.with_derived_core_mixins(interpreter)
 }
 
-fn internal_test(interpreter: &mut Interpreter) -> Type {
+fn internal_test(_: &mut Interpreter) -> Type {
     Type {
         static_methods: vec![
             Method::new_internal("case:that:equals:", |i, _, a| {
