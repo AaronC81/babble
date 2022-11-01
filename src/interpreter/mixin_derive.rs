@@ -13,6 +13,7 @@ pub fn derive_core_mixins(interpreter: &mut Interpreter, target: &mut Type) {
     target.used_mixins.push(interpreter.resolve_stdlib_type("Representable"));
 }
 
+// TODO: Consider making this work like Representable, where the definition is baked into the mixin
 /// Provides an implementation of `Equatable` for a given type.
 pub fn derive_equatable(interpreter: &mut Interpreter, target: &mut Type) {
     target.add_method(Method::new_internal("equals:", |i, recv, params| {
