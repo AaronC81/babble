@@ -10,6 +10,7 @@ use super::{Type, Method, Value, Interpreter};
 /// Provides core mixins for a given type.
 pub fn derive_core_mixins(interpreter: &mut Interpreter, target: &mut Type) {
     derive_equatable(interpreter, target);
+    target.used_mixins.push(interpreter.resolve_stdlib_type("Representable"));
 }
 
 /// Provides an implementation of `Equatable` for a given type.

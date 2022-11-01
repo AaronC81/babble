@@ -13,10 +13,16 @@ use super::{InterpreterErrorKind, TypeData, Variant, TypeRef, Interpreter, TypeI
 /// Instantiates a set of core standard library types, by building them from intrinsics, executing
 /// bundled Babble code to define them, or a combination of the two.
 pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError> {
+    // Some types are needed to define others, namely derived mixins, so add these to the
+    // interpreter in an early pass so they're resolvable
     interpreter.parse_and_evaluate(SourceFile::new(
         "<stdlib>/core_mixins.bbl",
         include_str!("../../stdlib/core_mixins.bbl")
     ).rc())?;
+    let early_core_types = early_core_types(interpreter);
+    interpreter.types.extend(early_core_types);
+
+    // Define the rest of the stdlib types
     let core_types = core_types(interpreter);
     interpreter.types.extend(core_types);
     interpreter.parse_and_evaluate(SourceFile::new(
@@ -48,6 +54,12 @@ pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError
     Ok(())
 }
 
+fn early_core_types(interpreter: &mut Interpreter) -> Vec<TypeRef> {
+    vec![
+        representable(interpreter).rc(),
+    ]
+}
+
 fn core_types(interpreter: &mut Interpreter) -> Vec<TypeRef> {
     vec![
         null(interpreter).rc(),
@@ -61,6 +73,21 @@ fn core_types(interpreter: &mut Interpreter) -> Vec<TypeRef> {
         program(interpreter).rc(),
         reflection(interpreter).rc(),
     ]
+}
+
+fn representable(_: &mut Interpreter) -> Type {
+    Type {
+        methods: vec![
+            Method::new_internal("repr", |_, recv, _| {
+                Ok(Value::new_string(&recv.borrow().to_language_string()).rc())
+            }).with_documentation("
+                A debug string representation of this value.
+
+                @returns The string representation.
+            ").rc(),
+        ],
+        ..Type::new("Representable")
+    }
 }
 
 fn null(interpreter: &mut Interpreter) -> Type {

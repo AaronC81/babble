@@ -395,14 +395,14 @@ fn test_array_string() {
     assert_eq!(
         evaluate("
             struct X a b.
-            #{ 1 2 (X a: 1 b: 2) 3 true }
-        ").unwrap().borrow().to_language_string(),
-        "#{ 1 2 (X a: 1 b: 2) 3 Boolean#True }",
+            #{ 1 2 (X a: 1 b: 2) 3 true } repr
+        ").unwrap(),
+        Value::new_string("#{ 1 2 (X a: 1 b: 2) 3 Boolean#True }").rc(),
     );
     assert_eq!(
         evaluate("
-            Array new
-        ").unwrap().borrow().to_language_string(),
-        "#{ }",
+            Array new repr
+        ").unwrap(),
+        Value::new_string("#{ }").rc(),
     );
 }
