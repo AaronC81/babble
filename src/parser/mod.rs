@@ -276,7 +276,8 @@ impl<'a> Parser<'a> {
             } else {
                 Err(ParserError::UnexpectedToken(self.here().clone()))
             }
-        } else if let Token { kind: TokenKind::BlockStart, .. } = self.here() {
+        } else if let Token { kind: TokenKind::BlockStart, location } = self.here() {
+            let location = location.clone();
             self.advance();
 
             // If the first token is a pipe, then parse parameters until the next pipe
@@ -326,11 +327,10 @@ impl<'a> Parser<'a> {
 
             let new_context = LexicalContext::new_with_parent(context).rc();
             Ok(Node {
-                // TODO
-                location: body[0].location.clone(),
+                location: location.clone(),
                 kind: NodeKind::Block {
                     body: Box::new(Node {
-                        location: body[0].location.clone(),
+                        location: location.clone(),
                         kind: NodeKind::StatementSequence(body),
                         context: new_context.clone(),
                     }),

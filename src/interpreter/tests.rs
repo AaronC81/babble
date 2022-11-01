@@ -369,3 +369,23 @@ fn test_mixin() {
         Value::new_integer(2).rc(),
     );
 }
+
+#[test]
+fn test_block_equality() {
+    // Blocks are only equal if they are the exact same block
+    assert_eq!(
+        evaluate("
+            x = [].
+            y = [].
+            x equals: y
+        ").unwrap().borrow().to_language_string(),
+        "Boolean#False",
+    );
+    assert_eq!(
+        evaluate("
+            x = [].
+            x equals: x
+        ").unwrap().borrow().to_language_string(),
+        "Boolean#True",
+    );
+}

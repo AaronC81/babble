@@ -255,12 +255,12 @@ impl Interpreter {
                     )
                     .collect::<Result<Vec<_>, _>>()?;
 
-                Ok(Value::new_block(Block {
-                    body: *body.clone(),
-                    parameters: parameters.clone(),
-                    captured_locals: capture_values,
-                    captured_self: self.current_stack_frame().self_value.clone(),
-                }).rc())
+                Ok(Value::new_block(Block::new(
+                    *body.clone(),
+                    parameters.clone(),
+                    capture_values,
+                    self.current_stack_frame().self_value.clone(),
+                )).rc())
             },
 
             NodeKind::EnumVariant { enum_type, variant_name, components } => {

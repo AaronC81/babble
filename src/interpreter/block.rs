@@ -3,9 +3,13 @@
 //! 
 //! See [`Block`] for more details.
 
+use std::sync::atomic::AtomicUsize;
+
 use crate::parser::Node;
 
 use super::{ValueRef, InterpreterResult, Interpreter, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariableRef, LocalVariable};
+
+static UNIQUE_BLOCK_ID: AtomicUsize = AtomicUsize::new(1);
 
 /// An anonymous function which can take a given number of unnamed parameters and return a value.
 /// 
@@ -14,21 +18,31 @@ use super::{ValueRef, InterpreterResult, Interpreter, InterpreterErrorKind, Stac
 /// [special analysis step after parsing](crate::parser::capture_analysis).
 #[derive(Debug, Clone)]
 pub struct Block {
+    pub id: usize,
     pub body: Node,
     pub parameters: Vec<String>,
     pub captured_locals: Vec<LocalVariableRef>,
     pub captured_self: ValueRef,
 }
 
-// TODO: more sensible Eq implementation, maybe use some unique ID
 impl PartialEq for Block {
     fn eq(&self, other: &Self) -> bool {
-        false
+        self.id == other.id
     }
 }
 impl Eq for Block {}
 
 impl Block {
+    pub fn new(body: Node, parameters: Vec<String>, captured_locals: Vec<LocalVariableRef>, captured_self: ValueRef) -> Self {
+        Self {
+            id: UNIQUE_BLOCK_ID.fetch_add(1, std::sync::atomic::Ordering::SeqCst),
+            body,
+            parameters,
+            captured_locals,
+            captured_self,
+        }
+    }
+    
     /// The number of parameters which this block takes.
     pub fn arity(&self) -> usize {
         self.parameters.len()
