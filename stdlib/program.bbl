@@ -56,4 +56,12 @@ impl Program {
         tag = ThrowTag new.
         Program catchEquals: tag in: [ block call: tag ].
     }
+
+    /// Run the given block repeatedly.
+    ///
+    /// @param loop: The block to execute.
+    /// @returns This method will never return.
+    static func loop: fn {
+        [ true ] whileTrue: fn.
+    }
 }
