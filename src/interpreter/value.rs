@@ -178,9 +178,28 @@ impl Value {
             TypeInstance::Type(t) => t.borrow().id.clone(),
             TypeInstance::PrimitiveInteger(i) => i.to_string(),
             TypeInstance::PrimitiveString(s) => s.clone(),
-            TypeInstance::PrimitiveArray(a) => "(array)".into(), // TODO: decide how to lay these out
+            TypeInstance::PrimitiveArray(a) =>
+                if a.is_empty() {
+                    "#{ }".to_string()
+                } else {
+                    format!("#{{ {} }}", a.iter()
+                        .map(|v| v.borrow().to_ws_safe_language_string())
+                        .collect::<Vec<_>>()
+                        .join(" "))
+                },
             TypeInstance::PrimitiveNull => "null".into(),
         }
+    }
+
+    /// The same as `to_language_string`, but wraps this value in parentheses if it contains any
+    /// whitespace.
+    pub fn to_ws_safe_language_string(&self) -> String {
+        let mut result = self.to_language_string();
+        if result.chars().any(|c| c.is_whitespace()) {
+            result.insert(0, '(');
+            result.push(')');
+        }
+        result
     }
 
     /// Performs a "soft copy" of this value, cloning primitive values and returning compound types
