@@ -4,10 +4,10 @@
 #![feature(result_flattening)]
 #![feature(let_chains)]
 
-use std::{env::args, fs::read_to_string};
+use std::{fs::read_to_string, io::{stdin, stdout, Write}};
 
 use clap::Parser;
-use interpreter::Interpreter;
+use interpreter::{Interpreter, InterpreterError};
 use source::SourceFile;
 
 mod source;
@@ -49,22 +49,51 @@ fn main() {
         println!("{}", output);
         return;
     } else {
-        unreachable!("invalid command")
+        repl();
     };
 
     let src = SourceFile::new(&input_name, &input_contents).rc();
     if let Err(e) = Interpreter::new().map(|mut i| i.parse_and_evaluate(src)).flatten() {
-        println!("Fatal error:\n  {}\n", e.kind);
-        if let Some(details) = e.details {
-            if let Some(location) = details.location {
-                println!("At: {}:{}", location.source_file.name, location.line_number());
-                println!("|   {}\n", location.line_contents().trim_end());
-            }
+        print_error(e);
+    }
+}
 
-            println!("Backtrace (most recent first):");
-            for frame in details.backtrace.iter().rev() {
-                println!("  - {}", frame.context);
-            }
+// TODO: panics on parse error
+fn repl() -> ! {
+    // Construct an interpreter instance
+    let mut interpreter = Interpreter::new().unwrap();    
+
+    let mut command_number = 1;
+    loop {
+        // Read a command
+        print!("> ");
+        stdout().flush().unwrap();
+        let mut command = "".to_string();
+        stdin().read_line(&mut command).unwrap();
+
+        // Run it
+        let source = SourceFile::new(&format!("repl-{}", command_number), &command);
+        match interpreter.parse_and_evaluate(source.rc()) {
+            Ok(result) => println!("{}", result.borrow_mut().to_language_string()),
+            Err(e) => print_error(e),
+        }
+        println!("");
+
+        command_number += 1;
+    }
+}
+
+fn print_error(e: InterpreterError) {
+    println!("Fatal error:\n  {}\n", e.kind);
+    if let Some(details) = e.details {
+        if let Some(location) = details.location {
+            println!("At: {}:{}", location.source_file.name, location.line_number());
+            println!("|   {}\n", location.line_contents().trim_end());
+        }
+
+        println!("Backtrace (most recent first):");
+        for frame in details.backtrace.iter().rev() {
+            println!("  - {}", frame.context);
         }
     }
 }
