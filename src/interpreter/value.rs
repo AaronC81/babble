@@ -174,7 +174,14 @@ impl Value {
                 result
             }
 
-            TypeInstance::Block(_) => "(anonymous block)".into(),
+            TypeInstance::Block(b) => match b.parameters {
+                crate::parser::BlockParameters::Named(_) => "[ block ]".into(),
+                crate::parser::BlockParameters::Patterned { fatal, .. } => if fatal {
+                    "![ block ]".into()
+                } else {
+                    "?[ block ]".into()
+                },
+            }
             TypeInstance::Type(t) => t.borrow().id.clone(),
             TypeInstance::PrimitiveInteger(i) => i.to_string(),
             TypeInstance::PrimitiveString(s) => s.clone(),
