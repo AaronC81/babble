@@ -16,6 +16,9 @@ pub mod capture_analysis;
 mod literal;
 pub use literal::*;
 
+mod pattern;
+pub use pattern::*;
+
 #[cfg(test)]
 mod tests;
 
