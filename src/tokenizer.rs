@@ -30,6 +30,8 @@ pub enum TokenKind {
     Star,
     Hash,
     Keyword(TokenKeyword),
+    QuestionMark,
+    ExclamationMark,
 
     BlockStart,
     BlockEnd,
@@ -185,6 +187,8 @@ impl<'a> Tokenizer<'a> {
                     '|' => self.tokens.push(TokenKind::Pipe.at(self.here_loc())),
                     '*' => self.tokens.push(TokenKind::Star.at(self.here_loc())),
                     '#' => self.tokens.push(TokenKind::Hash.at(self.here_loc())),
+                    '?' => self.tokens.push(TokenKind::QuestionMark.at(self.here_loc())),
+                    '!' => self.tokens.push(TokenKind::ExclamationMark.at(self.here_loc())),
 
                     // Start of a comment
                     '/' if self.peek() == '/' => {

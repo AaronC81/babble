@@ -38,6 +38,9 @@ pub enum ParserError {
     /// Fields used inside an enum variant are not permitted to be static - only fields within 
     /// structs are.
     StaticEnumVariantField,
+
+    /// An error occurred while parsing a pattern.
+    PatternError(PatternParseError),
 }
 
 /// The parser state.
@@ -282,44 +285,67 @@ impl<'a> Parser<'a> {
             } else {
                 Err(ParserError::UnexpectedToken(self.here().clone()))
             }
-        } else if let Token { kind: TokenKind::BlockStart, location } = self.here() {
+        } else if let Token {
+            kind: TokenKind::BlockStart | TokenKind::QuestionMark | TokenKind::ExclamationMark,
+            location
+        } = self.here() {
+            // What kind of block is this?
+            let (uses_pattern_params, fatal) = match self.here().kind {
+                TokenKind::BlockStart => (false, false),
+                TokenKind::QuestionMark => (true, false),
+                TokenKind::ExclamationMark => (true, true),
+                _ => unreachable!(),
+            };
             let location = location.clone();
+
+            // Advance past the block start, which might be either one token or two
             self.advance();
+            if uses_pattern_params {
+                let TokenKind::BlockStart = self.here().kind else { self.token_error()? };
+                self.advance();
+            }
 
             // If the first token is a pipe, then parse parameters until the next pipe
-            let mut parameters = vec![];
-            let mut captures = vec![];
-            if let Token { kind: TokenKind::Pipe, .. } = self.here() {
-                self.advance();
-                loop {
-                    match &self.here().kind {
-                        TokenKind::Identifier(i) => {
-                            parameters.push(i.clone());
+            let parameters = if uses_pattern_params {
+                // Parse patterned parameters
+                let mut patterns = vec![];
+                if let Token { kind: TokenKind::Pipe, .. } = self.here() {
+                    self.advance();
+                    loop {
+                        if let TokenKind::Pipe = &self.here().kind {
                             self.advance();
-                        },
-
-                        // TODO: this capture syntax is pretty ugly since it can be interspersed
-                        // into the normal parameter list, and also just kind of shouldn't be
-                        // necessary at all
-                        // Ideally we'll have some pass later to build this list automatically,
-                        // but for now it's explicit - consider removing this syntax at some point
-                        TokenKind::Star => {
-                            self.advance();
-                            if let TokenKind::Identifier(i) = &self.here().kind {
-                                captures.push(i.clone());
-                                self.advance();
-                            } else {
-                                return Err(ParserError::UnexpectedToken(self.here().clone()))
-                            }
+                            break
                         }
-                        TokenKind::Pipe => {
-                            self.advance();
-                            break;
-                        },
-                        _ => return Err(ParserError::UnexpectedToken(self.here().clone()))
+
+                        let exp = self.parse_expression(context.clone())?;
+                        let pattern = Pattern::parse(exp)
+                            .map_err(ParserError::PatternError)?;
+                        patterns.push(pattern);
                     }
                 }
-            }
+                BlockParameters::Patterned { patterns, fatal }
+            } else {
+                // Parse named parameters
+                let mut parameters = vec![];
+                if let Token { kind: TokenKind::Pipe, .. } = self.here() {
+                    self.advance();
+                    loop {
+                        match &self.here().kind {
+                            TokenKind::Identifier(i) => {
+                                parameters.push(i.clone());
+                                self.advance();
+                            },
+
+                            TokenKind::Pipe => {
+                                self.advance();
+                                break;
+                            },
+                            _ => return Err(ParserError::UnexpectedToken(self.here().clone()))
+                        }
+                    }
+                }
+                BlockParameters::Named(parameters)
+            };
 
             let mut body = vec![];
             
@@ -340,8 +366,8 @@ impl<'a> Parser<'a> {
                         kind: NodeKind::StatementSequence(body),
                         context: new_context.clone(),
                     }),
-                    parameters: BlockParameters::Named(parameters),
-                    captures,
+                    parameters,
+                    captures: vec![],
                 },
                 context: new_context,
             })

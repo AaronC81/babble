@@ -6,8 +6,8 @@ use crate::interpreter::{ValueRef, InterpreterError, Interpreter, Value};
 
 use super::Literal;
 
-#[derive(Debug, Clone)]
-enum PatternParseError {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PatternParseError {
     InvalidNode(Node),
 }
 
@@ -63,7 +63,7 @@ impl Pattern {
         }
     }
 
-    fn parse(interpreter: &Interpreter, node: Node) -> Result<Self, PatternParseError> {
+    pub fn parse(node: Node) -> Result<Self, PatternParseError> {
         match node.kind {
             // Literals
             NodeKind::Literal(l) => Ok(Pattern::new_literal(l)),
