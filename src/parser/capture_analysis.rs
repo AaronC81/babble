@@ -3,7 +3,7 @@
 
 use crate::parser::NodeKind;
 
-use super::{Node, NodeWalk};
+use super::{Node, NodeWalk, BlockParameters};
 
 /// A frame used in the capture analysis stack.
 struct AnalysisStackFrame {
@@ -62,7 +62,12 @@ fn handle_node(node: &mut Node, stack: &mut Vec<AnalysisStackFrame>) {
         NodeKind::Block { parameters, .. } => {
             let mut frame = AnalysisStackFrame::new();
             // Ensure that we don't try to capture our own parameters
-            frame.assignments.extend(parameters.clone());
+            frame.assignments.extend(match parameters {
+                BlockParameters::Named(names) => names.clone(),
+                BlockParameters::Patterned { patterns, .. } => patterns.iter()
+                    .flat_map(|p| p.all_bindings())
+                    .collect(),
+            });
             stack.push(frame);
         },
 

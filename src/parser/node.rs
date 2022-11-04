@@ -2,7 +2,7 @@
 
 use crate::{source::Location, interpreter::{ValueRef, Interpreter, Variant, InterpreterError, Value}};
 
-use super::{LexicalContextRef, Literal};
+use super::{LexicalContextRef, Literal, Pattern};
 
 /// A node in the parse tree.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -115,6 +115,21 @@ pub enum SendMessageParameter {
     Defined(String),
 }
 
+/// The parameters taken by a block.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum BlockParameters {
+    /// The block takes simple, named parameters.
+    Named(Vec<String>),
+
+    /// The block takes patterns as parameters, and depending on `fatal`, will either wrap the
+    /// block's return value in a `Match` or cause a fatal error to indicate that the arguments did
+    /// not match a pattern.
+    Patterned {
+        patterns: Vec<Pattern>,
+        fatal: bool,
+    }
+}
+
 /// The kind of this node.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NodeKind {
@@ -133,7 +148,7 @@ pub enum NodeKind {
     },
     Block {
         body: Box<Node>,
-        parameters: Vec<String>,
+        parameters: BlockParameters,
         captures: Vec<String>,
     },
     EnumVariant {

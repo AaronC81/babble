@@ -340,7 +340,7 @@ impl<'a> Parser<'a> {
                         kind: NodeKind::StatementSequence(body),
                         context: new_context.clone(),
                     }),
-                    parameters,
+                    parameters: BlockParameters::Named(parameters),
                     captures,
                 },
                 context: new_context,

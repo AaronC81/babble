@@ -17,23 +17,23 @@ pub struct Pattern {
 }
 
 impl Pattern {
-    fn new(kind: PatternKind) -> Self {
+    pub fn new(kind: PatternKind) -> Self {
         Self { kind }
     }
 
-    fn new_literal(value: Literal) -> Self {
+    pub fn new_literal(value: Literal) -> Self {
         Self::new(PatternKind::Literal(value))
     }
 
-    fn new_binding(name: &str) -> Self {
+    pub fn new_binding(name: &str) -> Self {
         Self::new(PatternKind::Binding(name.into()))
     }
 
-    fn new_discard() -> Self {
+    pub fn new_discard() -> Self {
         Self::new(PatternKind::Discard)
     }
 
-    fn match_against(&self, value: ValueRef, context: &mut PatternMatchContext) -> Result<bool, InterpreterError> {
+    pub fn match_against(&self, value: ValueRef, context: &mut PatternMatchContext) -> Result<bool, InterpreterError> {
         match &self.kind {
             PatternKind::Literal(expected) => {
                 // TODO: currently probably produces unexpected results for impure literals
@@ -55,7 +55,7 @@ impl Pattern {
         }
     }
 
-    fn all_bindings(&self) -> Vec<String> {
+    pub fn all_bindings(&self) -> Vec<String> {
         match &self.kind {
             PatternKind::Literal(_) => vec![],
             PatternKind::Binding(name) => vec![name.clone()],
