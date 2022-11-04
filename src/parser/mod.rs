@@ -13,6 +13,9 @@ pub use lexical_context::*;
 
 pub mod capture_analysis;
 
+mod literal;
+pub use literal::*;
+
 #[cfg(test)]
 mod tests;
 
@@ -222,7 +225,7 @@ impl<'a> Parser<'a> {
     fn parse_literal(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
         if let Token { kind: TokenKind::IntegerLiteral(value), location } = self.here() {
             let node = Node {
-                kind: NodeKind::IntegerLiteral(*value),
+                kind: NodeKind::Literal(Literal::Integer(*value as i64)),
                 location: location.clone(),
                 context,
             };
@@ -230,7 +233,7 @@ impl<'a> Parser<'a> {
             Ok(node)
         } else if let Token { kind: TokenKind::StringLiteral(value), location } = self.here() {
             let node = Node {
-                kind: NodeKind::StringLiteral(value.clone()),
+                kind: NodeKind::Literal(Literal::String(value.clone())),
                 location: location.clone(),
                 context,
             };
@@ -361,7 +364,7 @@ impl<'a> Parser<'a> {
             }
 
             Ok(Node {
-                kind: NodeKind::ArrayLiteral(items),
+                kind: NodeKind::Literal(Literal::Array(items)),
                 location,
                 context,
             })
@@ -369,10 +372,10 @@ impl<'a> Parser<'a> {
             let node = Node {
                 location: location.clone(),
                 kind: match kw {
-                    TokenKeyword::True => NodeKind::TrueLiteral,
-                    TokenKeyword::False => NodeKind::FalseLiteral,
-                    TokenKeyword::Null => NodeKind::NullLiteral,
-                    TokenKeyword::Zelf => NodeKind::SelfLiteral,
+                    TokenKeyword::True => NodeKind::Literal(Literal::True),
+                    TokenKeyword::False => NodeKind::Literal(Literal::False),
+                    TokenKeyword::Null => NodeKind::Literal(Literal::Null),
+                    TokenKeyword::Zelf => NodeKind::SelfAccess,
                     
                     // Should have been handled earlier
                     TokenKeyword::Impl

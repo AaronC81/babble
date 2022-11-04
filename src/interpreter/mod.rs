@@ -131,18 +131,6 @@ impl Interpreter {
     /// The inner implementation of `evaluate`.
     fn evaluate_inner(&mut self, node: &Node) -> InterpreterResult {
         match &node.kind {
-            NodeKind::IntegerLiteral(i) => (*i).try_into()
-                .map(|i| Value::new_integer(i).rc())
-                .map_err(|_| InterpreterErrorKind::IntegerOverflow.into()),
-
-            NodeKind::StringLiteral(s) => Ok(Value::new_string(s).rc()),
-
-            NodeKind::ArrayLiteral(items) => Ok(Value::new_array(
-                &items.iter()
-                    .map(|item| self.evaluate(&*item))
-                    .collect::<Result<Vec<_>, _>>()?
-            ).rc()),
-
             NodeKind::SendMessage { receiver, components } => {
                 // Evaluate the receiver
                 let receiver = self.evaluate(receiver)?;
@@ -298,10 +286,8 @@ impl Interpreter {
                 }.rc())
             },
 
-            NodeKind::TrueLiteral => Ok(Value::new_boolean(self, true).rc()),
-            NodeKind::FalseLiteral => Ok(Value::new_boolean(self, false).rc()),
-            NodeKind::NullLiteral => Ok(Value::new_null().rc()),
-            NodeKind::SelfLiteral => Ok(self.current_stack_frame().self_value.clone()),
+            NodeKind::Literal(l) => l.instantiate(self),
+            NodeKind::SelfAccess => Ok(self.current_stack_frame().self_value.clone()),
 
             NodeKind::ImplBlock { target, body } => {
                 // Evaluate target - it should be a type

@@ -2,7 +2,7 @@
 
 use crate::{source::Location, interpreter::{ValueRef, Interpreter, Variant, InterpreterError, Value}};
 
-use super::LexicalContextRef;
+use super::{LexicalContextRef, Literal};
 
 /// A node in the parse tree.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -118,14 +118,9 @@ pub enum SendMessageParameter {
 /// The kind of this node.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NodeKind {
-    IntegerLiteral(u64),
-    StringLiteral(String),
-    ArrayLiteral(Vec<Box<Node>>),
-    TrueLiteral,
-    FalseLiteral,
-    NullLiteral,
-    SelfLiteral,
+    Literal(Literal),
 
+    SelfAccess,
     Identifier(String),
     SendMessage {
         receiver: Box<Node>,
@@ -216,22 +211,26 @@ impl NodeWalk for Node {
             NodeKind::Use(mixin) => {
                 func(mixin);
             }
-            NodeKind::ArrayLiteral(items) => {
-                for node in items {
-                    func(node)
-                }
-            }
+            NodeKind::Literal(l) => l.walk_children(func),
 
-            NodeKind::IntegerLiteral(_)
-            | NodeKind::StringLiteral(_) 
-            | NodeKind::TrueLiteral
-            | NodeKind::FalseLiteral
-            | NodeKind::NullLiteral 
-            | NodeKind::SelfLiteral
+            | NodeKind::SelfAccess
             | NodeKind::EnumDefinition { name: _, variants: _ }
             | NodeKind::StructDefinition { name: _, instance_fields: _, static_fields: _ }
             | NodeKind::MixinDefinition { name: _ }
             | NodeKind::Identifier(_) => (),
+        }
+    }
+}
+
+impl NodeWalk for Literal {
+    fn walk_children(&mut self, func: &mut impl FnMut(&mut Node)) {
+        match self {
+            Literal::Array(items) => {
+                for node in items {
+                    node.walk_children(func);
+                }
+            }
+            _ => (),
         }
     }
 }

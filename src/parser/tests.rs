@@ -1,6 +1,6 @@
 use crate::{tokenizer::Tokenizer, source::SourceFile};
 
-use super::{Node, SendMessageComponents, NodeKind, Parser, SendMessageParameter};
+use super::{Node, SendMessageComponents, NodeKind, Parser, SendMessageParameter, Literal};
 
 #[test]
 fn test_simple_parse() {
@@ -17,12 +17,12 @@ fn test_simple_parse() {
         parsed,
         Node {
             kind: NodeKind::SendMessage {
-                receiver: box Node { kind: NodeKind::IntegerLiteral(32), .. },
+                receiver: box Node { kind: NodeKind::Literal(Literal::Integer(32)), .. },
                 components: SendMessageComponents::Parameterised(params)
             },
             ..
         } if matches!(&params[..], [
-            (p1, SendMessageParameter::Parsed(box Node { kind: NodeKind::IntegerLiteral(24), .. })),
+            (p1, SendMessageParameter::Parsed(box Node { kind: NodeKind::Literal(Literal::Integer(24)), .. })),
         ] if p1 == "add")
     ))
 }

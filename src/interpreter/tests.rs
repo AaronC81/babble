@@ -20,16 +20,6 @@ fn test_simple_interpret() {
 }
 
 #[test]
-fn test_integer_overflow_on_token_conversion() {
-    assert!(matches!(
-        //   One more than the maximum i64
-        //        vvvvvvvvvvvvvvvvvvv
-        evaluate("9223372036854775808."),
-        Err(InterpreterError { kind: InterpreterErrorKind::IntegerOverflow, .. }),
-    ));
-}
-
-#[test]
 fn test_message_precedence() {
     assert_eq!(
         evaluate("2 negate add: 7 negate.").unwrap(),
