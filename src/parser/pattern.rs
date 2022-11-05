@@ -17,6 +17,11 @@ use super::Literal;
 pub enum PatternParseError {
     /// The given node is not allowed to appear at this location in a pattern.
     InvalidNode(Node),
+
+    /// The pattern being matched against is a [`Literal`] which is impure (i.e. constructing it
+    /// could have side effects). This should be treated as an internal error, as generally the
+    /// parsing step should disallow this.
+    ImpureLiteral,
 }
 
 /// A pattern, describing a data layout that a value can be matched against, optionally extracting
@@ -33,6 +38,10 @@ impl Pattern {
 
     pub fn new_literal(value: Literal) -> Self {
         Self::new(PatternKind::Literal(value))
+    }
+
+    pub fn new_array(patterns: Vec<Pattern>) -> Self {
+        Self::new(PatternKind::Array(patterns))
     }
 
     pub fn new_any_binding(name: &str) -> Self {
@@ -62,7 +71,6 @@ impl Pattern {
     pub fn match_against(&self, value: ValueRef, context: &mut PatternMatchContext) -> Result<bool, InterpreterError> {
         match &self.kind {
             PatternKind::Literal(expected) => {
-                // TODO: currently probably produces unexpected results for impure literals
                 let expected_value = expected.instantiate(context.interpreter)?;
                 Ok(
                     context.interpreter.send_message(
@@ -73,6 +81,26 @@ impl Pattern {
                     )?.borrow().to_boolean().unwrap()
                 )
             },
+
+            PatternKind::Array(patterns) => {
+                // Extract array
+                let mut value = value.borrow_mut();
+                let array = value.to_array();
+                let Ok(array) = array else { return Ok(false) };
+
+                // Trying matching against each pattern
+                if patterns.len() != array.len() {
+                    return Ok(false);
+                }
+                for (pattern, value) in patterns.iter().zip(array.iter()) {
+                    if !pattern.match_against(value.clone(), context)? {
+                        return Ok(false);
+                    }
+                }
+
+                Ok(true)
+            },
+
             PatternKind::Fields { type_name, variant_name, fields } => {
                 // Resolve the type being matched against
                 let Some(type_value) = context.interpreter.resolve_type(type_name) else {
@@ -133,6 +161,7 @@ impl Pattern {
 
                 Ok(true)
             },
+
             PatternKind::PatternBinding(name, pattern) => {
                 if pattern.match_against(value.clone(), context)? {
                     context.bindings.insert(name.clone(), value);
@@ -141,10 +170,12 @@ impl Pattern {
                     Ok(false)
                 }
             },
+
             PatternKind::AnyBinding(name) => {
                 context.bindings.insert(name.into(), value);
                 Ok(true)
             },
+
             PatternKind::Discard => Ok(true),
         }
     }
@@ -153,6 +184,7 @@ impl Pattern {
     pub fn all_bindings(&self) -> Vec<String> {
         match &self.kind {
             PatternKind::Literal(_) => vec![],
+            PatternKind::Array(array) => array.iter().flat_map(|p| p.all_bindings()).collect(),
             PatternKind::Fields { fields, .. } =>
                 fields.iter().flat_map(|(_, pattern)| pattern.all_bindings()).collect(),
             PatternKind::PatternBinding(name, _) => vec![name.clone()],
@@ -165,7 +197,18 @@ impl Pattern {
     pub fn parse(node: Node) -> Result<Self, PatternParseError> {
         match node.kind {
             // Literals
-            NodeKind::Literal(l) => Ok(Pattern::new_literal(l)),
+            NodeKind::Literal(l) =>
+                if let Literal::Array(items) = l {
+                    Ok(Pattern::new_array(
+                            items.into_iter()
+                            .map(Pattern::parse)
+                            .collect::<Result<_, _>>()?
+                    ))
+                } else if !l.is_pure() {
+                    Err(PatternParseError::ImpureLiteral)
+                } else {
+                    Ok(Pattern::new_literal(l))
+                },
 
             // Compounds
             NodeKind::SendMessage { receiver, components } => {
@@ -239,6 +282,9 @@ impl Pattern {
 pub enum PatternKind {
     /// The value must be equal to the provided literal, according to `equals:`.
     Literal(Literal),
+
+    /// The value must be an `Array` with items matching the provided patterns.
+    Array(Vec<Pattern>),
 
     /// The value must be an instance of the given struct or enum type, and optionally have a set of
     /// fields which must match their corresponding patterns.

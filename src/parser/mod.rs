@@ -389,7 +389,7 @@ impl<'a> Parser<'a> {
                     break;
                 }
 
-                items.push(Box::new(self.parse_expression(context.clone())?));
+                items.push(self.parse_expression(context.clone())?);
             }
 
             Ok(Node {

@@ -6,7 +6,7 @@ use super::{Node, NodeKind};
 pub enum Literal {
     Integer(i64),
     String(String),
-    Array(Vec<Box<Node>>),
+    Array(Vec<Node>),
     True,
     False,
     Null,
