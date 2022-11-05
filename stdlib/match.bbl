@@ -9,3 +9,121 @@ InternalTest case: "match block call neg" that: (?[ | 1 | 25 ] call: 2) equals: 
 InternalTest case: "match block bindings"
              that: (?[ | Match#Hit value: value | value ] call: (Match#Hit value: 1)) 
              equals: (Match#Hit value: 1). 
+
+impl Match {
+    /// A shorthand constructror for `Match#Hit`.
+    ///
+    /// @param hit: The value to use.
+    /// @return: The new `Match#Hit` instance.
+    static func hit: value {
+        Match#Hit value: value
+    }
+
+    /// Composes a new block from an array of other blocks, which will call each block in the array
+    /// and return the first hit value.
+    ///
+    /// If none of the blocks return a hit, the composed block will return a miss.
+    ///
+    /// @param oneOf: The blocks to compose, each taking one parameter.
+    /// @returns A new block taking one parameter, which executes each block in turn.
+    static func oneOf: values {
+        [ |subject| 
+            outerResult = Match#Miss.
+            Program catchTag: [ |tag|
+                values forEach: [ |item|
+                    result = item call: subject.
+                    ?[ | Match#Hit value: value |
+                        outerResult = Match hit: value.
+                        Program throw: tag.
+                    ] call: result.
+                ].
+            ].
+            outerResult
+        ]
+    }
+    [
+        composed = Match oneOf: #{
+            ?[ | 1 | 100 ]
+            ?[ | 2 | 200 ]
+            ?[ | 3 | 300 ]
+        }.
+        InternalTest case: "match oneOf: hit"  that: (composed call: 2) equals: (Match hit: 200).
+        InternalTest case: "match oneOf: miss" that: (composed call: 5) equals: Match#Miss.
+    ] call.
+
+    /// Whether this match is a hit.
+    ///
+    /// @returns `true` if this match is a hit, or `false` otherwise.
+    func isHit {
+        // Can't really do pattern matching here, since it would return another match!
+        (Reflection variant: self) equals: "Hit"
+    }
+
+    /// Whether this match is a miss.
+    ///
+    /// @returns `true` if this match is a miss, or `false` otherwise.
+    func isMiss {
+        self isHit not
+    }
+
+    /// If this match is a hit, applies a function to the value and returns a new hit. If it is a
+    /// miss, returns miss.
+    ///
+    /// @param map: The block to execute on the value, taking one parameter.
+    /// @returns A new hit, or a miss if it was already a miss.
+    func map: fn {
+        self isHit ifTrue: [ Match#Hit value: (fn call: self value) ]
+                   else:   [ Match#Miss ]
+    }
+    InternalTest case: "match map: hit"  that: ((Match hit: 2) map: [ |x| x add: 1 ]) equals: (Match hit: 3).
+    InternalTest case: "match map: miss" that: ((Match#Miss)   map: [ |x| x add: 1 ]) equals: (Match#Miss).
+
+    /// If this match is a hit, returns its value. If it is a miss, executes the given block and
+    /// returns its return value.
+    ///
+    /// @param valueOrElse: The block to execute if this is a miss, taking no parameters.
+    /// @returns The match's inner value, or the value returned by the block.
+    func valueOrElse: fn {
+        self isHit ifTrue: [ self value ]
+                   else:   [ fn call ]
+    }
+    InternalTest case: "match valueOrElse: hit"  that: ((Match hit: 2) valueOrElse: [ 3 ]) equals: 2.
+    InternalTest case: "match valueOrElse: miss" that: ((Match#Miss)   valueOrElse: [ 3 ]) equals: 3.
+
+    /// If this match is a hit, returns its value. If it is a miss, returns the given value.
+    ///
+    /// @param valueOr: The default value to return if this is a miss.
+    /// @returns The match's inner value, or the default value.
+    func valueOr: value {
+        self valueOrElse: [ value ]
+    }
+    InternalTest case: "match valueOr: hit"  that: ((Match hit: 2) valueOr: 3) equals: 2.
+    InternalTest case: "match valueOr: miss" that: ((Match#Miss)   valueOr: 3) equals: 3.
+
+    /// Assuming that this match contains another match (if it is a hit), flattens one level of
+    /// nesting.
+    ///
+    /// For example, `Match#Hit value: (Match#Hit value: x))` becomes `Match#Hit value: x`. If
+    /// either match was a miss, returns a miss.
+    ///
+    /// @returns The flattened match, or a miss if this is a miss or the inner value is not a hit.
+    func flatten {
+        ?[ | Match#Hit value: (Match#Hit value: x) | x ] call: self
+    }
+    InternalTest case: "match flatten hit,hit"  that: (Match hit: (Match hit: 2)) flatten equals: (Match hit: 2).
+    InternalTest case: "match flatten hit,miss" that: (Match hit: Match#Miss) flatten     equals: Match#Miss.
+    InternalTest case: "match flatten miss"     that: (Match#Miss) flatten                equals: Match#Miss.
+}
+
+impl Boolean {
+    /// Converts this boolean to a `Match`, where `true` is a hit with value `null`, and `false` is
+    /// a miss.
+    ///
+    /// @returns The `Match` instance.
+    func toMatch {
+        self ifTrue: [ Match#Hit value: null ]
+               else: [ Match#Miss ]
+    }
+    InternalTest case: "Boolean toMatch true"  that: true toMatch  equals: (Match hit: null).
+    InternalTest case: "Boolean toMatch false" that: false toMatch equals: Match#Miss.
+}
