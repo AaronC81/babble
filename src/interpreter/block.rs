@@ -3,11 +3,11 @@
 //! 
 //! See [`Block`] for more details.
 
-use std::sync::atomic::AtomicUsize;
+use std::{sync::atomic::AtomicUsize, collections::HashMap};
 
-use crate::parser::{Node, BlockParameters};
+use crate::parser::{Node, BlockParameters, PatternMatchContext};
 
-use super::{ValueRef, InterpreterResult, Interpreter, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariableRef, LocalVariable};
+use super::{ValueRef, InterpreterResult, Interpreter, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariableRef, LocalVariable, Value};
 
 static UNIQUE_BLOCK_ID: AtomicUsize = AtomicUsize::new(1);
 
@@ -67,20 +67,53 @@ impl Block {
             }.into())
         }
 
-        // TODO
-        let BlockParameters::Named(ref parameters) = self.parameters else { todo!() };
-
-        // Create a new stack frame with the relevant locals - that is...
-        interpreter.stack.push(StackFrame {
-            locals:
-                // ...parameters...
+        let mut wrap_result_in_match = false;
+        let parameter_locals = match &self.parameters {
+            // For named parameters, simply map arguments to parameters one-to-one
+            BlockParameters::Named(ref parameters) => {
                 parameters.iter()
                     .cloned()
                     .zip(arguments)
                     .map(|(name, value)| LocalVariable { name, value }.rc())
-                    // ...and captures.
-                    .chain(self.captured_locals.iter().cloned())
-                    .collect(),
+                    .collect::<Vec<_>>()
+            },
+
+            // For patterned parameters, match each argument against the corresponding pattern, and
+            // deal with it according to the preference of the block if this fails
+            BlockParameters::Patterned { patterns, fatal } => {
+                let mut match_context = PatternMatchContext {
+                    interpreter,
+                    bindings: HashMap::new(),
+                };
+                if !fatal {
+                    wrap_result_in_match = true;
+                }
+                
+                for (pattern, value) in patterns.iter()
+                    .cloned()
+                    .zip(arguments)
+                {
+                    if !pattern.match_against(value.clone(), &mut match_context)? {
+                        if *fatal {
+                            return Err(InterpreterErrorKind::PatternMatchFailed(value, pattern).into())
+                        } else {
+                            return Ok(Value::new_match(interpreter, None).rc())
+                        }
+                    }
+                }
+                
+                match_context.bindings.into_iter()
+                    .map(|(name, value)| LocalVariable { name, value }.rc())
+                    .collect::<Vec<_>>()
+            }
+        };
+
+        // Create a new stack frame with the relevant locals - that is, parameters and captures
+        interpreter.stack.push(StackFrame {
+            locals: parameter_locals
+                .into_iter()
+                .chain(self.captured_locals.iter().cloned())
+                .collect(),
             self_value: self.captured_self.clone(),
             context: StackFrameContext::Block,
         });
@@ -89,11 +122,16 @@ impl Block {
         // This order may seem unintuitive - but when an error is fatal, then we want the stack
         // trace from the error to be as correct as possible, so we leave the frames which errored
         // on the stack
-        let result = interpreter.evaluate(&self.body);
+        let mut result = interpreter.evaluate(&self.body);
         if let Err(error) = &result && error.kind.is_fatal() {
             return Err(error.clone());
         }
         interpreter.stack.pop();
+
+        if wrap_result_in_match {
+            result = result.map(|value| Value::new_match(interpreter, Some(value)).rc());
+        }
+
         Ok(result?)
     }
 }

@@ -2,7 +2,7 @@
 
 use std::fmt::Display;
 
-use crate::{source::Location, parser::Node};
+use crate::{source::Location, parser::{Node, Pattern}};
 
 use super::{ValueRef, StackFrame, Interpreter};
 
@@ -104,6 +104,9 @@ pub enum InterpreterErrorKind {
     /// A `use` statement was invoked with something that isn't a mixin.
     UseNonMixin(String),
 
+    /// In a `![ ... ]` block, a passed argument did not match the corresponding pattern.
+    PatternMatchFailed(ValueRef, Pattern),
+
     /// A test within the language standard library failed.
     /// 
     /// Should never occur in normal usage.
@@ -170,6 +173,9 @@ impl Display for InterpreterErrorKind {
                 write!(f, "mixin use is not allowed here"),
             InterpreterErrorKind::UseNonMixin(name) =>
                 write!(f, "cannot use `{}` because it is not a mixin", name),
+
+            InterpreterErrorKind::PatternMatchFailed(_, _) =>
+                write!(f, "pattern match failed"), // TODO: more details
 
             InterpreterErrorKind::InternalTestFailed(name) =>
                 write!(f, "internal test `{}` failed", name),

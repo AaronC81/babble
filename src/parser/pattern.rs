@@ -103,7 +103,7 @@ pub enum PatternKind {
     Discard,
 }
 
-struct PatternMatchContext<'a> {
+pub struct PatternMatchContext<'a> {
     pub interpreter: &'a mut Interpreter,
     pub bindings: HashMap<String, ValueRef>, 
 }

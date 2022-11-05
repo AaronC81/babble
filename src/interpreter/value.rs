@@ -62,6 +62,34 @@ impl Value {
         }
     }
 
+    /// Constructs a new match value, with `Hit` or `Miss` being mapped to the given `Option`.
+    /// 
+    /// Unlike most, this constructor requires an interpreter reference, because `Match` is
+    /// defined in the Babble standard library as an enum rather than being a core type, so must be
+    /// resolved from an instantiated standard library.
+    pub fn new_match(interpreter: &Interpreter, value: Option<ValueRef>) -> Self {
+        let match_type = interpreter.resolve_stdlib_type("Match");
+        let match_type_ref = match_type.borrow();
+
+        let variant_name;
+        let field_values;
+        if let Some(value) = value {
+            variant_name = "Hit";
+            field_values = vec![value];
+        } else {
+            variant_name = "Miss";
+            field_values = vec![];
+        }
+
+        Self {
+            type_instance: TypeInstance::Fields {
+                source_type: match_type.clone(),
+                variant: Some(match_type_ref.resolve_variant(variant_name).unwrap().0),
+                field_values,
+            }
+        }
+    }
+
     /// Transforms this into a [ValueRef].
     pub fn rc(self) -> ValueRef {
         Rc::new(RefCell::new(self))
