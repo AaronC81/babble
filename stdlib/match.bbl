@@ -3,5 +3,9 @@ enum Match {
     Miss.
 }
 
-InternalTest case: "match block call pos" that: (?[ |1| 25 ] call: 1) equals: (Match#Hit value: 25).
-InternalTest case: "match block call neg" that: (?[ |1| 25 ] call: 2) equals: Match#Miss.
+InternalTest case: "match block call pos" that: (?[ | 1 | 25 ] call: 1) equals: (Match#Hit value: 25).
+InternalTest case: "match block call neg" that: (?[ | 1 | 25 ] call: 2) equals: Match#Miss.
+
+InternalTest case: "match block bindings"
+             that: (?[ | Match#Hit value: value | value ] call: (Match#Hit value: 1)) 
+             equals: (Match#Hit value: 1). 
