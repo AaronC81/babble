@@ -384,14 +384,7 @@ fn block(interpreter: &mut Interpreter) -> Type {
         let mut method = Method::new_internal(&method_name, |i, r, a| {
             let r = r.borrow();
             let b = r.to_block()?;
-            if b.arity() != a.len() {
-                Err(InterpreterErrorKind::IncorrectBlockArity {
-                    expected: b.arity(),
-                    got: a.len(),
-                }.into())
-            } else {
-                b.call(i, a)
-            }
+            b.call(i, a)
         });
         if i == 0 {
             method.add_documentation("
@@ -412,6 +405,17 @@ fn block(interpreter: &mut Interpreter) -> Type {
     }
 
     methods.extend([
+        Method::new_internal("callWith:", |i, r, a| {
+            let r = r.borrow();
+            let b = r.to_block()?;
+            b.call(i, a[0].borrow_mut().to_array()?.clone())
+        }).with_documentation("
+            Calls this block with the given array of arguments.
+
+            @param callWith: The array of arguments to pass to the block.
+            @returns The result of the block.
+        ").rc(),
+
         Method::new_internal("arity", |_, r, _| {
             Ok(Value::new_integer(r.borrow().to_block()?.arity() as i64).rc())
         }).with_documentation("
