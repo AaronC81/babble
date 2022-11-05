@@ -242,7 +242,7 @@ impl NodeWalk for Literal {
         match self {
             Literal::Array(items) => {
                 for node in items {
-                    node.walk_children(func);
+                    func(node);
                 }
             }
             _ => (),
