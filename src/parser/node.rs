@@ -16,6 +16,12 @@ pub struct Node {
 /// parameters.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SendMessageComponents {
+    /// The call has no associated method information, not even a method name.
+    /// 
+    /// This is currently only used for one special case - enum variant instantiation where the enum
+    /// variant has no fields.
+    Blank,
+
     /// The method call has no arguments.
     Unary(String),
 
@@ -28,6 +34,7 @@ impl SendMessageComponents {
     /// `x set: 2 value: "Hello"` calls the method `set:hello:`.
     pub fn to_method_name(&self) -> String {
         match self {
+            SendMessageComponents::Blank => unreachable!(),
             SendMessageComponents::Unary(s) => s.clone(),
             SendMessageComponents::Parameterised(params) => {
                 params
@@ -49,7 +56,7 @@ impl SendMessageComponents {
                     _ => None,
                 }).collect()
             },
-            SendMessageComponents::Unary(_) => vec![],
+            SendMessageComponents::Unary(_) | SendMessageComponents::Blank => vec![],
         }
     }
 
@@ -62,7 +69,7 @@ impl SendMessageComponents {
                     _ => None,
                 }).collect()
             },
-            SendMessageComponents::Unary(_) => vec![],
+            SendMessageComponents::Unary(_) | SendMessageComponents::Blank => vec![],
         }
     }
 
@@ -72,7 +79,7 @@ impl SendMessageComponents {
     /// **Panics** if any parameters are not [`SendMessageParameter::Defined`].
     pub fn defined_internal_names(&self) -> Vec<String> {
         match self {
-            SendMessageComponents::Unary(_) => vec![],
+            SendMessageComponents::Unary(_) | SendMessageComponents::Blank => vec![],
             SendMessageComponents::Parameterised(pl) => pl.iter().map(|(_, p)| match p {
                 SendMessageParameter::Defined(id) => id.clone(),
                 _ => unreachable!(),
@@ -84,7 +91,7 @@ impl SendMessageComponents {
     /// evaluated.
     pub fn evaluate_parameters(&self, interpreter: &mut Interpreter) -> Result<Vec<ValueRef>, InterpreterError> {
         Ok(match self {
-            SendMessageComponents::Unary(_) => vec![],
+            SendMessageComponents::Unary(_) | SendMessageComponents::Blank => vec![],
             SendMessageComponents::Parameterised(params) =>
                 params.iter()
                     .map(|(_, p)| match p {

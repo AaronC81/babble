@@ -266,7 +266,7 @@ impl<'a> Parser<'a> {
                 self.advance();
 
                 let components = self.try_parse_only_send_parameters(context)?
-                    .unwrap_or_else(|| SendMessageComponents::Unary("<blank>".into()));
+                    .unwrap_or_else(|| SendMessageComponents::Blank);
                 
                 node.kind = NodeKind::EnumVariant {
                     enum_type: Box::new(node.clone()),

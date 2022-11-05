@@ -267,7 +267,8 @@ impl Interpreter {
 
                 // Check that names of passed fields match expected fields
                 let given_field_names = match components {
-                    SendMessageComponents::Unary(_) => vec![],
+                    SendMessageComponents::Blank => vec![],
+                    SendMessageComponents::Unary(_) => unreachable!(),
                     SendMessageComponents::Parameterised(params) => params.iter().map(|(n, _)| n.clone()).collect()
                 };
                 if given_field_names != variant.fields {
