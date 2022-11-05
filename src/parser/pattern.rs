@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::parser::{SendMessageComponents, SendMessageParameter, Node, NodeKind};
 
-use crate::interpreter::{ValueRef, InterpreterError, Interpreter, Value, InterpreterErrorKind, TypeInstance};
+use crate::interpreter::{ValueRef, InterpreterError, Interpreter, Value, InterpreterErrorKind, TypeInstance, TypeData};
 
 use super::Literal;
 
@@ -91,8 +91,26 @@ impl Pattern {
                         return Ok(false)
                     }
                     
-                    // TODO: check fields
-                    if !fields.is_empty() || !actual_field_values.is_empty() { todo!() }
+                    // Check fields
+                    for (field_name, pattern) in fields {
+                        // Resolve the field index
+                        let field_names = match type_value.borrow().data {
+                            TypeData::Fields { ref instance_fields, .. } =>
+                                instance_fields.clone(),
+                            TypeData::Variants(ref v) => v[variant_index.unwrap()].fields.clone(),
+                            _ => return Ok(false),
+                        };
+                        let field_index = field_names.iter()
+                            .enumerate()
+                            .find(|(_, x)| x == &field_name).map(|(i, _)| i)
+                            .ok_or(InterpreterErrorKind::MissingName(field_name.clone()).into())?;
+
+                        // Get the value of that field and check if it's a match
+                        let field_value = actual_field_values[field_index].clone();
+                        if !pattern.match_against(field_value, context)? {
+                            return Ok(false)
+                        }
+                    }
                 }
 
                 Ok(true)
@@ -127,9 +145,18 @@ impl Pattern {
                     return Err(PatternParseError::InvalidNode(*enum_type))
                 };
 
-                // TODO: doesn't check fields yet - going to sort out <blank> first
+                let fields = match components {
+                    SendMessageComponents::Blank => vec![],
+                    SendMessageComponents::Unary(_) => unreachable!(),
+                    SendMessageComponents::Parameterised(params) =>
+                        params.iter().map(|(name, param)| match param {
+                            SendMessageParameter::Parsed(node) =>
+                                Self::parse(*node.clone()).map(|p| (name.into(), p)),
+                            _ => unreachable!(),
+                        }).collect::<Result<Vec<_>, _>>()?,
+                };
 
-                Ok(Pattern::new_fields(type_name, Some(variant_name), vec![]))
+                Ok(Pattern::new_fields(type_name, Some(variant_name), fields))
             },
 
             // Bindings
