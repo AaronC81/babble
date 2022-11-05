@@ -25,8 +25,12 @@ impl Pattern {
         Self::new(PatternKind::Literal(value))
     }
 
-    pub fn new_binding(name: &str) -> Self {
-        Self::new(PatternKind::Binding(name.into()))
+    pub fn new_any_binding(name: &str) -> Self {
+        Self::new(PatternKind::AnyBinding(name.into()))
+    }
+
+    pub fn new_pattern_binding(name: &str, pattern: Pattern) -> Self {
+        Self::new(PatternKind::PatternBinding(name.into(), Box::new(pattern)))
     }
 
     pub fn new_discard() -> Self {
@@ -114,8 +118,16 @@ impl Pattern {
                 }
 
                 Ok(true)
-            }
-            PatternKind::Binding(name) => {
+            },
+            PatternKind::PatternBinding(name, pattern) => {
+                if pattern.match_against(value.clone(), context)? {
+                    context.bindings.insert(name.clone(), value);
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            },
+            PatternKind::AnyBinding(name) => {
                 context.bindings.insert(name.into(), value);
                 Ok(true)
             },
@@ -128,7 +140,8 @@ impl Pattern {
             PatternKind::Literal(_) => vec![],
             PatternKind::Fields { fields, .. } =>
                 fields.iter().flat_map(|(_, pattern)| pattern.all_bindings()).collect(),
-            PatternKind::Binding(name) => vec![name.clone()],
+            PatternKind::PatternBinding(name, _) => vec![name.clone()],
+            PatternKind::AnyBinding(name) => vec![name.clone()],
             PatternKind::Discard => vec![],
         }
     }
@@ -164,13 +177,18 @@ impl Pattern {
                 if i == "_" {
                     Ok(Pattern::new_discard())
                 } else {
-                    Ok(Pattern::new_binding(&i))
+                    Ok(Pattern::new_any_binding(&i))
                 }
+            NodeKind::Assignment { target, value } =>
+                if let NodeKind::Identifier(i) = target.kind {
+                    Self::parse(*value).map(|p| Pattern::new_pattern_binding(&i, p))
+                } else {
+                    Err(PatternParseError::InvalidNode(*target))
+                },
             
             // Invalid
             NodeKind::StatementSequence(_)
             | NodeKind::Block { .. }
-            | NodeKind::Assignment { .. }
             | NodeKind::SelfAccess
             | NodeKind::ImplBlock { .. }
             | NodeKind::FuncDefinition { .. }
@@ -191,7 +209,8 @@ pub enum PatternKind {
         variant_name: Option<String>,
         fields: Vec<(String, Pattern)>,
     },
-    Binding(String),
+    AnyBinding(String),
+    PatternBinding(String, Box<Pattern>),
     Discard,
 }
 
