@@ -167,8 +167,25 @@ impl Pattern {
             // Literals
             NodeKind::Literal(l) => Ok(Pattern::new_literal(l)),
 
-            // Compounds - all TODO currently
-            NodeKind::SendMessage { receiver, components } => todo!(),
+            // Compounds
+            NodeKind::SendMessage { receiver, components } => {
+                let NodeKind::Identifier(type_name) = receiver.kind else {
+                    return Err(PatternParseError::InvalidNode(*receiver))
+                };
+
+                let fields = match components {
+                    SendMessageComponents::Blank => vec![],
+                    SendMessageComponents::Unary(_) => unreachable!(),
+                    SendMessageComponents::Parameterised(params) =>
+                        params.iter().map(|(name, param)| match param {
+                            SendMessageParameter::Parsed(node) =>
+                                Self::parse(*node.clone()).map(|p| (name.into(), p)),
+                            _ => unreachable!(),
+                        }).collect::<Result<Vec<_>, _>>()?,
+                };
+
+                Ok(Pattern::new_fields(type_name, None, fields))
+            },
             NodeKind::EnumVariant { enum_type, variant_name, components } => {
                 let NodeKind::Identifier(type_name) = enum_type.kind else {
                     return Err(PatternParseError::InvalidNode(*enum_type))
