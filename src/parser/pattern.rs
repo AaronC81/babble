@@ -1,3 +1,9 @@
+//! Implements patterns which values can be matched against, optionally extracting certain fields
+//! from the structure of values.
+//! 
+//! Patterns do not currently use any special syntax - they are parsed as if they were regular 
+//! nodes, and then converted into a pattern as a second step.
+
 use std::collections::HashMap;
 
 use crate::parser::{SendMessageComponents, SendMessageParameter, Node, NodeKind};
@@ -6,11 +12,15 @@ use crate::interpreter::{ValueRef, InterpreterError, Interpreter, Value, Interpr
 
 use super::Literal;
 
+/// An error occurred when parsing a node tree into a pattern.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PatternParseError {
+    /// The given node is not allowed to appear at this location in a pattern.
     InvalidNode(Node),
 }
 
+/// A pattern, describing a data layout that a value can be matched against, optionally extracting
+/// values from the value.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Pattern {
     pub kind: PatternKind,
@@ -45,6 +55,10 @@ impl Pattern {
         })
     }
 
+    /// Matches the given value against this pattern, returning a boolean indicating whether the 
+    /// pattern matched.
+    /// 
+    /// If the pattern contains bindings, the bound values are recorded in the provided `context`.
     pub fn match_against(&self, value: ValueRef, context: &mut PatternMatchContext) -> Result<bool, InterpreterError> {
         match &self.kind {
             PatternKind::Literal(expected) => {
@@ -135,6 +149,7 @@ impl Pattern {
         }
     }
 
+    /// Extracts the list of all bindings which could be bound when matching a pattern.
     pub fn all_bindings(&self) -> Vec<String> {
         match &self.kind {
             PatternKind::Literal(_) => vec![],
@@ -146,6 +161,7 @@ impl Pattern {
         }
     }
 
+    /// Parse a node tree into a pattern.
     pub fn parse(node: Node) -> Result<Self, PatternParseError> {
         match node.kind {
             // Literals
@@ -201,16 +217,27 @@ impl Pattern {
     }
 }
 
+/// Describes the requirements of a pattern.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PatternKind {
+    /// The value must be equal to the provided literal, according to `equals:`.
     Literal(Literal),
+
+    /// The value must be an instance of the given struct or enum type, and optionally have a set of
+    /// fields which must match their corresponding patterns.
     Fields {
         type_name: String,
         variant_name: Option<String>,
         fields: Vec<(String, Pattern)>,
     },
+
+    /// Matches any value and binds it to the given name.
     AnyBinding(String),
+
+    /// Matches any value matching the inner pattern, and if it matches, binds it to the given name.
     PatternBinding(String, Box<Pattern>),
+
+    /// Matches any value.
     Discard,
 }
 
