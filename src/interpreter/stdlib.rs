@@ -4,11 +4,11 @@
 //! reason or another. Where possible, Babble's standard library is defined _in Babble_, with these
 //! files imported and executed by [`instantiate`].
 
-use std::process::exit;
+use std::{process::exit, sync::RwLock};
 
 use crate::{interpreter::{Type, Method, Value}, parser::{SendMessageComponents, SendMessageParameter}, source::SourceFile};
 
-use super::{InterpreterErrorKind, TypeData, Variant, TypeRef, Interpreter, TypeInstance, mixin_derive::TypeCoreMixinDeriveBuilder, InterpreterError, DocumentationState};
+use super::{InterpreterErrorKind, TypeData, Variant, TypeRef, Interpreter, TypeInstance, mixin_derive::TypeCoreMixinDeriveBuilder, InterpreterError, DocumentationState, ValueRef};
 
 /// Instantiates a set of core standard library types, by building them from intrinsics, executing
 /// bundled Babble code to define them, or a combination of the two.
@@ -54,6 +54,9 @@ pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError
         include_str!("../../stdlib/range.bbl")
     ).rc())?;
 
+    for test in unsafe { DEFERRED_INTERNAL_TESTS.read() }.unwrap().iter() {
+        test.borrow().to_block()?.call(interpreter, vec![])?;
+    }
 
     Ok(())
 }
@@ -486,6 +489,9 @@ fn boolean(interpreter: &mut Interpreter) -> Type {
     }.with_derived_core_mixins(interpreter)
 }
 
+// TODO: yuck - make this a static field on InternalTest
+static mut DEFERRED_INTERNAL_TESTS: RwLock<Vec<ValueRef>> = RwLock::new(vec![]);
+
 fn internal_test(_: &mut Interpreter) -> Type {
     Type {
         static_methods: vec![
@@ -503,6 +509,14 @@ fn internal_test(_: &mut Interpreter) -> Type {
                     Err(InterpreterErrorKind::InternalTestFailed(a[0].borrow().to_string()?).into())
                 }
 
+            }).rc(),
+
+            Method::new_internal("defer:", |i, _, a| {
+                let test = a[0].clone();
+                unsafe {
+                    DEFERRED_INTERNAL_TESTS.write().unwrap().push(test);
+                }
+                Ok(Value::new_null().rc())
             }).rc(),
         ],
 

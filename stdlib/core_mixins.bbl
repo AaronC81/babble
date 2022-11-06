@@ -79,15 +79,10 @@ impl Enumerable {
     /// @param find: The predicate to use, which should accept one parameter.
     /// @returns The first value matching the predicate, or `null` if none is found.
     func find: fn {
-        foundItem = null.
-        Program catchTag: [ |tag|
-            self forEach: [ |x|
-                (fn call: x) ifTrue: [
-                    foundItem = x.
-                    Program throw: tag.
-                ].
+        self forEach: [ |x|
+            (fn call: x) ifTrue: [
+                return x.
             ].
         ].
-        foundItem
     }
 }
