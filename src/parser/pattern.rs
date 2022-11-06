@@ -252,6 +252,8 @@ impl Pattern {
             NodeKind::Identifier(i) =>
                 if i == "_" {
                     Ok(Pattern::new_discard())
+                } else if i.chars().next().unwrap().is_uppercase() {
+                    Ok(Pattern::new_fields(i, None, vec![]))
                 } else {
                     Ok(Pattern::new_any_binding(&i))
                 }
