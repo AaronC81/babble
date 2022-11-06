@@ -51,6 +51,26 @@ impl Match {
         InternalTest case: "match oneOf: miss" that: (composed call: 5) equals: Match#Miss.
     ] call.
 
+    /// Wraps a single-argument pattern block by allowing the block to throw a tag to return an
+    /// overall miss.
+    ///
+    /// This allows the implementation of 'guard clauses', to be more specific than is possible in
+    /// a pattern about what should be matched. You can perform arbitrarily-complex checks in the
+    /// block's body, and pretend that the initial pattern never matched by throwing the tag if 
+    /// necessary.
+    ///
+    /// @param withExplicitMiss: A two-argument block, the first being the match subject, and the second being a tag to throw. It should return a match.
+    /// @returns A new block taking just the match subject, which will return the wrapped block's value, or a miss if the block throws the tag.
+    static func withExplicitMiss: fn {
+        [ |subject|
+            returnValue = Match#Miss.
+            Program catchTag: [ |tag|
+                returnValue = fn call: subject call: tag.
+            ].
+            returnValue
+        ]
+    }
+
     /// Whether this match is a hit.
     ///
     /// @returns `true` if this match is a hit, or `false` otherwise.
