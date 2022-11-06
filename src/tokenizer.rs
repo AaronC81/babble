@@ -72,6 +72,7 @@ pub enum TokenKeyword {
     Static,
     Mixin,
     Use,
+    Return,
 }
 
 /// An error encountered while tokenizing.
@@ -331,6 +332,7 @@ impl<'a> Tokenizer<'a> {
             "static"  => Some(TokenKeyword::Static),
             "mixin"   => Some(TokenKeyword::Mixin),
             "use"     => Some(TokenKeyword::Use),
+            "return"  => Some(TokenKeyword::Return),
             _         => None,
         }
     }

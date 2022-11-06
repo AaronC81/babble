@@ -395,7 +395,9 @@ impl Interpreter {
                 self.types.push(t);
 
                 Ok(Value::new_null().rc())
-            }
+            },
+
+            NodeKind::Sugar(_) => unreachable!("sugar found by interpreter"),
         }
     }
 

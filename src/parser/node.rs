@@ -186,5 +186,11 @@ pub enum NodeKind {
         name: String,
     },
     Use(Box<Node>),
+
+    Sugar(SugarNodeKind),
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SugarNodeKind {
+    Return(Box<Node>),
+}

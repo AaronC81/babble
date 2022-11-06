@@ -1,4 +1,4 @@
-use super::{Node, NodeKind, Literal};
+use super::{Node, NodeKind, Literal, SugarNodeKind};
 
 pub trait NodeWalk {
     /// Calls `func` on this node and all child nodes.
@@ -46,6 +46,10 @@ impl NodeWalk for Node {
                 func(mixin);
             }
             NodeKind::Literal(l) => l.walk_children(func),
+
+            NodeKind::Sugar(SugarNodeKind::Return(value)) => {
+                func(value);
+            }
 
             | NodeKind::SelfAccess
             | NodeKind::EnumDefinition { name: _, variants: _ }

@@ -12,6 +12,7 @@ mod lexical_context;
 pub use lexical_context::*;
 
 pub mod capture_analysis;
+pub mod desugar;
 
 mod literal;
 pub use literal::*;
@@ -115,6 +116,7 @@ impl<'a> Parser<'a> {
 
     pub fn parse_and_analyse(source_file: Rc<SourceFile>, tokens: &'a [Token]) -> Result<Node, ParserError> {
         let mut parsed = Self::parse(source_file, tokens)?;
+        desugar::desugar_return(&mut parsed);
         capture_analysis::populate_captures(&mut parsed);
         Ok(parsed)
     }
@@ -374,6 +376,18 @@ impl<'a> Parser<'a> {
                 },
                 context: new_context,
             })
+        } else if let Token { kind: TokenKind::Keyword(TokenKeyword::Return), location } = self.here() {
+            let location = location.clone();
+            self.advance();
+
+            // Parse the value to return
+            let value = self.parse_expression(context.clone())?;
+
+            Ok(Node {
+                kind: NodeKind::Sugar(SugarNodeKind::Return(Box::new(value))),
+                context,
+                location,
+            })
         } else if let Token { kind: TokenKind::Hash, location } = self.here() {
             let location = location.clone();
             self.advance();
@@ -416,7 +430,8 @@ impl<'a> Parser<'a> {
                     | TokenKeyword::Enum 
                     | TokenKeyword::Static
                     | TokenKeyword::Mixin
-                    | TokenKeyword::Use =>
+                    | TokenKeyword::Use
+                    | TokenKeyword::Return =>
                         return Err(ParserError::UnexpectedToken(self.here().clone())),
                 },
                 context,

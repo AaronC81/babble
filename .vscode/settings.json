@@ -1,6 +1,6 @@
 {
     "highlight.regexes": {
-        "\\b(true|false|null|impl|func|self|enum|struct|static|mixin|use)\\b": {
+        "\\b(true|false|null|impl|func|self|enum|struct|static|mixin|use|return)\\b": {
             "regexFlags": "g",
             "filterFileRegex": ".*\\.bbl",
             "decorations": [

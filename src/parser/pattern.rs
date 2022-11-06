@@ -273,6 +273,7 @@ impl Pattern {
             | NodeKind::EnumDefinition { .. }
             | NodeKind::StructDefinition { .. }
             | NodeKind::MixinDefinition { .. }
+            | NodeKind::Sugar(_)
             | NodeKind::Use(_)
                 => Err(PatternParseError::InvalidNode(node)),
         }
