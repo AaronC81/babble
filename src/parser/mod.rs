@@ -19,6 +19,9 @@ pub use literal::*;
 mod pattern;
 pub use pattern::*;
 
+mod traits;
+pub use traits::*;
+
 #[cfg(test)]
 mod tests;
 

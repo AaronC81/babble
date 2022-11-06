@@ -3,7 +3,7 @@
 
 use crate::parser::NodeKind;
 
-use super::{Node, NodeWalk, BlockParameters};
+use super::{Node, traits::NodeWalk, BlockParameters};
 
 /// A frame used in the capture analysis stack.
 struct AnalysisStackFrame {
