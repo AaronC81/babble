@@ -184,15 +184,25 @@ impl<'a> Parser<'a> {
 
     fn parse_parameterised_send(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
         let mut result = self.parse_unary_send(context.clone())?;
-        if let Some(components) = self.try_parse_only_send_parameters(context.clone())? {
-            let location = result.location.clone();
-            result = Node {
-                kind: NodeKind::SendMessage {
-                    receiver: Box::new(result),
-                    components,
-                },
-                location,
-                context: LexicalContext::new_with_parent(context).rc(),
+        loop {
+            if let Some(components) = self.try_parse_only_send_parameters(context.clone())? {
+                let location = result.location.clone();
+                result = Node {
+                    kind: NodeKind::SendMessage {
+                        receiver: Box::new(result),
+                        components,
+                    },
+                    location,
+                    context: LexicalContext::new_with_parent(context.clone()).rc(),
+                }
+            }
+
+            if self.here().kind == TokenKind::Dollar {
+                self.advance();
+                result = self.try_parse_append_send_unaries(result, context.clone())?;
+                // ...and repeat
+            } else {
+                break
             }
         }
 
@@ -218,10 +228,15 @@ impl<'a> Parser<'a> {
 
     fn parse_unary_send(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
         let mut result = self.parse_literal(context.clone())?;
+        result = self.try_parse_append_send_unaries(result, context.clone())?;
+        Ok(result)
+    }
+
+    fn try_parse_append_send_unaries(&mut self, mut node: Node, context: LexicalContextRef) -> Result<Node, ParserError> {
         while let Token { kind: TokenKind::Identifier(id), location } = self.here() {
-            result = Node {
+            node = Node {
                 kind: NodeKind::SendMessage {
-                    receiver: Box::new(result),
+                    receiver: Box::new(node),
                     components: SendMessageComponents::Unary(id.clone()),
                 },
                 location: location.clone(),
@@ -229,8 +244,7 @@ impl<'a> Parser<'a> {
             };
             self.advance();
         }
-
-        Ok(result)
+        Ok(node)
     }
 
     fn parse_literal(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {

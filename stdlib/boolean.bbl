@@ -3,7 +3,7 @@ impl Boolean {
     ///
     /// @param ifFalse: The block to execute.
     func ifFalse: action {
-        (self not) ifTrue: action
+        self not $ ifTrue: action
     }
 
     /// Executes one block if this boolean is `true`, or another if it is `false`.

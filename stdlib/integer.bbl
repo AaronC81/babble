@@ -11,7 +11,7 @@ impl Integer {
     func times: action {
         counter = 0.
         [ counter lessThan: self ] whileTrue: [
-            (action arity equals: 1) ifTrue: [
+            action arity equals: 1 $ ifTrue: [
                 action call: counter.
             ] else: [
                 action call.

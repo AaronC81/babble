@@ -5,7 +5,7 @@
 mixin Equatable.
 impl Equatable {
     func notEquals: other {
-        (self equals: other) not
+        self equals: other $ not
     }
 }
 
@@ -20,7 +20,7 @@ impl Orderable {
     }
 
     func lessThan: other {
-        (self greaterThanOrEquals: other) not.
+        self greaterThanOrEquals: other $ not.
     }
     func lessThanOrEquals: other {
         (self lessThan: other) or: (self equals: other).
@@ -70,7 +70,7 @@ impl Enumerable {
     /// @returns The new array.
     func filter: fn {
         result = #{}.
-        self forEach: [ |x| (fn  call: x) ifTrue: [ result append: x ] ].
+        self forEach: [ |x| fn call: x $ ifTrue: [ result append: x ] ].
         result
     }
 
@@ -80,7 +80,7 @@ impl Enumerable {
     /// @returns The first value matching the predicate, or `null` if none is found.
     func find: fn {
         self forEach: [ |x|
-            (fn call: x) ifTrue: [
+            fn call: x $ ifTrue: [
                 return x.
             ].
         ].

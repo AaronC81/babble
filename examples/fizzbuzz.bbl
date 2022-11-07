@@ -5,13 +5,13 @@
     // Calculate the output string using concatenation, replacing with the original number if the
     // resulting string is empty (neither fizz nor buzz)
     output = "".
-    ((x modulo: 3) equals: 0) ifTrue: [
+    x modulo: 3 $ equals: 0 $ ifTrue: [
         output = output concat: "fizz".
     ].
-    ((x modulo: 5) equals: 0) ifTrue: [
+    x modulo: 5 $ equals: 0 $ ifTrue: [
         output = output concat: "buzz".
     ].
-    (output equals: "") ifTrue: [
+    output equals: "" $ ifTrue: [
         output = x.
     ].
 
