@@ -218,6 +218,12 @@ impl Interpreter {
                     field_values[field_index] = value.clone();
 
                     Ok(value)
+                // Are we assigning to `self`?
+                } else if let box Node { kind: NodeKind::SelfAccess, .. } = target {
+                    let value = self.evaluate(value)?;
+                    let value = Value::soft_copy(value);
+                    *self.stack.last_mut().unwrap().self_value.borrow_mut() = value.borrow().clone();
+                    Ok(value)
                 } else {
                     Err(InterpreterErrorKind::InvalidAssignmentTarget.into())
                 }
