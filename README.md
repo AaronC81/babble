@@ -66,7 +66,7 @@ cargo run -- -f <file>
 # To-do list
 
 - [x] Mixins - a way of implementing shared functionality, like Rust's traits
-- [ ] Pattern matching - implemented with match-blocks, which take patterns as parameters and return
+- [x] Pattern matching - implemented with match-blocks, which take patterns as parameters and return
       `Match#Hit returnValue` or `Match#Miss` depending on whether the pattern was actually matched
 - [ ] Better parser errors
 - [x] Better runtime errors
