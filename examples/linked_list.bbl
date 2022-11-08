@@ -1,0 +1,44 @@
+enum LinkedList {
+    Item value next.
+    End.
+}
+
+impl LinkedList {
+    static func fromArray: array {
+        list = LinkedList#End.
+        array forEach: [ |item| list insert: item ].
+        list
+    }
+
+    func isEmpty {
+        ?[ | LinkedList#End | ] call: self $ isHit
+    }
+
+    func length {
+        self isEmpty $
+            ifTrue: [ 0 ]
+            else:   [ self next length add: 1 ]
+    }
+
+    func insert: item {
+        self isEmpty $
+            ifTrue: [ self = LinkedList#Item value: item next: LinkedList#End ]
+            else:   [ self next insert: item ]
+    }
+
+    func forEach: fn {
+        self isEmpty $ ifFalse: [
+            fn call: self value.
+            self next forEach: fn
+        ]
+    }
+    use Enumerable.
+}
+
+l = LinkedList fromArray: #{ 1 2 3 4 5 }.
+l insert: 6.
+Console println: ("Length: " concat: l length repr).
+
+// Test out some methods provided by `Enumerable`
+Console println: l toArray.
+Console println: (l filter: [ |n| n modulo: 2 $ equals: 0 ]).
