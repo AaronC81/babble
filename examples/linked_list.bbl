@@ -15,19 +15,19 @@ impl LinkedList {
     }
 
     func length {
-        self isEmpty $
+        self isEmpty
             ifTrue: [ 0 ]
             else:   [ self next length add: 1 ]
     }
 
     func insert: item {
-        self isEmpty $
+        self isEmpty
             ifTrue: [ self = LinkedList#Item value: item next: LinkedList#End ]
             else:   [ self next insert: item ]
     }
 
     func forEach: fn {
-        self isEmpty $ ifFalse: [
+        self isEmpty ifFalse: [
             fn call: self value.
             self next forEach: fn
         ]
