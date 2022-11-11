@@ -74,7 +74,7 @@ fn test_unary_block() {
 #[test]
 fn test_param_block() {
     assert_eq!(
-        evaluate("[ | a b | a add: b ] call: 3 call: 4").unwrap(),
+        evaluate("[ | a b | a add: b ] callWith: #{ 3 4 }").unwrap(),
         Value::new_integer(7).rc(),
     );
 

@@ -26,6 +26,10 @@ pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError
     let core_types = core_types(interpreter);
     interpreter.types.extend(core_types);
     interpreter.parse_and_evaluate(SourceFile::new(
+        "<stdlib>/block.bbl",
+        include_str!("../../stdlib/block.bbl")
+    ).rc())?;
+    interpreter.parse_and_evaluate(SourceFile::new(
         "<stdlib>/program.bbl",
         include_str!("../../stdlib/program.bbl")
     ).rc())?;
@@ -372,83 +376,48 @@ fn console(_: &mut Interpreter) -> Type {
     }
 }
 
-pub const MAXIMUM_BLOCK_ARITY: usize = 64;
-
 fn block(interpreter: &mut Interpreter) -> Type {
-    let mut methods = vec![];
-    
-    for i in 0..=MAXIMUM_BLOCK_ARITY {
-        let method_name = if i == 0 {
-            "call".into()
-        } else {
-            "call:".repeat(i)
-        };
-
-        let mut method = Method::new_internal(&method_name, |i, r, a| {
-            let r = r.borrow();
-            let b = r.to_block()?;
-            b.call(i, a)
-        });
-        if i == 0 {
-            method.add_documentation("
-                Calls this block. Additional variants of this method exist for calling blocks with
-                any number of parameters, using the form `call:call:...`, where `call:` can be
-                repeated for each additional parameter.
-
-                If the number of arguments passed does not match the number expected by this block,
-                a fatal error occurs.
-
-                @returns The result of the block.
-            ");
-        } else {
-            method.documentation = DocumentationState::Hidden;
-        }
-
-        methods.push(method.rc());
-    }
-
-    methods.extend([
-        Method::new_internal("callWith:", |i, r, a| {
-            let r = r.borrow();
-            let b = r.to_block()?;
-            b.call(i, a[0].borrow_mut().to_array()?.clone())
-        }).with_documentation("
-            Calls this block with the given array of arguments.
-
-            @param callWith: The array of arguments to pass to the block.
-            @returns The result of the block.
-        ").rc(),
-
-        Method::new_internal("arity", |_, r, _| {
-            Ok(Value::new_integer(r.borrow().to_block()?.arity() as i64).rc())
-        }).with_documentation("
-            How many arguments this block takes.
-
-            @returns An integer representing the number of arguments this block takes.
-        ").rc(),
-
-        Method::new_internal("whileTrue:", |i, r, a| {
-            let r = r.borrow();
-            let condition_block = r.to_block()?;
-
-            while condition_block.call(i, vec![])?.borrow().to_boolean()? {
-                let arg = a[0].borrow();
-                let block = arg.to_block()?;
-                block.call(i, vec![])?;
-            }
-
-            Ok(Value::new_null().rc())
-        }).with_documentation("
-            Repeatedly executes another block (the _body_) while this block (the _condition_)
-            continues to return `true`. If the condition returns `false` the first time it is
-            executed, the body is never executed.
-
-            @param whileTrue: The block to execute as a condition.
-        ").rc(),
-    ]);
-
     Type {
-        methods,
+        methods: vec![
+            Method::new_internal("callWith:", |i, r, a| {
+                let r = r.borrow();
+                let b = r.to_block()?;
+                b.call(i, a[0].borrow_mut().to_array()?.clone())
+            }).with_documentation("
+                Calls this block with the given array of arguments.
+
+                @param callWith: The array of arguments to pass to the block.
+                @returns The result of the block.
+            ").rc(),
+
+            Method::new_internal("arity", |_, r, _| {
+                Ok(Value::new_integer(r.borrow().to_block()?.arity() as i64).rc())
+            }).with_documentation("
+                How many arguments this block takes.
+
+                @returns An integer representing the number of arguments this block takes.
+            ").rc(),
+
+            Method::new_internal("whileTrue:", |i, r, a| {
+                let r = r.borrow();
+                let condition_block = r.to_block()?;
+
+                while condition_block.call(i, vec![])?.borrow().to_boolean()? {
+                    let arg = a[0].borrow();
+                    let block = arg.to_block()?;
+                    block.call(i, vec![])?;
+                }
+
+                Ok(Value::new_null().rc())
+            }).with_documentation("
+                Repeatedly executes another block (the _body_) while this block (the _condition_)
+                continues to return `true`. If the condition returns `false` the first time it is
+                executed, the body is never executed.
+
+                @param whileTrue: The block to execute as a condition.
+            ").rc(),
+        ],
+
         ..Type::new("Block")
     }.with_derived_core_mixins(interpreter)
 }

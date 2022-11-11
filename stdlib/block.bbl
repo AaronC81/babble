@@ -1,0 +1,16 @@
+impl Block {
+    /// Calls this block with no arguments.
+    ///
+    /// @returns The result of the block.
+    func call {
+        self callWith: #{}
+    }
+
+    /// Calls this block with one argument.
+    ///
+    /// @param call The single argument to pass.
+    /// @returns The result of the block.
+    func call: arg {
+        self callWith: #{arg}
+    }
+}
