@@ -58,7 +58,10 @@ pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError
         include_str!("../../stdlib/range.bbl")
     ).rc())?;
 
-    for test in unsafe { DEFERRED_INTERNAL_TESTS.read() }.unwrap().iter() {
+    // Run deferred tests
+    let deferred_tests = interpreter.resolve_stdlib_type("InternalTest").borrow()
+        .static_fields[0].borrow_mut().to_array()?.iter().cloned().collect::<Vec<_>>();
+    for test in deferred_tests {
         test.borrow().to_block()?.call(interpreter, vec![])?;
     }
 
@@ -458,9 +461,6 @@ fn boolean(interpreter: &mut Interpreter) -> Type {
     }.with_derived_core_mixins(interpreter)
 }
 
-// TODO: yuck - make this a static field on InternalTest
-static mut DEFERRED_INTERNAL_TESTS: RwLock<Vec<ValueRef>> = RwLock::new(vec![]);
-
 fn internal_test(_: &mut Interpreter) -> Type {
     Type {
         static_methods: vec![
@@ -480,13 +480,20 @@ fn internal_test(_: &mut Interpreter) -> Type {
 
             }).rc(),
 
-            Method::new_internal("defer:", |i, _, a| {
+            Method::new_internal("defer:", |i, r, a| {
                 let test = a[0].clone();
-                unsafe {
-                    DEFERRED_INTERNAL_TESTS.write().unwrap().push(test);
-                }
+                i.resolve_stdlib_type("InternalTest").borrow_mut()
+                    .static_fields[0]
+                    .borrow_mut()
+                    .to_array()?
+                    .push(test);
                 Ok(Value::new_null().rc())
             }).rc(),
+        ],
+
+        static_fields: vec![
+            // Deferred tests
+            Value::new_array(&[]).rc(),
         ],
 
         ..Type::new("InternalTest")
