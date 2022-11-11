@@ -9,25 +9,8 @@ use super::{Type, Method, Value, Interpreter};
 
 /// Provides core mixins for a given type.
 pub fn derive_core_mixins(interpreter: &mut Interpreter, target: &mut Type) {
-    derive_equatable(interpreter, target);
-    target.used_mixins.push(interpreter.resolve_stdlib_type("Representable"));
-}
-
-// TODO: Consider making this work like Representable, where the definition is baked into the mixin
-/// Provides an implementation of `Equatable` for a given type.
-pub fn derive_equatable(interpreter: &mut Interpreter, target: &mut Type) {
-    target.add_method(Method::new_internal("equals:", |i, recv, params| {
-        let this = recv.borrow();
-        let other = params[0].borrow();
-
-        Ok(Value::new_boolean(i, this.type_instance == other.type_instance).rc())
-    }).with_documentation("
-        Determines whether this object is value-equal to another object.
-
-        @param equals: The other object.
-        @returns `true` if the two objects are equal, or `false` otherwise.
-    ").rc());
     target.used_mixins.push(interpreter.resolve_stdlib_type("Equatable"));
+    target.used_mixins.push(interpreter.resolve_stdlib_type("Representable"));
 }
 
 /// An extension trait for `Type` which allows for easy derivation of core mixins.

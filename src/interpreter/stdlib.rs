@@ -15,12 +15,12 @@ use super::{InterpreterErrorKind, TypeData, Variant, TypeRef, Interpreter, TypeI
 pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError> {
     // Some types are needed to define others, namely derived mixins, so add these to the
     // interpreter in an early pass so they're resolvable
+    let early_core_types = early_core_types(interpreter);
+    interpreter.types.extend(early_core_types);
     interpreter.parse_and_evaluate(SourceFile::new(
         "<stdlib>/core_mixins.bbl",
         include_str!("../../stdlib/core_mixins.bbl")
     ).rc())?;
-    let early_core_types = early_core_types(interpreter);
-    interpreter.types.extend(early_core_types);
 
     // Define the rest of the stdlib types
     let core_types = core_types(interpreter);
@@ -71,6 +71,7 @@ pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError
 fn early_core_types(interpreter: &mut Interpreter) -> Vec<TypeRef> {
     vec![
         representable(interpreter).rc(),
+        equatable(interpreter).rc(),
     ]
 }
 
@@ -100,7 +101,28 @@ fn representable(_: &mut Interpreter) -> Type {
                 @returns The string representation.
             ").rc(),
         ],
+        data: TypeData::Mixin,
         ..Type::new("Representable")
+    }
+}
+
+fn equatable(_: &mut Interpreter) -> Type {
+    Type {
+        methods: vec![
+            Method::new_internal("equals:", |i, recv, args| {
+                let this = recv.borrow();
+                let other = args[0].borrow();
+
+                Ok(Value::new_boolean(i, this.type_instance == other.type_instance).rc())
+            }).with_documentation("
+                Determines whether this object is value-equal to another object.
+
+                @param equals: The other object.
+                @returns `true` if the two objects are equal, or `false` otherwise.
+            ").rc(),
+        ],
+        data: TypeData::Mixin,
+        ..Type::new("Equatable")
     }
 }
 

@@ -1,9 +1,9 @@
-/// Implemented by all type automatically to provide by-value equality comparisons.
-///
-/// Requirements (provided automatically):
-///   - `equals:`
-mixin Equatable.
+// Equatable is already defined in stdlib - just extending it here
 impl Equatable {
+    /// Determines whether this object is not value-equal to another object.
+    /// 
+    /// @param equals: The other object.
+    /// @returns `true` if the two objects are not equal, or `false` otherwise.
     func notEquals: other {
         self equals: other $ not
     }
