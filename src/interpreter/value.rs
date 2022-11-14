@@ -90,6 +90,9 @@ impl Value {
         }
     }
 
+    /// Constructs an instance of another primitive value which implements `PrimitiveValue`. The
+    /// value can be accessed through downcasting using [`Value::to_other`] or
+    /// [`Value::to_other_mut`].
     pub fn new_other<T: PrimitiveValue>(value: T) -> Self {
         Self { type_instance: TypeInstance::PrimitiveOther(Rc::new(RefCell::new(value))) }
     }
@@ -166,6 +169,10 @@ impl Value {
         }
     }
 
+    /// Extracts the "other" primitive from this value, and downcasts it to the given type parameter
+    /// `T` which implements [PrimitiveValue].
+    /// 
+    /// If this value is not a "other" primitive, or if the downcast fails, returns an error.
     pub fn to_other<T: PrimitiveValue>(&self) -> Result<impl Deref<Target = T> + '_, InterpreterError> {
         let TypeInstance::PrimitiveOther(other) = &self.type_instance else {
             return Err(InterpreterErrorKind::IncorrectType.into())
@@ -180,6 +187,7 @@ impl Value {
         Ok(Ref::map(r, |other| { other.downcast_ref::<T>().unwrap() }))
     }
 
+    /// Mutable version of [`Value::to_other`].
     pub fn to_other_mut<T: PrimitiveValue>(&self) -> Result<impl DerefMut<Target = T> + '_, InterpreterError> {
         let TypeInstance::PrimitiveOther(other) = &self.type_instance else {
             return Err(InterpreterErrorKind::IncorrectType.into())
