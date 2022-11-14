@@ -115,6 +115,9 @@ pub enum InterpreterErrorKind {
     /// Code executed by the interpreter called `Program error: "something"`.
     ProgramError(String),
 
+    /// An error occurred while performing IO from user code.
+    IoError(String),
+
     /// Not really an error - used by `Program throw: ...` to unwind the stack
     Throw(ValueRef),
 }
@@ -182,6 +185,8 @@ impl Display for InterpreterErrorKind {
 
             InterpreterErrorKind::ProgramError(message) =>
                 f.write_str(message),
+            InterpreterErrorKind::IoError(err) =>
+                write!(f, "IO error: {}", err),
 
             InterpreterErrorKind::Throw(value) =>
                 write!(f, "uncaught throw of `{}`", value.borrow().to_language_string()),

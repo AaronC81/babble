@@ -3,6 +3,8 @@
 #![feature(assert_matches)]
 #![feature(result_flattening)]
 #![feature(let_chains)]
+#![feature(type_name_of_val)]
+#![feature(trait_upcasting)]
 
 use std::{fs::read_to_string, io::{stdin, stdout, Write}};
 

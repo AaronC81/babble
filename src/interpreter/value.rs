@@ -1,6 +1,6 @@
 //! Implements values, the core pieces of data which the interpreter works with.
 
-use std::{rc::Rc, cell::RefCell};
+use std::{rc::Rc, cell::{RefCell, Ref, RefMut}, any::Any, fmt::Debug, ops::{Deref, DerefMut}};
 
 use super::{Interpreter, InterpreterErrorKind, Block, TypeData, Variant, TypeRef, InterpreterError};
 
@@ -90,6 +90,10 @@ impl Value {
         }
     }
 
+    pub fn new_other<T: PrimitiveValue>(value: T) -> Self {
+        Self { type_instance: TypeInstance::PrimitiveOther(Rc::new(RefCell::new(value))) }
+    }
+
     /// Transforms this into a [ValueRef].
     pub fn rc(self) -> ValueRef {
         Rc::new(RefCell::new(self))
@@ -162,6 +166,34 @@ impl Value {
         }
     }
 
+    pub fn to_other<T: PrimitiveValue>(&self) -> Result<impl Deref<Target = T> + '_, InterpreterError> {
+        let TypeInstance::PrimitiveOther(other) = &self.type_instance else {
+            return Err(InterpreterErrorKind::IncorrectType.into())
+        };
+        let r = other.borrow() as Ref<dyn Any>;
+
+        // Check we can actually downcast first, and bail with an Err if we can't...
+        drop(r.downcast_ref::<T>().ok_or(InterpreterErrorKind::IncorrectType.into())?);
+
+        // ...then return a mapped Ref to the downcasted value if we can
+        // (Because we already checked, the unwrap won't panic)
+        Ok(Ref::map(r, |other| { other.downcast_ref::<T>().unwrap() }))
+    }
+
+    pub fn to_other_mut<T: PrimitiveValue>(&self) -> Result<impl DerefMut<Target = T> + '_, InterpreterError> {
+        let TypeInstance::PrimitiveOther(other) = &self.type_instance else {
+            return Err(InterpreterErrorKind::IncorrectType.into())
+        };           
+        let mut r = other.borrow_mut() as RefMut<dyn Any>;
+
+        // Check we can actually downcast first, and bail with an Err if we can't...
+        drop(r.downcast_mut::<T>().ok_or(InterpreterErrorKind::IncorrectType.into())?);
+
+        // ...then return a mapped RefMut to the downcasted value if we can
+        // (Because we already checked, the unwrap won't panic)
+        Ok(RefMut::map(r, |other| { other.downcast_mut::<T>().unwrap() }))
+    }
+
     /// Converts this value into a printable string.
     pub fn to_language_string(&self) -> String {
         match &self.type_instance {
@@ -223,6 +255,7 @@ impl Value {
                         .join(" "))
                 },
             TypeInstance::PrimitiveNull => "null".into(),
+            TypeInstance::PrimitiveOther(v) => v.borrow().to_language_string(),
         }
     }
 
@@ -243,7 +276,8 @@ impl Value {
         match value.borrow().type_instance {
             TypeInstance::Fields { .. }
             | TypeInstance::Type(_)
-            | TypeInstance::Block(_) => value.clone(),
+            | TypeInstance::Block(_)
+            | TypeInstance::PrimitiveOther(_) => value.clone(),
 
             TypeInstance::PrimitiveInteger(i) => Value::new_integer(i).rc(),
             TypeInstance::PrimitiveString(ref s) => Value::new_string(s).rc(),
@@ -254,7 +288,7 @@ impl Value {
 }
 
 /// An instance of a type, either defined or primitive, which composes the data behind a value.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub enum TypeInstance {
     /// An instance of a struct or enum, containing a sequence of fields, and optionally a variant
     /// index if the type is an enum.
@@ -281,9 +315,35 @@ pub enum TypeInstance {
     /// The value is an array.
     PrimitiveArray(Vec<ValueRef>),
 
+    /// The value is an instance of another native type which implements [PrimitiveValue].
+    PrimitiveOther(Rc<RefCell<dyn PrimitiveValue>>), 
+
     /// The value is null.
     PrimitiveNull,
 }
+
+impl PartialEq for TypeInstance {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (TypeInstance::Fields { source_type: a, variant: a_variant, field_values: a_fields },
+             TypeInstance::Fields { source_type: b, variant: b_variant, field_values: b_fields }) => {
+                a == b && a_variant == b_variant && a_fields == b_fields
+            }
+            (TypeInstance::Type(a), TypeInstance::Type(b)) => a == b,
+            (TypeInstance::Block(a), TypeInstance::Block(b)) => a == b,
+
+            (TypeInstance::PrimitiveInteger(a), TypeInstance::PrimitiveInteger(b)) => a == b,
+            (TypeInstance::PrimitiveString(a), TypeInstance::PrimitiveString(b)) => a == b,
+            (TypeInstance::PrimitiveArray(a), TypeInstance::PrimitiveArray(b)) => a == b,
+            (TypeInstance::PrimitiveNull, TypeInstance::PrimitiveNull) => true,
+
+            (TypeInstance::PrimitiveOther(a), TypeInstance::PrimitiveOther(b)) => Rc::ptr_eq(a, b),
+
+            _ => false,
+        }
+    }
+}
+impl Eq for TypeInstance {}
 
 impl TypeInstance {
     /// Gets the type of the value represented by this type instance.
@@ -298,7 +358,17 @@ impl TypeInstance {
             TypeInstance::PrimitiveInteger(_) => interpreter.resolve_stdlib_type("Integer"),
             TypeInstance::PrimitiveString(_) => interpreter.resolve_stdlib_type("String"),
             TypeInstance::PrimitiveArray(_) => interpreter.resolve_stdlib_type("Array"),
+            TypeInstance::PrimitiveOther(v) => v.borrow().get_type(interpreter),
             TypeInstance::PrimitiveNull => interpreter.resolve_stdlib_type("Null"),
         }
     }
+}
+
+/// Can be implemented on any type to allow it to be used as a [TypeInstance::PrimitiveOther].
+pub trait PrimitiveValue: Any + Debug {
+    /// Gets the type of this value in the language.
+    fn get_type(&self, interpreter: &Interpreter) -> TypeRef;
+
+    /// Converts this value to a string.
+    fn to_language_string(&self) -> String;
 }

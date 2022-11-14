@@ -4,11 +4,11 @@
 //! reason or another. Where possible, Babble's standard library is defined _in Babble_, with these
 //! files imported and executed by [`instantiate`].
 
-use std::{process::exit, sync::RwLock};
+use std::{process::exit, sync::RwLock, fs::File, io::Read, any::Any};
 
 use crate::{interpreter::{Type, Method, Value}, parser::{SendMessageComponents, SendMessageParameter}, source::SourceFile};
 
-use super::{InterpreterErrorKind, TypeData, Variant, TypeRef, Interpreter, TypeInstance, mixin_derive::TypeCoreMixinDeriveBuilder, InterpreterError, DocumentationState, ValueRef};
+use super::{InterpreterErrorKind, TypeData, Variant, TypeRef, Interpreter, TypeInstance, mixin_derive::TypeCoreMixinDeriveBuilder, InterpreterError, DocumentationState, ValueRef, PrimitiveValue};
 
 /// Instantiates a set of core standard library types, by building them from intrinsics, executing
 /// bundled Babble code to define them, or a combination of the two.
@@ -87,6 +87,7 @@ fn core_types(interpreter: &mut Interpreter) -> Vec<TypeRef> {
         internal_test(interpreter).rc(),
         program(interpreter).rc(),
         reflection(interpreter).rc(),
+        file(interpreter).rc(),
     ]
 }
 
@@ -621,5 +622,48 @@ fn reflection(_: &mut Interpreter) -> Type {
             ").rc(),
         ],
         ..Type::new("Reflection")
+    }
+}
+
+fn file(interpreter: &mut Interpreter) -> Type {
+    Type {
+        data: TypeData::Empty,
+
+        static_methods: vec![
+            Method::new_internal("open:", |_, _, a| {
+                let path = a[0].borrow().to_string()?;
+                let file = File::open(path.clone())
+                    .map_err(|e| InterpreterErrorKind::IoError(e.to_string()).into())?;
+                let handle = FileHandle { file, path };
+                Ok(Value::new_other(handle).rc())
+            }).rc(),
+        ],
+
+        methods: vec![
+            Method::new_internal("readAllText", |_, r, _| {
+                let mut s = "".into();
+                r.borrow().to_other_mut::<FileHandle>()?.file.read_to_string(&mut s)
+                    .map_err(|e| InterpreterErrorKind::IoError(e.to_string()).into())?;
+                Ok(Value::new_string(&s).rc())
+            }).rc(),
+        ],
+
+        ..Type::new("File")
+    }.with_derived_core_mixins(interpreter)
+}
+
+#[derive(Debug)]
+struct FileHandle {
+    file: File,
+    path: String,
+}
+
+impl PrimitiveValue for FileHandle {
+    fn get_type(&self, interpreter: &Interpreter) -> TypeRef {
+        interpreter.resolve_stdlib_type("File")
+    }
+
+    fn to_language_string(&self) -> String {
+        format!("File path: \"{}\"", self.path)
     }
 }
