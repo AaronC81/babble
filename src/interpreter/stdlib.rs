@@ -634,7 +634,7 @@ fn file(interpreter: &mut Interpreter) -> Type {
                 let path = a[0].borrow().to_string()?;
                 let file = File::open(path.clone())
                     .map_err(|e| InterpreterErrorKind::IoError(e.to_string()).into())?;
-                let handle = FileHandle { file, path };
+                let handle = FileHandle { file: Some(file), path };
                 Ok(Value::new_other(handle).rc())
             }).rc(),
         ],
@@ -642,9 +642,14 @@ fn file(interpreter: &mut Interpreter) -> Type {
         methods: vec![
             Method::new_internal("readAllText", |_, r, _| {
                 let mut s = "".into();
-                r.borrow().to_other_mut::<FileHandle>()?.file.read_to_string(&mut s)
+                r.borrow().to_other_mut::<FileHandle>()?.file_if_open()?.read_to_string(&mut s)
                     .map_err(|e| InterpreterErrorKind::IoError(e.to_string()).into())?;
                 Ok(Value::new_string(&s).rc())
+            }).rc(),
+
+            Method::new_internal("close", |_, r, _| {
+                r.borrow().to_other_mut::<FileHandle>()?.close();
+                Ok(Value::new_null().rc())
             }).rc(),
         ],
 
@@ -652,9 +657,10 @@ fn file(interpreter: &mut Interpreter) -> Type {
     }.with_derived_core_mixins(interpreter)
 }
 
+/// Wraps a (possibly closed) file, and its path.
 #[derive(Debug)]
 struct FileHandle {
-    file: File,
+    file: Option<File>,
     path: String,
 }
 
@@ -665,5 +671,18 @@ impl PrimitiveValue for FileHandle {
 
     fn to_language_string(&self) -> String {
         format!("File path: \"{}\"", self.path)
+    }
+}
+
+impl FileHandle {
+    /// Gets a mutable reference to the file if it is open, otherwise returns an [InterpreterError]
+    /// describing that the file is closed.
+    fn file_if_open(&mut self) -> Result<&mut File, InterpreterError> {
+        self.file.as_mut().ok_or_else(|| InterpreterErrorKind::IoError("File is closed".into()).into())
+    }
+
+    /// Closes the file by dropping the file handle.
+    fn close(&mut self) {
+        self.file = None;
     }
 }
