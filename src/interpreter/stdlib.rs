@@ -10,6 +10,15 @@ use crate::{interpreter::{Type, Method, Value}, parser::{SendMessageComponents, 
 
 use super::{InterpreterErrorKind, TypeData, Variant, TypeRef, Interpreter, TypeInstance, mixin_derive::TypeCoreMixinDeriveBuilder, InterpreterError, DocumentationState, ValueRef, PrimitiveValue};
 
+macro_rules! load_stdlib_file {
+    ($interpreter:expr, $filename:literal) => {
+        $interpreter.parse_and_evaluate(SourceFile::new(
+            &format!("<stdlib>/{}", $filename),
+            include_str!(concat!("../../stdlib/", $filename))
+        ).rc())
+    }
+}
+
 /// Instantiates a set of core standard library types, by building them from intrinsics, executing
 /// bundled Babble code to define them, or a combination of the two.
 pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError> {
@@ -17,50 +26,20 @@ pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError
     // interpreter in an early pass so they're resolvable
     let early_core_types = early_core_types(interpreter);
     interpreter.types.extend(early_core_types);
-    interpreter.parse_and_evaluate(SourceFile::new(
-        "<stdlib>/core_mixins.bbl",
-        include_str!("../../stdlib/core_mixins.bbl")
-    ).rc())?;
+    load_stdlib_file!(interpreter, "core_mixins.bbl")?;
 
     // Define the rest of the stdlib types
     let core_types = core_types(interpreter);
     interpreter.types.extend(core_types);
-    interpreter.parse_and_evaluate(SourceFile::new(
-        "<stdlib>/block.bbl",
-        include_str!("../../stdlib/block.bbl")
-    ).rc())?;
-    interpreter.parse_and_evaluate(SourceFile::new(
-        "<stdlib>/program.bbl",
-        include_str!("../../stdlib/program.bbl")
-    ).rc())?;
-    interpreter.parse_and_evaluate(SourceFile::new(
-        "<stdlib>/boolean.bbl",
-        include_str!("../../stdlib/boolean.bbl")
-    ).rc())?;
-    interpreter.parse_and_evaluate(SourceFile::new(
-        "<stdlib>/integer.bbl",
-        include_str!("../../stdlib/integer.bbl")
-    ).rc())?;
-    interpreter.parse_and_evaluate(SourceFile::new(
-        "<stdlib>/array.bbl",
-        include_str!("../../stdlib/array.bbl")
-    ).rc())?;
-    interpreter.parse_and_evaluate(SourceFile::new(
-        "<stdlib>/match.bbl",
-        include_str!("../../stdlib/match.bbl")
-    ).rc())?;
-    interpreter.parse_and_evaluate(SourceFile::new(
-        "<stdlib>/string.bbl",
-        include_str!("../../stdlib/string.bbl")
-    ).rc())?;
-    interpreter.parse_and_evaluate(SourceFile::new(
-        "<stdlib>/range.bbl",
-        include_str!("../../stdlib/range.bbl")
-    ).rc())?;
-    interpreter.parse_and_evaluate(SourceFile::new(
-        "<stdlib>/file.bbl",
-        include_str!("../../stdlib/file.bbl")
-    ).rc())?;
+    load_stdlib_file!(interpreter, "block.bbl")?;
+    load_stdlib_file!(interpreter, "program.bbl")?;
+    load_stdlib_file!(interpreter, "boolean.bbl")?;
+    load_stdlib_file!(interpreter, "integer.bbl")?;
+    load_stdlib_file!(interpreter, "array.bbl")?;
+    load_stdlib_file!(interpreter, "match.bbl")?;
+    load_stdlib_file!(interpreter, "string.bbl")?;
+    load_stdlib_file!(interpreter, "range.bbl")?;
+    load_stdlib_file!(interpreter, "file.bbl")?;
 
     // Run deferred tests
     let deferred_tests = interpreter.resolve_stdlib_type("InternalTest").borrow()
