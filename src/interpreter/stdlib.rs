@@ -57,6 +57,10 @@ pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError
         "<stdlib>/range.bbl",
         include_str!("../../stdlib/range.bbl")
     ).rc())?;
+    interpreter.parse_and_evaluate(SourceFile::new(
+        "<stdlib>/file.bbl",
+        include_str!("../../stdlib/file.bbl")
+    ).rc())?;
 
     // Run deferred tests
     let deferred_tests = interpreter.resolve_stdlib_type("InternalTest").borrow()
@@ -636,7 +640,12 @@ fn file(interpreter: &mut Interpreter) -> Type {
                     .map_err(|e| InterpreterErrorKind::IoError(e.to_string()).into())?;
                 let handle = FileHandle { file: Some(file), path };
                 Ok(Value::new_other(handle).rc())
-            }).rc(),
+            }).with_documentation("
+                Opens a file for reading.
+
+                @param open: The path to the file.
+                @returns The opened `File` instance.
+            ").rc(),
         ],
 
         methods: vec![
@@ -645,12 +654,33 @@ fn file(interpreter: &mut Interpreter) -> Type {
                 r.borrow().to_other_mut::<FileHandle>()?.file_if_open()?.read_to_string(&mut s)
                     .map_err(|e| InterpreterErrorKind::IoError(e.to_string()).into())?;
                 Ok(Value::new_string(&s).rc())
-            }).rc(),
+            }).with_documentation("
+                Reads the file from the current position until the end, returning its contents.
+
+                @returns The text read from the file.
+            ").rc(),
+
+            Method::new_internal("readBytes:", |_, r, a| {
+                let mut buf = vec![0; a[0].borrow().to_integer()? as usize];
+                let n = r.borrow().to_other_mut::<FileHandle>()?.file_if_open()?
+                    .read(&mut buf).map_err(|e| InterpreterErrorKind::IoError(e.to_string()).into())?;
+                buf.truncate(n);
+                let buf = buf.into_iter().map(|b| Value::new_integer(b as i64).rc()).collect::<Vec<_>>();
+                Ok(Value::new_array(&buf).rc())
+            }).with_documentation("
+                Reads a particular number of bytes from the file, or possibly less (including zero) 
+                if the file ends or the bytes are not available.
+
+                @param readBytes: The number of bytes to read.
+                @returns An array of bytes read from the file, no longer than the requested number.
+            ").rc(),
 
             Method::new_internal("close", |_, r, _| {
                 r.borrow().to_other_mut::<FileHandle>()?.close();
                 Ok(Value::new_null().rc())
-            }).rc(),
+            }).with_documentation("
+                Closes the file. After this, further I/O operations will error.
+            ").rc(),
         ],
 
         ..Type::new("File")

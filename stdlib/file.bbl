@@ -1,0 +1,11 @@
+impl File {
+    /// Reads one byte from the file, or returns `null` if no byte is available.
+    ///
+    /// @returns The read byte, or `null`.
+    func readByte {
+        result = self readBytes: 1.
+        result isEmpty
+            ifTrue: [ null ]
+            else:   [ result get: 0 ].
+    }
+}
