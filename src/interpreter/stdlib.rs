@@ -133,10 +133,54 @@ fn integer(interpreter: &mut Interpreter) -> Type {
                 let b = params[0].borrow().to_integer()?;
                 Ok(Value::new_integer(a - b).rc())
             }).with_documentation("
-                Subtracts the given integer to this one.
+                Subtracts the given integer from this one.
 
                 @param sub: The integer to subtract.
-                @returns The two integers, subtracted.
+                @returns This integer with the other integer subtracted.
+            ").rc(),
+
+            Method::new_internal("mul:", |_, recv, params| {
+                let a = recv.borrow().to_integer()?;
+                let b = params[0].borrow().to_integer()?;
+                Ok(Value::new_integer(a * b).rc())
+            }).with_documentation("
+                Multiplies the given integer with this one.
+
+                @param mul: The integer to multiply with.
+                @returns The two integers, multiplied.
+            ").rc(),
+
+            Method::new_internal("div:", |_, recv, params| {
+                let a = recv.borrow().to_integer()?;
+                let b = params[0].borrow().to_integer()?;
+                Ok(Value::new_integer(a / b).rc())
+            }).with_documentation("
+                Performs integer division with another integer.
+
+                @param div: The divisor.
+                @returns This integer divided by the other integer.
+            ").rc(),
+
+            // TODO: What overflow semantics do we want for these?
+            Method::new_internal("leftShift:", |_, recv, params| {
+                let a = recv.borrow().to_integer()?;
+                let b = params[0].borrow().to_integer()?;
+                Ok(Value::new_integer(a << b).rc())
+            }).with_documentation("
+                Shifts this integer left by the specified amount.
+
+                @param leftShift: The amount to shift by.
+                @returns This integer shifted left by the other integer.
+            ").rc(),
+            Method::new_internal("rightShift:", |_, recv, params| {
+                let a = recv.borrow().to_integer()?;
+                let b = params[0].borrow().to_integer()?;
+                Ok(Value::new_integer(a >> b).rc())
+            }).with_documentation("
+                Shifts this integer right by the specified amount.
+
+                @param leftShift: The amount to shift by.
+                @returns This integer shifted right by the other integer.
             ").rc(),
 
             Method::new_internal("negate", |_, recv, _| {

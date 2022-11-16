@@ -20,6 +20,14 @@ impl Range {
         ].
     }
 
+    /// Determines whether this range contains a given integer.
+    ///
+    /// @param contains: The integer to check.
+    /// @returns `true` if the integer is within the range, `false` otherwise. 
+    func contains: i {
+        (i greaterThanOrEquals: self start) and: (i lessThan: self end)
+    }
+
     use Enumerable.
     InternalTest case: "range toArray" that: (Range upTo: 5) toArray equals: #{ 0 1 2 3 4 }.
     InternalTest case: "range filter" that: ((Range upTo: 5) filter: [ |x| x greaterThan: 2 ]) equals: #{ 3 4 }.

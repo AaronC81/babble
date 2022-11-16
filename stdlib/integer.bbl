@@ -1,9 +1,13 @@
 impl Integer {
     // Mathematical tests for core methods
-    InternalTest case: "addition"    that: (1 add: 3)          equals: 4.
-    InternalTest case: "subtraction" that: (5 sub: 2)          equals: 3.
-    InternalTest case: "negation"    that: ((3 negate) add: 5) equals: 2.
-    InternalTest case: "modulo"      that: (11 modulo: 3)      equals: 2.
+    InternalTest case: "addition"       that: (1 add: 3)          equals: 4.
+    InternalTest case: "subtraction"    that: (5 sub: 2)          equals: 3.
+    InternalTest case: "multiplication" that: (5 mul: 2)          equals: 10.
+    InternalTest case: "division"       that: (15 div: 3)         equals: 5.
+    InternalTest case: "left shift"     that: (5 leftShift: 2)    equals: 20.
+    InternalTest case: "right shift"    that: (20 rightShift: 2)  equals: 5.
+    InternalTest case: "negation"       that: ((3 negate) add: 5) equals: 2.
+    InternalTest case: "modulo"         that: (11 modulo: 3)      equals: 2.
 
     /// Executes the block the number of times equal to this integer.
     /// 
@@ -20,10 +24,44 @@ impl Integer {
             counter = counter add: 1.
         ].
     }
-
     [
         sum = 0.
         5 times: [ |x| sum = sum add: (x add: 1). ].
         InternalTest case: "times" that: sum equals: 15.
     ] call.
+
+    /// Converts an array of big-endian bytes into an integer.
+    ///
+    /// If any of the items of the sequence is outside of the range 0..255, returns `null`.
+    ///
+    /// @param fromBigEndianBytes: The array of bytes.
+    /// @returns An integer constructed from these bytes, or `null` if one of the items was invalid.
+    static func fromBigEndianBytes: bytes {
+        result = 0.
+        bytes forEach: [ |byte|
+            Range upTo: 256 $ contains: byte $ ifFalse: [ return null ].
+            result = result leftShift: 8 $ add: byte.
+        ].
+        result
+    }
+
+    /// Converts an array of little-endian bytes into an integer.
+    ///
+    /// If any of the items of the sequence is outside of the range 0..255, returns `null`.
+    ///
+    /// @param fromLittleEndianBytes: The array of bytes.
+    /// @returns An integer constructed from these bytes, or `null` if one of the items was invalid.
+    static func fromLittleEndianBytes: bytes {
+        self fromBigEndianBytes: (bytes reverse)
+    }
+
+    InternalTest defer: [
+        InternalTest case: "fromBigEndianBytes pos"
+                     that: (Integer fromBigEndianBytes: #{ 1 2 3 4 })
+                     equals: 16909060.
+
+        InternalTest case: "fromBigEndianBytes neg"
+                     that: (Integer fromBigEndianBytes: #{ 1 2 256 4 })
+                     equals: null.
+    ]
 }
