@@ -4,7 +4,7 @@
 //! reason or another. Where possible, Babble's standard library is defined _in Babble_, with these
 //! files imported and executed by [`instantiate`].
 
-use std::{process::exit, sync::RwLock, fs::File, io::Read, any::Any};
+use std::{process::exit, sync::RwLock, fs::File, io::{Read, Write}, any::Any};
 
 use crate::{interpreter::{Type, Method, Value}, parser::{SendMessageComponents, SendMessageParameter}, source::SourceFile};
 
@@ -267,6 +267,17 @@ fn string(interpreter: &mut Interpreter) -> Type {
                 @param charAt: The index of the character to get.
                 @returns A substring of a single character, or `null` if the index is out of bounds.
             ").rc(),
+
+            Method::new_internal("toInteger", |_, recv, _| {
+                Ok(recv.borrow().to_string()?.parse::<i64>()
+                    .map(Value::new_integer)
+                    .unwrap_or_else(|_| Value::new_null())
+                    .rc())
+            }).with_documentation("
+                Parses this string as an integer. If the string is not a valid integer, returns `null`.
+
+                @returns An integer, or `null`.
+            ").rc(),
         ],
 
         static_methods: vec![
@@ -418,11 +429,25 @@ fn console(_: &mut Interpreter) -> Type {
 
             Method::new_internal("print:", |_, _, p| {
                 print!("{}", p[0].borrow().to_language_string());
+                drop(std::io::stdout().flush());
                 Ok(Value::new_null().rc())
             }).with_documentation("
                 Prints an object to the console, with no trailing newline.
 
+                Additionally, flushes the console buffer, to ensure that the output is actually
+                displayed, since many consoles will not usually show content until a newline is
+                printed.
+
                 @param print: The object to print.
+            ").rc(),
+
+            Method::new_internal("input", |_, _, _| {
+                let line = std::io::stdin().lines().next().unwrap().unwrap();
+                Ok(Value::new_string(&line).rc())
+            }).with_documentation("
+                Reads a line of input from the console.
+
+                @returns The line as a string.
             ").rc(),
         ],
 
