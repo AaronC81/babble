@@ -40,6 +40,7 @@ pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError
     load_stdlib_file!(interpreter, "string.bbl")?;
     load_stdlib_file!(interpreter, "range.bbl")?;
     load_stdlib_file!(interpreter, "file.bbl")?;
+    load_stdlib_file!(interpreter, "random.bbl")?;
 
     // Run deferred tests
     let deferred_tests = interpreter.resolve_stdlib_type("InternalTest").borrow()

@@ -1,0 +1,33 @@
+struct Random.
+impl Random {
+    /// Returns the requested number of random bytes.
+    ///
+    /// @param bytes: The number of bytes to return.
+    /// @returns An array of random bytes.
+    static func bytes: count {
+        File open: "/dev/random" in: [ |f| 
+            f readBytes: count
+        ]
+    }
+
+    /// Returns a random integer from 0 up to (but not including) the given limit.
+    ///
+    /// @param upTo: The limit.
+    /// @returns A random integer.
+    static func upTo: limit {
+        // Due to signing otherwise making things complicated, only allow up to a 32-bit number as
+        // the limit
+        max = Integer fromLittleEndianBytes: #{ 255 255 255 255 }. // No hex literals yet :(
+        (limit greaterThan: max) ifTrue: [ Program error: "Random limit out of range" ].
+
+        Integer fromLittleEndianBytes: (self bytes: 4) $ modulo: limit
+    }
+
+    /// Returns a random element of the given array.
+    ///
+    /// @param sample: The array to sample from.
+    /// @returns A random element from the array. 
+    static func sample: array {
+        array get: (self upTo: array length)
+    }
+}

@@ -1,4 +1,19 @@
 impl File {
+    /// Opens a file, passes it to a block, then closes the file when the block exits.
+    ///
+    /// If the block subverts normal control flow, such as by throwing a value or returning, then
+    /// the file will **not** be closed.
+    ///
+    /// @param open: The path to the file.
+    /// @param in: The block to execute, which should take one argument, the path to the file.
+    /// @returns The result of the block.
+    static func open: name in: fn {
+        f = self open: name.
+        r = fn call: f.
+        f close.
+        r
+    }
+
     /// Reads one byte from the file, or returns `null` if no byte is available.
     ///
     /// @returns The read byte, or `null`.
