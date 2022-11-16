@@ -1,0 +1,57 @@
+struct Question text answer.
+struct Operation symbol resultCalc.
+struct MathsQuiz score.
+impl MathsQuiz {
+    /// Returns an `Operation` representing either addition, subtraction, or multiplication, at
+    /// random.
+    func randomOperation {
+        Random sample: #{
+            (Operation symbol: "+" resultCalc: [ |a b| a add: b ])
+            (Operation symbol: "-" resultCalc: [ |a b| a sub: b ])
+            (Operation symbol: "*" resultCalc: [ |a b| a mul: b ])
+        }
+    }
+
+    /// Returns a `Question` with a random operation, and two operands as numbers between 1 and 10.
+    func randomQuestion {
+        // Pick operands and operation
+        a = Random upTo: 10 $ add: 1.
+        b = Random upTo: 10 $ add: 1.
+        op = self randomOperation.
+
+        // Compose question by calculating text and answer
+        text = a repr concat: " "
+                    $ concat: op symbol
+                    $ concat: " " 
+                    $ concat: b repr.
+        answer = op resultCalc callWith: #{ (a) (b) }.
+        Question text: text answer: answer.
+    }
+
+    /// Starts a 10-question quiz.
+    func run {
+        10 times: [ |i|
+            // Print question
+            question = self randomQuestion.
+            Console println: ("Question " concat: (i add: 1 $ repr)).
+            Console println: ("What is " concat: question text
+                                       $ concat: "?").
+
+            // Get input and evaluate answer
+            // (Don't bother considering malformed input for this example)
+            Console print: "> ".
+            userAnswer = Console input toInteger.
+            (userAnswer equals: question answer)
+                ifTrue: [ Console println: "That's right!". self score = self score add: 1. ]
+                else:   [ Console println: ("Sorry, it was " concat: question answer repr) ].
+
+            Console println: "".
+        ].
+
+        // Print final score
+        Console println: ("You scored " concat: self score repr
+                                      $ concat: " out of 10").
+    }
+}
+
+MathsQuiz score: 0 $ run.
