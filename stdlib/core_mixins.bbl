@@ -231,4 +231,26 @@ impl Enumerable {
             i lessThanOrEquals: n
         ]
     }
+
+    /// Determines whether any element of the enumerable matches a predicate.
+    ///
+    /// @param any: The predicate to use, which should accept one parameter.
+    /// @returns `true` if any element matches the predicate, `false` otherwise.
+    func any: fn {
+        self forEach: [ |x|
+            fn call: x $ ifTrue: [ return true ].
+        ].
+        false
+    }
+
+    /// Determines whether all elements of the enumerable match a predicate.
+    ///
+    /// @param any: The predicate to use, which should accept one parameter.
+    /// @returns `true` if all elements match the predicate, `false` otherwise.
+    func all: fn {
+        self forEach: [ |x|
+            fn call: x $ ifFalse: [ return false ].
+        ].
+        true
+    }
 }

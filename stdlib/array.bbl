@@ -104,5 +104,11 @@ impl Array {
         InternalTest case: "chunk" that: (#{ 1 2 3 4 5 6 7 8 } chunk: 3) equals: #{ #{ 1 2 3 } #{ 4 5 6 } #{ 7 8 } }.
         InternalTest case: "chunkExact non-exact" that: (#{ 1 2 3 4 5 6 7 8   } chunkExact: 3) equals: #{ #{ 1 2 3 } #{ 4 5 6 } }.
         InternalTest case: "chunkExact exact" that:     (#{ 1 2 3 4 5 6 7 8 9 } chunkExact: 3) equals: #{ #{ 1 2 3 } #{ 4 5 6 } #{ 7 8 9 } }.
+
+        InternalTest case: "any pos" that: (#{ 1 3 5 4 7 } any: [ |x| x modulo: 2 $ equals: 0 ]) equals: true.
+        InternalTest case: "any neg" that: (#{ 1 3 5 9 7 } any: [ |x| x modulo: 2 $ equals: 0 ]) equals: false.
+
+        InternalTest case: "all pos" that: (#{ 1 3 5 9 7 } all: [ |x| x modulo: 2 $ equals: 1 ]) equals: true.
+        InternalTest case: "all neg" that: (#{ 1 3 5 4 7 } all: [ |x| x modulo: 2 $ equals: 1 ]) equals: false.
     ]
 }
