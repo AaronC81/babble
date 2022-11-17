@@ -36,4 +36,41 @@ impl String {
                  $ reverse join
     }
     InternalTest case: "strip" that: " \n  abc \r\t  " strip equals: "abc".
+
+    /// Splits a string using another string as a separator.
+    ///
+    /// @param split: The separator to split on.
+    /// @returns An array of separated strings.
+    func split: sep {
+        buffer = "".    // Current separated string
+        matchIndex = 0. // Expected character in separator
+        result = #{}.   // Resulting array of strings
+
+        self chars forEach: [ |c|
+            // Does this character correspond to the next character in the separator?
+            c equals: (sep charAt: matchIndex) $ ifTrue: [
+                // Yes - advance the separator index, and if we've reached the end, push the buffer
+                // into the result and reset it
+                matchIndex = matchIndex add: 1.
+                matchIndex equals: sep length $ ifTrue: [
+                    result append: buffer.
+                    buffer = "".
+                    matchIndex = 0.
+                ]
+            ] else: [
+                // No - if the separator index had advanced, reset it and append the character to
+                // the current buffer
+                matchIndex equals: 0 $ ifFalse: [
+                    buffer = buffer concat: (sep chars take: matchIndex $ join).
+                ].
+                matchIndex = 0.
+                buffer = buffer concat: c.
+            ].
+        ].
+
+        result append: buffer.
+        result
+    }
+    InternalTest case: "split single-char" that: ("abc,def,gh,xyz,12 3" split: ",") equals: #{ "abc" "def" "gh" "xyz" "12 3" }.
+    InternalTest case: "split multi-char" that: ("abc, def, gh,xyz, 12 3, " split: ", ") equals: #{ "abc" "def" "gh,xyz" "12 3" "" }.
 }
