@@ -84,6 +84,9 @@ pub enum TokenizerError {
 
     /// While tokenizing, an integer literal would have overflown.
     IntegerLiteralOverflow(Location),
+
+    /// A string literal used an invalid escape sequence.
+    InvalidEscapeSequence(Location),
 }
 
 /// The current state of the tokenizer.
@@ -93,7 +96,7 @@ pub enum TokenizerState {
     Idle,
 
     /// A token is being collected which will end when whitespace is encountered.
-    CollectingWhitespaceSeparated(Token),
+    CollectingWhitespaceSeparated { token: Token, next_is_escape_sequence: bool },
 
     /// A comment is being collected, which will end on a newline.
     Comment,
@@ -146,6 +149,7 @@ impl<'a> Tokenizer<'a> {
     /// Performs one step of the tokenizer.
     fn step(&mut self) -> Result<(), TokenizerError> {
         let here = self.here();
+        let here_loc = self.here_loc();
 
         match &mut self.state {
             TokenizerState::Idle => {
@@ -158,23 +162,26 @@ impl<'a> Tokenizer<'a> {
 
                     // Start of an identifier
                     _ if here.is_alphabetic() || here == '_' => {
-                        self.state = TokenizerState::CollectingWhitespaceSeparated(
-                            TokenKind::Identifier(here.to_string()).at(self.here_loc()),
-                        )
+                        self.state = TokenizerState::CollectingWhitespaceSeparated {
+                            token: TokenKind::Identifier(here.to_string()).at(self.here_loc()),
+                            next_is_escape_sequence: false,
+                        }
                     }
 
                     // Start of an integer literal
                     _ if here.is_numeric() => {
-                        self.state = TokenizerState::CollectingWhitespaceSeparated(
-                            TokenKind::IntegerLiteral(here.to_string().parse().unwrap()).at(self.here_loc()),
-                        )
+                        self.state = TokenizerState::CollectingWhitespaceSeparated {
+                            token: TokenKind::IntegerLiteral(here.to_string().parse().unwrap()).at(self.here_loc()),
+                            next_is_escape_sequence: false,
+                        }
                     }
 
                     // Start of a string literal
                     '"' => {
-                        self.state = TokenizerState::CollectingWhitespaceSeparated(
-                            TokenKind::StringLiteral("".into()).at(self.here_loc()),
-                        )
+                        self.state = TokenizerState::CollectingWhitespaceSeparated {
+                            token: TokenKind::StringLiteral("".into()).at(self.here_loc()),
+                            next_is_escape_sequence: false,
+                        }
                     }
 
                     // Simple symbols
@@ -212,7 +219,7 @@ impl<'a> Tokenizer<'a> {
                 }
             },
 
-            TokenizerState::CollectingWhitespaceSeparated(ref mut token) => {
+            TokenizerState::CollectingWhitespaceSeparated { ref mut token, ref mut next_is_escape_sequence }  => {
                 match token.kind {
                     TokenKind::Identifier(ref mut id) => {
                         match here {
@@ -277,8 +284,27 @@ impl<'a> Tokenizer<'a> {
                     }
 
                     TokenKind::StringLiteral(ref mut value) => {
-                        // TODO: escapes
                         match here {
+                            // If the last character started an escape sequence, deal with that
+                            c if *next_is_escape_sequence => {
+                                let escape_char = match c {
+                                    'n' => '\n',
+                                    'r' => '\r',
+                                    't' => '\t',
+                                    '\\' => '\\',
+                                    '0' => '\0',
+                                    '"' => '"',
+                                    _ => Err(TokenizerError::InvalidEscapeSequence(here_loc))?,
+                                };
+                                value.push(escape_char);
+                                *next_is_escape_sequence = false;
+                            }
+
+                            // Prepare for escape sequences
+                            '\\' => {
+                                *next_is_escape_sequence = true;
+                            }
+
                             // Finish on matching quote
                             '"' => {
                                 self.tokens.push(token.clone());
@@ -350,15 +376,15 @@ impl<'a> Tokenizer<'a> {
         }
 
         // If the tokenizer was parsing an arbitrary-length token, shift it now
-        if let TokenizerState::CollectingWhitespaceSeparated(ref mut t) = tokenizer.state {
+        if let TokenizerState::CollectingWhitespaceSeparated { ref mut token, .. } = tokenizer.state {
             // Keyword check
-            if let TokenKind::Identifier(id) = &t.kind {
+            if let TokenKind::Identifier(id) = &token.kind {
                 if let Some(keyword) = Self::to_keyword(id) {
-                    t.kind = TokenKind::Keyword(keyword);
+                    token.kind = TokenKind::Keyword(keyword);
                 }
             }
             
-            tokenizer.tokens.push(t.clone());
+            tokenizer.tokens.push(token.clone());
         }
 
         tokenizer.tokens.push(TokenKind::EndOfFile.at(tokenizer.here_loc()));
