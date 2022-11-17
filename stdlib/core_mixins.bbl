@@ -191,6 +191,13 @@ impl Enumerable {
         result equals: null $ ifTrue: [ "" ] else: [ result ]
     }
 
+    /// Joins together the strings in this enumerable by repeatedly calling `concat:`.
+    ///
+    /// @returns The concatenated value.
+    func join {
+        self join: ""
+    }
+
     /// Builds an array with elements from this enumerable, taking elements from the start until the
     /// predicate function returns `false` for the first time.
     ///

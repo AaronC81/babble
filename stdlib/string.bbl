@@ -26,4 +26,14 @@ impl String {
     }
     InternalTest case: "isWhitespace pos" that: " \t  \r  " isWhitespace equals: true.
     InternalTest case: "isWhitespace neg" that: " \t h \r  " isWhitespace equals: false.
+
+    /// Returns a copy of this string with whitespace stripped from the beginning and end.
+    ///
+    /// @returns The new string with whitespace stripped.
+    func strip {
+        self chars skipWhile: [ |c| c isWhitespace ]
+                 $ reverse skipWhile: [ |c| c isWhitespace ]
+                 $ reverse join
+    }
+    InternalTest case: "strip" that: " \n  abc \r\t  " strip equals: "abc".
 }

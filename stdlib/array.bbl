@@ -97,6 +97,7 @@ impl Array {
         InternalTest case: "join none"
                      that: (#{ } join: ", ")
                      equals: "".
+        InternalTest case: "join no-arg" that: #{ "foo" "bar" "baz" } join equals: "foobarbaz".
         
         InternalTest case: "takeWhile" that: (#{ 1 2 3 4 8 1 2 } takeWhile: [ |x| x lessThan: 5 ]) equals: #{ 1 2 3 4 }.
         InternalTest case: "skipWhile" that: (#{ 1 2 3 4 8 1 2 } skipWhile: [ |x| x lessThan: 5 ]) equals: #{ 8 1 2 }.
