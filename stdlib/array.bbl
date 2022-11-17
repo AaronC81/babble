@@ -85,6 +85,8 @@ impl Array {
         InternalTest case: "filter" that: (#{ 1 2 3 } filter: [ |x| x lessThan: 3 ]) equals: #{ 1 2 }.
         InternalTest case: "find pos" that: (#{ 1 8 3 } find: [ |x| x modulo: 2 $ equals: 0 ]) equals: 8.
         InternalTest case: "find neg" that: (#{ 1 7 3 } find: [ |x| x modulo: 2 $ equals: 0 ]) equals: null.
+        InternalTest case: "contains pos" that: (#{ 1 7 3 } contains: 7) equals: true.
+        InternalTest case: "contains neg" that: (#{ 1 7 3 } contains: 8) equals: false.
 
         InternalTest case: "withIndex" that: (#{ 1 7 3 } withIndex) equals: #{ #{ 0 1 } #{ 1 7 } #{ 2 3 } }.
         InternalTest case: "sum" that: #{ 1 7 3 } sum equals: 11.

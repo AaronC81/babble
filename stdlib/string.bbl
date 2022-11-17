@@ -1,4 +1,7 @@
 impl String {
+    // Slightly wonky test for escape sequences
+    InternalTest case: "escapes" that: "\r\n\t\0\"" length equals: 5.
+
     /// Gets the characters within this string.
     ///
     /// @returns An array of this string's characters.
@@ -11,4 +14,16 @@ impl String {
         result
     }
     InternalTest case: "chars" that: "hello" chars equals: #{ "h" "e" "l" "l" "o" }.
+
+    /// Whether this string is composed entirely of whitespace.
+    ///
+    /// This currently only supports ASCII whitespace characters: \r, \n, \t, and space.
+    ///
+    /// @returns `true` if the string is entirely ASCII whitespace, `false` otherwise.
+    func isWhitespace {
+        wsChars = #{ "\r" "\n" "\t" " " }.
+        self chars all: [ |c| wsChars contains: c ].
+    }
+    InternalTest case: "isWhitespace pos" that: " \t  \r  " isWhitespace equals: true.
+    InternalTest case: "isWhitespace neg" that: " \t h \r  " isWhitespace equals: false.
 }

@@ -86,6 +86,19 @@ impl Enumerable {
         ].
     }
 
+    /// Determines whether this enumerable contains an item which equals the given item.
+    ///
+    /// @param contains: The item to find.
+    /// @returns `true` if the item is found, or `false` otherwise.
+    func contains: item {
+        self forEach: [ |x|
+            x equals: item $ ifTrue: [
+                return true.
+            ].
+        ].
+        false
+    }
+
     /// Constructs a new array composed of new 2-element arrays: the first element is the index of
     /// the source item (starting from 0), and the second element is the source item.
     ///
