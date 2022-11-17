@@ -85,4 +85,150 @@ impl Enumerable {
             ].
         ].
     }
+
+    /// Constructs a new array composed of new 2-element arrays: the first element is the index of
+    /// the source item (starting from 0), and the second element is the source item.
+    ///
+    /// @returns The new array of 2-element arrays, of the form `#{ index item }`.
+    func withIndex {
+        i = 0.
+        self map: [ |x|
+            thisI = i.
+            i = i add: 1.
+            #{ (thisI) (x) }
+        ]
+    }
+
+    /// Partitions this enumerable into an array of chunks of a given size.
+    ///
+    /// If the enumerable is not evenly divisible by the chunk size, the last chunk will be smaller
+    /// and contain the leftover elements. (If you would like all chunks to be the same size, see
+    /// `chunkExact:`.)
+    ///
+    /// @param chunk: The size of each chunk.
+    /// @returns An array of chunk arrays.
+    func chunk: n {
+        result = #{}.
+        chunk = #{}.
+
+        // Build chunks, and shift them onto the result list when they're large enough
+        self forEach: [ |x|
+            chunk append: x.
+            chunk length $ equals: n $ ifTrue: [
+                result append: chunk.
+                chunk = #{}.
+            ].
+        ].
+
+        // Catch non-empty chunk still being built
+        chunk isEmpty not $ ifTrue: [ result append: chunk ].
+        result
+    }
+
+    /// Partitions this enumerable into an array of chunks of a given size.
+    ///
+    /// If the enumerable is not evenly divisible by the chunk size, the remaining elements will
+    /// be omitted from the result. (If you would like the last chunk to be smaller, see `chunk:`.)
+    ///
+    /// @param chunk: The size of each chunk.
+    /// @returns An array of chunk arrays.
+    func chunkExact: n {
+        chunks = self chunk: n.
+
+        // If the last chunk isn't long enough, remove it
+        chunks last length $ equals: n $ ifFalse: [ chunks pop ].
+
+        chunks
+    }
+
+    /// Reduces this enumerable into a single value, by starting with an accumulator value and
+    /// repeatedly applying a block to it with each element of the enumerable.
+    ///
+    /// The block will be called for each item in the enumerable, with the block's result replacing
+    /// the current accumulator value.
+    ///
+    /// @param reduce: The block to apply, which should accept two parameters: the accumulator and
+    ///   the enumerable value.
+    /// @param acc: The initial accumulator value.
+    /// @returns The accumulator value obtained after repeatedly applying the block.
+    func reduce: fn acc: acc {
+        self forEach: [ |x| acc = fn callWith: #{ (acc) (x) } ].
+        acc
+    }
+
+    /// Adds together the elements in this enumerable, by starting with the integer 0 and repeatedly
+    /// calling `add:`.
+    ///
+    /// @returns The summed value. 
+    func sum {
+        self reduce: [ |acc x| acc add: x ] acc: 0
+    }
+
+    /// Joins together the strings in this enumerable with a separator between them, by repeatedly
+    /// calling `concat:`.
+    ///
+    /// @returns The concatenated value.
+    func join: sep {
+        result = null.
+        self forEach: [ |x|
+            result = result equals: null $
+                ifTrue: [ x ]
+                else:   [ result concat: sep $ concat: x ].
+        ].
+        result equals: null $ ifTrue: [ "" ] else: [ result ]
+    }
+
+    /// Builds an array with elements from this enumerable, taking elements from the start until the
+    /// predicate function returns `false` for the first time.
+    ///
+    /// @param takeWhile: The predicate function, which should accept one parameter.
+    /// @returns The elements taken until the predicate became `false`.
+    func takeWhile: fn {
+        result = #{}.
+        self forEach: [ |x|
+            fn call: x $
+                ifTrue: [ result append: x ]
+                else:   [ return result ].
+        ].
+        result
+    }
+
+    /// Builds an array with elements from this enumerable, skipping elements from the start until
+    /// the predicate function returns `false` for the first time.
+    ///
+    /// @param takeWhile: The predicate function, which should accept one parameter.
+    /// @returns The elements taken after the predicate became `false`.
+    func skipWhile: fn {
+        taking = false.
+        result = #{}.
+        self forEach: [ |x|
+            taking = taking or: (fn call: x $ not).
+            taking ifTrue: [ result append: x ].
+        ].
+        result
+    }
+
+    /// Takes the first `n` elements from this enumerable.
+    ///
+    /// @param take: The number of elements to take.
+    /// @returns An array of the first `n` elements.
+    func take: n {
+        i = 0.
+        self takeWhile: [ |x|
+            i = i add: 1.
+            i lessThanOrEquals: n
+        ]
+    }
+
+    /// Skips the first `n` elements from this enumerable, and takes the rest.
+    ///
+    /// @param take: The number of elements to skip.
+    /// @returns An array of all elements after the first `n`.
+    func skip: n {
+        i = 0.
+        self skipWhile: [ |x|
+            i = i add: 1.
+            i lessThanOrEquals: n
+        ]
+    }
 }

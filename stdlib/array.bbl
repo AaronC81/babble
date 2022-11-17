@@ -46,6 +46,37 @@ impl Array {
         null
     }
 
+    /// Deletes the last item of this array and returns it. If the array is empty, returns `null`.
+    ///
+    /// @returns The last (now-deleted) item of this array, or `null`.
+    func pop {
+        self delete: (self length sub: 1)
+    }
+    [
+        x = #{ 1 2 3 }.
+        popped = x pop.
+        InternalTest case: "popped value" that: popped equals: 3.
+        InternalTest case: "popped value" that: x      equals: #{ 1 2 }.
+    ] call.
+
+    /// Returns the first item of this array.
+    ///
+    /// @returns The first item of the array, or `null` if it is empty.
+    func first {
+        self get: 0
+    }
+    InternalTest case: "first non-empty" that: #{ 1 2 3 } first equals: 1.
+    InternalTest case: "first empty"     that: #{ } first       equals: null.
+
+    /// Returns the last item of this array.
+    ///
+    /// @returns The last item of the array, or `null` if it is empty.
+    func last {
+        self get: (self length sub: 1)
+    }
+    InternalTest case: "last non-empty" that: #{ 1 2 3 } last equals: 3.
+    InternalTest case: "last empty"     that: #{ } last       equals: null.
+
     use Enumerable.
     InternalTest defer: [
         InternalTest case: "toArray" that: #{ 1 2 3 } toArray equals: #{ 1 2 3 }.
@@ -54,5 +85,24 @@ impl Array {
         InternalTest case: "filter" that: (#{ 1 2 3 } filter: [ |x| x lessThan: 3 ]) equals: #{ 1 2 }.
         InternalTest case: "find pos" that: (#{ 1 8 3 } find: [ |x| x modulo: 2 $ equals: 0 ]) equals: 8.
         InternalTest case: "find neg" that: (#{ 1 7 3 } find: [ |x| x modulo: 2 $ equals: 0 ]) equals: null.
+
+        InternalTest case: "withIndex" that: (#{ 1 7 3 } withIndex) equals: #{ #{ 0 1 } #{ 1 7 } #{ 2 3 } }.
+        InternalTest case: "sum" that: #{ 1 7 3 } sum equals: 11.
+        InternalTest case: "join many" that: (#{ "foo" "bar" "baz" } join: ", ") equals: "foo, bar, baz".
+        InternalTest case: "join one"
+                     that: (#{ "foo" } join: ", ")
+                     equals: "foo".
+        InternalTest case: "join none"
+                     that: (#{ } join: ", ")
+                     equals: "".
+        
+        InternalTest case: "takeWhile" that: (#{ 1 2 3 4 8 1 2 } takeWhile: [ |x| x lessThan: 5 ]) equals: #{ 1 2 3 4 }.
+        InternalTest case: "skipWhile" that: (#{ 1 2 3 4 8 1 2 } skipWhile: [ |x| x lessThan: 5 ]) equals: #{ 8 1 2 }.
+        InternalTest case: "take" that: (#{ 1 2 3 4 8 1 2 } take: 3) equals: #{ 1 2 3 }.
+        InternalTest case: "skip" that: (#{ 1 2 3 4 8 1 2 } skip: 3) equals: #{ 4 8 1 2 }.
+
+        InternalTest case: "chunk" that: (#{ 1 2 3 4 5 6 7 8 } chunk: 3) equals: #{ #{ 1 2 3 } #{ 4 5 6 } #{ 7 8 } }.
+        InternalTest case: "chunkExact non-exact" that: (#{ 1 2 3 4 5 6 7 8   } chunkExact: 3) equals: #{ #{ 1 2 3 } #{ 4 5 6 } }.
+        InternalTest case: "chunkExact exact" that:     (#{ 1 2 3 4 5 6 7 8 9 } chunkExact: 3) equals: #{ #{ 1 2 3 } #{ 4 5 6 } #{ 7 8 9 } }.
     ]
 }
