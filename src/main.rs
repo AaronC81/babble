@@ -5,6 +5,7 @@
 #![feature(let_chains)]
 #![feature(type_name_of_val)]
 #![feature(trait_upcasting)]
+#![feature(test)]
 
 use std::{fs::read_to_string, io::{stdin, stdout, Write}};
 
@@ -17,6 +18,9 @@ mod tokenizer;
 mod parser;
 mod interpreter;
 mod doc_gen;
+
+#[cfg(test)]
+mod bench;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]

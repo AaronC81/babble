@@ -27,7 +27,7 @@ pub mod stdlib;
 pub mod mixin_derive;
 
 #[cfg(test)]
-mod tests;
+pub mod tests;
 
 /// A named local variable with a value.
 #[derive(Debug)]
