@@ -1,19 +1,19 @@
 extern crate test;
 
-use test::Bencher;
+use test::{Bencher, black_box};
 
 use crate::interpreter::tests::evaluate;
 
 #[bench]
 fn bench_startup(b: &mut Bencher) {
-    b.iter(|| {
-        evaluate("null").unwrap();
-    });
+    b.iter(|| black_box({
+        evaluate("null").unwrap()
+    }));
 }
 
 #[bench]
 fn bench_factorial(b: &mut Bencher) {
-    b.iter(|| {
+    b.iter(|| black_box({
         evaluate("
             impl Integer {
                 func benchFactorial {
@@ -24,19 +24,19 @@ fn bench_factorial(b: &mut Bencher) {
             }
             
             20 benchFactorial        
-        ").unwrap();
-    });
+        ").unwrap()
+    }));
 }
 
 #[bench]
 fn bench_iteration(b: &mut Bencher) {
-    b.iter(|| {
+    b.iter(|| black_box({
         evaluate("
             sum = 0.
             10000 times: [
                 sum = sum add: 1.
             ]
-        ").unwrap();
-    });
+        ").unwrap()
+    }));
 }
 
