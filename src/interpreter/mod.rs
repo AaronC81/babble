@@ -26,6 +26,8 @@ pub use method::*;
 pub mod stdlib;
 pub mod mixin_derive;
 
+pub mod instruction;
+
 #[cfg(test)]
 pub mod tests;
 
