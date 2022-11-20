@@ -103,6 +103,9 @@ pub enum InstructionKind {
     /// The number of arguments is determined by the method name.
     Call(String),
 
+    /// Peeks the item on the top of the stack, and pushes another copy of it.
+    Duplicate,
+
     /// Constructs an enum variant value. Pops arguments, last-first, then the enum value. Pushes
     /// the constructed enum variant.
     /// 
@@ -147,6 +150,21 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
             NodeKind::SelfAccess => vec![InstructionKind::GetSelf.with_loc(&loc)].into(),
             NodeKind::Identifier(i) => vec![InstructionKind::Get(i).with_loc(&loc)].into(),
 
+            NodeKind::Array(items) => {
+                let mut instructions: InstructionBlock = vec![
+                    InstructionKind::Get("Array".into()).with_loc(&loc),
+                    InstructionKind::Call("new".into()).with_loc(&loc),
+                ].into();
+
+                for item in items {
+                    instructions.push(InstructionKind::Duplicate.with_loc(&loc));
+                    instructions.extend(compile(item)?);
+                    instructions.push(InstructionKind::Call("append:".into()).with_loc(&loc));
+                }
+
+                instructions
+            }
+
             NodeKind::StatementSequence(stmts) => {
                 // Compile with interspersed `pop`s
                 let mut instructions = InstructionBlock::new();
@@ -179,10 +197,8 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
                         for (name, param) in params {
                             labels.push(name);
                             match param {
-                                SendMessageParameter::Parsed(n) => instructions.extend(compile(*n)?),
-
-                                SendMessageParameter::Evaluated(_)
-                                | SendMessageParameter::Defined(_) => unreachable!(),
+                                SendMessageParameter::CallArgument(n) => instructions.extend(compile(*n)?),
+                                SendMessageParameter::DefinitionParameter(_) => unreachable!(),
                             }
                         }
                     },
@@ -229,10 +245,8 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
                     SendMessageComponents::Parameterised(args) => {
                         for (_, arg) in args {
                             match arg {
-                                SendMessageParameter::Parsed(n) => instructions.extend(compile(*n)?),
-
-                                SendMessageParameter::Evaluated(_)
-                                | SendMessageParameter::Defined(_) => unreachable!(),
+                                SendMessageParameter::CallArgument(n) => instructions.extend(compile(*n)?),
+                                SendMessageParameter::DefinitionParameter(_) => unreachable!(),
                             }
                         }
                     },
@@ -320,6 +334,7 @@ impl Display for Instruction {
                     },
                     indent(body.to_string()),
                 ),
+            InstructionKind::Duplicate => write!(f, "dup"),
             InstructionKind::Call(n) => write!(f, "call {}", n),
             InstructionKind::NewVariant { name, labels } =>
                 write!(f, "new variant {} {}",

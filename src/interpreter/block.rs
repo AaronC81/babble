@@ -7,7 +7,7 @@ use std::{sync::atomic::AtomicUsize, collections::HashMap};
 
 use crate::parser::{Node, BlockParameters, PatternMatchContext};
 
-use super::{ValueRef, InterpreterResult, Interpreter, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariableRef, LocalVariable, Value};
+use super::{ValueRef, InterpreterResult, Interpreter, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariableRef, LocalVariable, Value, instruction::InstructionBlock};
 
 static UNIQUE_BLOCK_ID: AtomicUsize = AtomicUsize::new(1);
 
@@ -19,7 +19,7 @@ static UNIQUE_BLOCK_ID: AtomicUsize = AtomicUsize::new(1);
 #[derive(Debug, Clone)]
 pub struct Block {
     pub id: usize,
-    pub body: Node,
+    pub body: InstructionBlock,
     pub parameters: BlockParameters,
     pub captured_locals: Vec<LocalVariableRef>,
     pub captured_self: ValueRef,
@@ -33,7 +33,7 @@ impl PartialEq for Block {
 impl Eq for Block {}
 
 impl Block {
-    pub fn new(body: Node, parameters: BlockParameters, captured_locals: Vec<LocalVariableRef>, captured_self: ValueRef) -> Self {
+    pub fn new(body: InstructionBlock, parameters: BlockParameters, captured_locals: Vec<LocalVariableRef>, captured_self: ValueRef) -> Self {
         Self {
             id: UNIQUE_BLOCK_ID.fetch_add(1, std::sync::atomic::Ordering::SeqCst),
             body,

@@ -22,7 +22,7 @@ fn test_simple_parse() {
             },
             ..
         } if matches!(&params[..], [
-            (p1, SendMessageParameter::Parsed(box Node { kind: NodeKind::Literal(Literal::Integer(24)), .. })),
+            (p1, SendMessageParameter::CallArgument(box Node { kind: NodeKind::Literal(Literal::Integer(24)), .. })),
         ] if p1 == "add")
     ))
 }

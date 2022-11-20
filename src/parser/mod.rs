@@ -217,7 +217,7 @@ impl<'a> Parser<'a> {
                 let id = id.clone();
                 self.advance();
                 let value = self.parse_unary_send(context.clone())?;
-                parameters.push((id, SendMessageParameter::Parsed(Box::new(value))));
+                parameters.push((id, SendMessageParameter::CallArgument(Box::new(value))));
             }
 
             Ok(Some(SendMessageComponents::Parameterised(parameters)))
@@ -424,7 +424,7 @@ impl<'a> Parser<'a> {
             }
 
             Ok(Node {
-                kind: NodeKind::Literal(Literal::Array(items)),
+                kind: NodeKind::Array(items),
                 location,
                 context,
             })
@@ -563,11 +563,11 @@ impl<'a> Parser<'a> {
         if let SendMessageComponents::Parameterised(ref mut components) = &mut parameters {
             for (_, internal_name) in components {
                 // The "value" for this parameter should always be a plain identifier
-                let SendMessageParameter::Parsed(box Node { kind: NodeKind::Identifier(id), .. }) = internal_name else {
+                let SendMessageParameter::CallArgument(box Node { kind: NodeKind::Identifier(id), .. }) = internal_name else {
                     return Err(ParserError::InvalidFuncDefinitionParameter);
                 };
 
-                *internal_name = SendMessageParameter::Defined(id.clone());
+                *internal_name = SendMessageParameter::DefinitionParameter(id.clone());
             }
         }
 

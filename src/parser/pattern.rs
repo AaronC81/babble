@@ -73,12 +73,8 @@ impl Pattern {
             PatternKind::Literal(expected) => {
                 let expected_value = expected.instantiate(context.interpreter)?;
                 Ok(
-                    context.interpreter.send_message(
-                        value,
-                        &SendMessageComponents::Parameterised(vec![
-                            ("equals".to_string(), SendMessageParameter::Evaluated(expected_value)),
-                        ])
-                    )?.borrow().to_boolean().unwrap()
+                    context.interpreter.send_message(value, "equals:", vec![expected_value])?
+                        .borrow().to_boolean().unwrap()
                 )
             },
 
@@ -197,19 +193,16 @@ impl Pattern {
     pub fn parse(node: Node) -> Result<Self, PatternParseError> {
         match node.kind {
             // Literals
-            NodeKind::Literal(l) =>
-                if let Literal::Array(items) = l {
-                    Ok(Pattern::new_array(
-                            items.into_iter()
-                            .map(Pattern::parse)
-                            .collect::<Result<_, _>>()?
-                    ))
-                } else if !l.is_pure() {
-                    Err(PatternParseError::ImpureLiteral)
-                } else {
-                    Ok(Pattern::new_literal(l))
-                },
+            NodeKind::Literal(l) => Ok(Pattern::new_literal(l)),
 
+            // Arrays
+            NodeKind::Array(items) =>
+                Ok(Pattern::new_array(
+                    items.into_iter()
+                        .map(Pattern::parse)
+                        .collect::<Result<_, _>>()?
+                )),
+            
             // Compounds
             NodeKind::SendMessage { receiver, components } => {
                 let NodeKind::Identifier(type_name) = receiver.kind else {
@@ -221,7 +214,7 @@ impl Pattern {
                     SendMessageComponents::Unary(_) => unreachable!(),
                     SendMessageComponents::Parameterised(params) =>
                         params.iter().map(|(name, param)| match param {
-                            SendMessageParameter::Parsed(node) =>
+                            SendMessageParameter::CallArgument(node) =>
                                 Self::parse(*node.clone()).map(|p| (name.into(), p)),
                             _ => unreachable!(),
                         }).collect::<Result<Vec<_>, _>>()?,
@@ -239,7 +232,7 @@ impl Pattern {
                     SendMessageComponents::Unary(_) => unreachable!(),
                     SendMessageComponents::Parameterised(params) =>
                         params.iter().map(|(name, param)| match param {
-                            SendMessageParameter::Parsed(node) =>
+                            SendMessageParameter::CallArgument(node) =>
                                 Self::parse(*node.clone()).map(|p| (name.into(), p)),
                             _ => unreachable!(),
                         }).collect::<Result<Vec<_>, _>>()?,
