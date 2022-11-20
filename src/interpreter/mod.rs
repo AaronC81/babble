@@ -5,7 +5,7 @@
 
 use std::{fmt::Display, rc::Rc, cell::RefCell};
 
-use crate::{parser::{NodeKind, Node, SendMessageComponents, Parser}, tokenizer::Tokenizer, source::SourceFile};
+use crate::{parser::{NodeKind, Node, SendMessageComponents, Parser, BlockParameters}, tokenizer::Tokenizer, source::SourceFile};
 
 mod error;
 
@@ -23,7 +23,7 @@ pub use block::*;
 mod method;
 pub use method::*;
 
-use self::instruction::{compile, InstructionBlock};
+use self::instruction::{compile, InstructionBlock, InstructionKind};
 
 pub mod stdlib;
 pub mod mixin_derive;
@@ -130,7 +130,282 @@ impl Interpreter {
 
     /// Evaluate a single instruction block within this interpreter.
     pub fn evaluate(&mut self, instructions: &InstructionBlock) -> InterpreterResult {
-        todo!();
+        // TODO: no error info
+        let mut value_stack = vec![];
+
+        for instruction in instructions {
+            match &instruction.kind {
+                InstructionKind::Get(id) => {
+                    // Push value of local
+                    if let Some(var) = self.find_local(id) {
+                        value_stack.push(var.borrow().value.clone());
+                    } else if let Some(t) = self.resolve_type(id) {
+                        value_stack.push(Value::new_type(t).rc())
+                    } else {
+                        return Err(InterpreterErrorKind::MissingName(id.into()).into())
+                    }
+                },
+                
+                InstructionKind::GetSelf => {
+                    // Push `self` from current frame
+                    value_stack.push(self.current_stack_frame().self_value.clone());
+                }
+
+                InstructionKind::Set(id) => {
+                    // Peek the value to assign
+                    //
+                    // Perform a value copy so that we don't actually mirror the value of the 
+                    // assignment value, for example:
+                    //   a = 3.
+                    //   b = 5.
+                    //   a = 10. // b should remain 5
+                    let value = value_stack.last().unwrap().clone();
+                    let value = Value::soft_copy(value);
+
+                    if let Some(target) = self.find_local(&id) {
+                        target.borrow_mut().value = value.clone();
+                    } else {
+                        self.create_local(&id, value.clone());
+                    }
+                },
+
+                InstructionKind::SetField(field_name) => {
+                    // Pop target, then peek value
+                    let target_value = value_stack.pop().unwrap();
+                    let value = value_stack.last().unwrap().clone();
+
+                    // Check if the receiver has a field with the correct name
+                    let mut target_value = target_value.borrow_mut();
+                    let mut type_borrow;
+                    let fields;
+                    let field_values;
+                    match &mut target_value.type_instance {
+                        TypeInstance::Fields { source_type, variant, field_values: fv } => {
+                            fields = match source_type.borrow().data {
+                                TypeData::Fields { ref instance_fields, .. } =>
+                                    instance_fields.clone(),
+                                TypeData::Variants(ref v) => v[variant.unwrap()].fields.clone(),
+                                _ => return Err(InterpreterErrorKind::InvalidAssignmentTarget.into()),
+                            };
+                            field_values = fv;
+                        },
+
+                        TypeInstance::Type(source_type) => {
+                            fields = match source_type.borrow().data {
+                                TypeData::Fields { ref static_fields, .. } =>
+                                    static_fields.clone(),
+                                _ => return Err(InterpreterErrorKind::InvalidAssignmentTarget.into()),
+                            };
+                            type_borrow = source_type.borrow_mut();
+                            field_values = &mut type_borrow.static_fields;
+                        },
+
+                        _ => return Err(InterpreterErrorKind::InvalidAssignmentTarget.into()),
+                    };
+                    
+                    let field_index = fields.iter()
+                        .enumerate()
+                        .find(|(_, x)| x == &field_name).map(|(i, _)| i)
+                        .ok_or(InterpreterErrorKind::InvalidAssignmentTarget.into())?;
+                    
+                    field_values[field_index] = value.clone();
+                },
+
+                InstructionKind::SetSelf => {
+                    // Peek value and overwrite `self`
+                    let value = value_stack.last().unwrap().clone();
+                    let value = Value::soft_copy(value);
+                    *self.stack.last_mut().unwrap().self_value.borrow_mut() = value.borrow().clone();
+                },
+
+                InstructionKind::Pop => {
+                    // Pop top value and discard
+                    value_stack.pop().unwrap();
+                },
+
+                InstructionKind::Duplicate => {
+                    // Peek value and push it again
+                    value_stack.push(value_stack.last().unwrap().clone())
+                },
+
+                InstructionKind::Push(l) => {
+                    // Instantiate literal and push it
+                    value_stack.push(l.instantiate(self)?);
+                },
+
+                InstructionKind::PushBlock { parameters, captures, body } => {
+                    // Grab captures from local variables
+                    let capture_values = captures
+                        .iter()
+                        .map(|name|
+                            self.find_local(name)
+                                .ok_or_else(|| InterpreterErrorKind::MissingCaptureName(name.clone()).into())
+                        )
+                        .collect::<Result<Vec<_>, _>>()?;
+
+                    // Build block and push it
+                    let block = Value::new_block(Block::new(
+                        body.clone(),
+                        parameters.clone(),
+                        capture_values,
+                        self.current_stack_frame().self_value.clone(),
+                    )).rc();
+                    value_stack.push(block);
+                },
+
+                InstructionKind::Call(method_name) => {
+                    // Pop arguments
+                    let arg_count = method_name.chars().filter(|c| *c == ':').count();
+                    let mut args = vec![];
+                    for _ in 0..arg_count {
+                        args.insert(0, value_stack.pop().unwrap());
+                    }
+
+                    // Pop receiver
+                    let receiver = value_stack.pop().unwrap();
+
+                    // Perform method call and push result
+                    value_stack.push(self.send_message(receiver, method_name, args)?);
+                },
+
+                InstructionKind::NewVariant { name, labels } => {
+                    // Pop the type, and get its variants
+                    let enum_type =
+                        if let TypeInstance::Type(t) = &value_stack.pop().unwrap().borrow().type_instance {
+                            t.clone()
+                        } else {
+                            // Should never parse
+                            unreachable!()
+                        };
+
+                    // Find details of the requested variant
+                    let enum_type_ref = enum_type.borrow();
+                    let (variant_idx, variant) = enum_type_ref.resolve_variant(name)?;
+
+                    // Check that names of passed fields match expected fields
+                    if labels != &variant.fields {
+                        return Err(InterpreterErrorKind::IncorrectVariantParameters.into())
+                    }
+
+                    // Pop each field value
+                    let mut field_values = vec![];
+                    for _ in 0..labels.len() {
+                        field_values.insert(0, value_stack.pop().unwrap());
+                    }
+
+                    // Instantiate enum variant and push it
+                    value_stack.push(Value {
+                        type_instance: TypeInstance::Fields {
+                            source_type: enum_type.clone(),
+                            variant: Some(variant_idx),
+                            field_values,
+                        }
+                    }.rc());
+                },
+
+                InstructionKind::Impl => {
+                    // Pop body (should be a block), and peek target (should be a type)
+                    let body_v = value_stack.pop().unwrap().clone();
+                    let body_b = body_v.borrow();
+                    let body = body_b.to_block()?;
+                    let target = value_stack.last().unwrap().borrow().to_type()?;
+
+                    // Push new stack frame and evaluate body inside it
+                    self.stack.push(StackFrame {
+                        context: StackFrameContext::Impl(target),
+                        self_value: Value::new_null().rc(),
+                        locals: vec![],
+                    });
+                    self.evaluate(&body.body)?;
+                    self.stack.pop();
+                },
+
+                InstructionKind::Use => {
+                    // The current stack frame should represent an `impl` block, so we know where to
+                    // use this mixin
+                    let StackFrame { context: StackFrameContext::Impl(t), .. } = self.current_stack_frame() else {
+                        return Err(InterpreterErrorKind::UseInvalidContext.into());
+                    };
+                    let t = t.clone();
+                    
+                    // Peek the stack, it should be a mixin type
+                    let mixin = value_stack.last().unwrap().clone().borrow().to_type()?;
+                    let TypeData::Mixin = mixin.borrow().data else {
+                        return Err(InterpreterErrorKind::UseNonMixin(mixin.borrow().id.clone()).into());
+                    };
+
+                    // Insert used mixin
+                    t.borrow_mut().used_mixins.push(mixin);
+                },
+
+                InstructionKind::DefType(name, data) => {
+                    // Check no equivalently-named type already exists
+                    if self.resolve_type(name).is_some() {
+                        return Err(InterpreterErrorKind::DuplicateTypeDefinition(name.into()).into());
+                    }
+                    let (is_struct, is_enum) = match data {
+                        TypeData::Fields { .. } => (true, false),
+                        TypeData::Variants(_) => (false, true),
+                        _ => (false, false),
+                    };
+
+                    // Create new type
+                    let mut t = Type {
+                        data: data.clone(),
+                        ..Type::new(name)
+                    };
+
+                    // Structs or enums require accessors core mixin derivation
+                    if is_struct || is_enum {
+                        t.generate_accessor_methods();
+                        mixin_derive::derive_core_mixins(self, &mut t);
+                    }
+
+                    // Make our type shared and available
+                    let t = t.rc();
+                    self.types.push(t.clone());
+
+                    // Structs require a constructor to be generated
+                    if is_struct {
+                        Type::generate_struct_constructor(t.clone());
+                    }
+
+                    // Push reference to new type
+                    value_stack.push(Value::new_type(t).rc())
+                },
+
+                InstructionKind::DefFunc { name, locality, documentation } => {
+                    // The current stack frame should represent an `impl` block, so we know where to
+                    // put this method
+                    let StackFrame { context: StackFrameContext::Impl(t), .. } = self.current_stack_frame() else {
+                        return Err(InterpreterErrorKind::FuncDefinitionInvalidContext.into());
+                    };
+
+                    // Peek the stack to get this method's body
+                    let block = value_stack.last().unwrap().clone().borrow().to_block()?.clone();
+                    let internal_names = match block.parameters {
+                        BlockParameters::Named(n) => n,
+                        BlockParameters::Patterned { .. } => unreachable!(),
+                    };
+                    
+                    let mut method = Method::new_compiled(&name, block.body, internal_names);
+                    if let Some(documentation) = documentation {
+                        method.add_documentation(documentation);
+                    }
+                    let method = method.rc();
+                    match locality {
+                        MethodLocality::Instance => t.borrow_mut().add_method(method),
+                        MethodLocality::Static => t.borrow_mut().add_static_method(method),
+                    }
+                },
+            }
+        }
+
+        if value_stack.len() == 1 {
+            Ok(value_stack.pop().unwrap())
+        } else {
+            unreachable!("incorrect number of values left on the stack after frame - got {}", value_stack.len())
+        }
     }
 
     /// Retrieve a type by name, or return `None` if it does not exist.

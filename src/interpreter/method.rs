@@ -42,7 +42,7 @@ impl Method {
     }
 
     /// Constructs a new method which executes by evaluating parsed nodes.
-    pub fn new_parsed(name: &str, instructions: InstructionBlock, internal_names: Vec<String>) -> Self {
+    pub fn new_compiled(name: &str, instructions: InstructionBlock, internal_names: Vec<String>) -> Self {
         Self {
             name: name.into(),
             implementation: MethodImplementation::Compiled { instructions, internal_names },

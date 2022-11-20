@@ -61,8 +61,8 @@ impl Into<InstructionBlock> for Vec<Instruction> {
 
 #[derive(Debug, Clone)]
 pub struct Instruction {
-    kind: InstructionKind,
-    location: Location,
+    pub kind: InstructionKind,
+    pub location: Location,
 }
 
 #[derive(Debug, Clone)]
@@ -106,10 +106,13 @@ pub enum InstructionKind {
     /// Peeks the item on the top of the stack, and pushes another copy of it.
     Duplicate,
 
-    /// Constructs an enum variant value. Pops arguments, last-first, then the enum value. Pushes
+    /// Constructs an enum variant value. Pops the enum type, then arguments, last-first. Pushes
     /// the constructed enum variant.
     /// 
     /// The number of arguments is determined by the argument labels given.
+    /// 
+    /// Note that this pop order is different to function calls, since we should validate the
+    /// variant fields before constructing the value, otherwise we could imbalance the stack.
     NewVariant {
         name: String,
         labels: Vec<String>,
@@ -160,6 +163,7 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
                     instructions.push(InstructionKind::Duplicate.with_loc(&loc));
                     instructions.extend(compile(item)?);
                     instructions.push(InstructionKind::Call("append:".into()).with_loc(&loc));
+                    instructions.push(InstructionKind::Pop.with_loc(&loc));
                 }
 
                 instructions
@@ -188,7 +192,7 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
                 }.with_loc(&loc)].into(),
 
             NodeKind::EnumVariant { enum_type, variant_name, components } => {
-                let mut instructions = compile(*enum_type)?;
+                let mut instructions = InstructionBlock::new();
 
                 let mut labels = vec![];
                 match components {
@@ -204,6 +208,7 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
                     },
                     SendMessageComponents::Unary(_) => unreachable!("enum constructor cannot be unary"),
                 }
+                instructions.extend(compile(*enum_type)?);
                 instructions.push(InstructionKind::NewVariant { name: variant_name, labels }.with_loc(&loc));
                 instructions
             },
@@ -223,15 +228,15 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
                         let mut instructions = compile(*value)?;
                         instructions.push(InstructionKind::SetSelf.with_loc(&loc));
                         instructions
-                    }
+                    },
 
                     // Field
                     NodeKind::SendMessage { receiver, components: SendMessageComponents::Unary(field_name) } => {
-                        let mut instructions = compile(*receiver)?;
-                        instructions.extend(compile(*value)?);
+                        let mut instructions = compile(*value)?;
+                        instructions.extend(compile(*receiver)?);
                         instructions.push(InstructionKind::SetField(field_name).with_loc(&loc));
                         instructions
-                    }
+                    },
 
                     _ => return Err(InterpreterErrorKind::InvalidAssignmentTarget.into()),
                 }
@@ -279,7 +284,10 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
                 vec![
                     InstructionKind::PushBlock {
                         parameters: match parameters {
-                            SendMessageComponents::Parameterised(p) => BlockParameters::Named(p.into_iter().map(|(n, _)| n).collect()),
+                            SendMessageComponents::Parameterised(p) => BlockParameters::Named(p.into_iter().map(|(_, n)| match n {
+                                SendMessageParameter::CallArgument(_) => unreachable!(),
+                                SendMessageParameter::DefinitionParameter(n) => n,
+                            }).collect()),
                             SendMessageComponents::Unary(_) => BlockParameters::Named(vec![]),
                             SendMessageComponents::Blank => unreachable!("cannot define function with blank parameters"),
                         },
