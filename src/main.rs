@@ -10,9 +10,11 @@
 use std::{fs::read_to_string, io::{stdin, stdout, Write}};
 
 use clap::Parser;
-use interpreter::{Interpreter, InterpreterError, instruction::Instruction};
+use interpreter::{Interpreter, InterpreterError, instruction::InstructionKind};
 use source::SourceFile;
 use tokenizer::Tokenizer;
+
+use crate::interpreter::instruction::compile;
 
 mod source;
 mod tokenizer;
@@ -67,8 +69,8 @@ fn main() {
     if args.show_asm {
         let tokens = Tokenizer::tokenize(src.clone()).expect("tokenization failed");
         let node = crate::parser::Parser::parse_and_analyse(src.clone(), &tokens[..]).expect("parsing failed");
-        let compiled = Instruction::compile(node).expect("compilation failed");
-        println!("{}", compiled.into_iter().map(|i| i.to_string()).collect::<Vec<_>>().join("\n"));
+        let compiled = compile(node).expect("compilation failed");
+        println!("{}", compiled);
         return;
     }
 

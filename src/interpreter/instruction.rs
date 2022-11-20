@@ -8,14 +8,65 @@
 
 // TODO: how do matchblocks work with this?
 
-use std::fmt::Display;
+use std::{fmt::Display, slice::Iter};
 
-use crate::parser::{Node, Literal, NodeKind, SendMessageComponents, SendMessageParameter, BlockParameters};
+use crate::{parser::{Node, Literal, NodeKind, SendMessageComponents, SendMessageParameter, BlockParameters}, source::Location};
 
 use super::{Value, InterpreterError, TypeData, InterpreterErrorKind, MethodLocality};
 
 #[derive(Debug, Clone)]
-pub enum Instruction {
+pub struct InstructionBlock(Vec<Instruction>);
+
+impl InstructionBlock {
+    pub fn new() -> Self {
+        Self(Vec::new())
+    }
+
+    pub fn extend(&mut self, other: impl IntoIterator<Item = Instruction>) {
+        self.0.extend(other.into_iter());
+    }
+
+    pub fn push(&mut self, instruction: Instruction) {
+        self.0.push(instruction);
+    }
+
+    pub fn iter(&self) -> Iter<Instruction> {
+        self.0.iter()
+    }
+}
+
+impl IntoIterator for InstructionBlock {
+    type Item = Instruction;
+    type IntoIter = std::vec::IntoIter<Instruction>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a InstructionBlock {
+    type Item = &'a Instruction;
+    type IntoIter = std::slice::Iter<'a, Instruction>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter()
+    }
+}
+
+impl Into<InstructionBlock> for Vec<Instruction> {
+    fn into(self) -> InstructionBlock {
+        InstructionBlock(self)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Instruction {
+    kind: InstructionKind,
+    location: Location,
+}
+
+#[derive(Debug, Clone)]
+pub enum InstructionKind {
     /// Resolves a value by name and pushes it onto the stack.
     Get(String),
 
@@ -43,7 +94,7 @@ pub enum Instruction {
     PushBlock {
         parameters: BlockParameters,
         captures: Vec<String>,
-        body: Vec<Instruction>,
+        body: InstructionBlock,
     },
 
     /// Calls a method on a receiver. Pops arguments, last-first, then the receiver. Pushes the
@@ -81,37 +132,45 @@ pub enum Instruction {
     },
 }
 
-impl Instruction {
-    pub fn compile(node: Node) -> Result<Vec<Instruction>, InterpreterError> {
-        Ok(match node.kind {
-            NodeKind::Literal(l) => vec![Instruction::Push(l)],
-            NodeKind::SelfAccess => vec![Instruction::GetSelf],
-            NodeKind::Identifier(i) => vec![Instruction::Get(i)],
+impl InstructionKind {
+    pub fn with_loc(self, location: &Location) -> Instruction {
+        Instruction { kind: self, location: location.clone() }
+    }
+}
+
+pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
+    let loc = node.location;
+
+    Ok(
+        match node.kind {
+            NodeKind::Literal(l) => vec![InstructionKind::Push(l).with_loc(&loc)].into(),
+            NodeKind::SelfAccess => vec![InstructionKind::GetSelf.with_loc(&loc)].into(),
+            NodeKind::Identifier(i) => vec![InstructionKind::Get(i).with_loc(&loc)].into(),
 
             NodeKind::StatementSequence(stmts) => {
                 // Compile with interspersed `pop`s
-                let mut instructions = vec![];
+                let mut instructions = InstructionBlock::new();
                 let mut is_first_stmt = true;
                 for stmt in stmts {
                     if !is_first_stmt {
-                        instructions.push(Instruction::Pop);
+                        instructions.push(InstructionKind::Pop.with_loc(&loc));
                     } else {
                         is_first_stmt = false;
                     }
-                    instructions.extend(Instruction::compile(stmt)?);
+                    instructions.extend(compile(stmt)?);
                 }
                 instructions
             },
 
             NodeKind::Block { body, parameters, captures } =>
-                vec![Instruction::PushBlock {
+                vec![InstructionKind::PushBlock {
                     parameters,
                     captures,
-                    body: Instruction::compile(*body)?,
-                }],
+                    body: compile(*body)?,
+                }.with_loc(&loc)].into(),
 
             NodeKind::EnumVariant { enum_type, variant_name, components } => {
-                let mut instructions = Instruction::compile(*enum_type)?;
+                let mut instructions = compile(*enum_type)?;
 
                 let mut labels = vec![];
                 match components {
@@ -120,7 +179,7 @@ impl Instruction {
                         for (name, param) in params {
                             labels.push(name);
                             match param {
-                                SendMessageParameter::Parsed(n) => instructions.extend(Instruction::compile(*n)?),
+                                SendMessageParameter::Parsed(n) => instructions.extend(compile(*n)?),
 
                                 SendMessageParameter::Evaluated(_)
                                 | SendMessageParameter::Defined(_) => unreachable!(),
@@ -129,7 +188,7 @@ impl Instruction {
                     },
                     SendMessageComponents::Unary(_) => unreachable!("enum constructor cannot be unary"),
                 }
-                instructions.push(Instruction::NewVariant { name: variant_name, labels });
+                instructions.push(InstructionKind::NewVariant { name: variant_name, labels }.with_loc(&loc));
                 instructions
             },
 
@@ -138,23 +197,23 @@ impl Instruction {
                 match target.kind {
                     // Local variable
                     NodeKind::Identifier(i) => {
-                        let mut instructions = Instruction::compile(*value)?;
-                        instructions.push(Instruction::Set(i));
+                        let mut instructions = compile(*value)?;
+                        instructions.push(InstructionKind::Set(i).with_loc(&loc));
                         instructions
                     },
 
                     // Self
                     NodeKind::SelfAccess => {
-                        let mut instructions = Instruction::compile(*value)?;
-                        instructions.push(Instruction::SetSelf);
+                        let mut instructions = compile(*value)?;
+                        instructions.push(InstructionKind::SetSelf.with_loc(&loc));
                         instructions
                     }
 
                     // Field
                     NodeKind::SendMessage { receiver, components: SendMessageComponents::Unary(field_name) } => {
-                        let mut instructions = Instruction::compile(*receiver)?;
-                        instructions.extend(Instruction::compile(*value)?);
-                        instructions.push(Instruction::SetField(field_name));
+                        let mut instructions = compile(*receiver)?;
+                        instructions.extend(compile(*value)?);
+                        instructions.push(InstructionKind::SetField(field_name).with_loc(&loc));
                         instructions
                     }
 
@@ -163,14 +222,14 @@ impl Instruction {
             }
 
             NodeKind::SendMessage { receiver, components } => {
-                let mut instructions = Instruction::compile(*receiver)?;
+                let mut instructions = compile(*receiver)?;
 
                 let name = components.to_method_name();
                 match components {
                     SendMessageComponents::Parameterised(args) => {
                         for (_, arg) in args {
                             match arg {
-                                SendMessageParameter::Parsed(n) => instructions.extend(Instruction::compile(*n)?),
+                                SendMessageParameter::Parsed(n) => instructions.extend(compile(*n)?),
 
                                 SendMessageParameter::Evaluated(_)
                                 | SendMessageParameter::Defined(_) => unreachable!(),
@@ -182,29 +241,29 @@ impl Instruction {
                     SendMessageComponents::Blank => unreachable!("method call cannot be blank"),
                 }
 
-                instructions.push(Instruction::Call(name));
+                instructions.push(InstructionKind::Call(name).with_loc(&loc));
                 instructions
             }
 
             NodeKind::ImplBlock { target, body } => {
-                let inner = Instruction::compile(*body)?;
+                let inner = compile(*body)?;
 
-                let mut instructions = Instruction::compile(*target)?;
-                instructions.push(Instruction::PushBlock {
+                let mut instructions = compile(*target)?;
+                instructions.push(InstructionKind::PushBlock {
                     parameters: BlockParameters::Named(vec![]),
                     captures: vec![],
                     body: inner,
-                });
-                instructions.push(Instruction::Impl);
+                }.with_loc(&loc));
+                instructions.push(InstructionKind::Impl.with_loc(&loc));
                 instructions
             },
 
             NodeKind::FuncDefinition { parameters, body, is_static, documentation } => {
-                let inner = Instruction::compile(*body)?;
+                let inner = compile(*body)?;
                 let name = parameters.to_method_name();
 
                 vec![
-                    Instruction::PushBlock {
+                    InstructionKind::PushBlock {
                         parameters: match parameters {
                             SendMessageComponents::Parameterised(p) => BlockParameters::Named(p.into_iter().map(|(n, _)| n).collect()),
                             SendMessageComponents::Unary(_) => BlockParameters::Named(vec![]),
@@ -212,31 +271,32 @@ impl Instruction {
                         },
                         captures: vec![],
                         body: inner,
-                    },
-                    Instruction::DefFunc {
+                    }.with_loc(&loc),
+                    InstructionKind::DefFunc {
                         name,
                         locality: if is_static { MethodLocality::Static } else { MethodLocality::Instance },
                         documentation,
-                    },
-                ]
+                    }.with_loc(&loc),
+                ].into()
             }
             
             NodeKind::EnumDefinition { name, variants } => 
-                vec![Instruction::DefType(name, TypeData::Variants(variants))],
+                vec![InstructionKind::DefType(name, TypeData::Variants(variants)).with_loc(&loc)].into(),
             NodeKind::StructDefinition { name, instance_fields, static_fields } =>
-                vec![Instruction::DefType(name, TypeData::Fields { instance_fields, static_fields })],
+                vec![InstructionKind::DefType(name, TypeData::Fields { instance_fields, static_fields }).with_loc(&loc)].into(),
             NodeKind::MixinDefinition { name } =>
-                vec![Instruction::DefType(name, TypeData::Mixin)],
+                vec![InstructionKind::DefType(name, TypeData::Mixin).with_loc(&loc)].into(),
             NodeKind::Use(target) => {
-                let mut instructions = Self::compile(*target)?;
-                instructions.push(Instruction::Use);
+                let mut instructions = compile(*target)?;
+                instructions.push(InstructionKind::Use.with_loc(&loc));
                 instructions
             },
 
             NodeKind::Sugar(_) => unreachable!("sugar nodes should be expanded before compilation"),
-        })
-    }
+        }
+    )
 }
+
 
 fn indent(s: String) -> String {
     s.split("\n").map(|l| format!("  {}", l)).collect::<Vec<_>>().join("\n")
@@ -244,37 +304,48 @@ fn indent(s: String) -> String {
 
 impl Display for Instruction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Instruction::Get(n) => write!(f, "get {}", n),
-            Instruction::GetSelf => write!(f, "get (self)"),
-            Instruction::Set(n) => write!(f, "set {}", n),
-            Instruction::SetField(n) => write!(f, "set field {}", n),
-            Instruction::SetSelf => write!(f, "set (self)"),
-            Instruction::Pop => write!(f, "pop"),
-            Instruction::Push(l) => write!(f, "push {}", l),
-            Instruction::PushBlock { parameters, captures: _, body } =>
+        match &self.kind {
+            InstructionKind::Get(n) => write!(f, "get {}", n),
+            InstructionKind::GetSelf => write!(f, "get (self)"),
+            InstructionKind::Set(n) => write!(f, "set {}", n),
+            InstructionKind::SetField(n) => write!(f, "set field {}", n),
+            InstructionKind::SetSelf => write!(f, "set (self)"),
+            InstructionKind::Pop => write!(f, "pop"),
+            InstructionKind::Push(l) => write!(f, "push {}", l),
+            InstructionKind::PushBlock { parameters, captures: _, body } =>
                 write!(f, "push block [ | {} |\n{}\n]",
                     match parameters {
                         BlockParameters::Named(names) => names.join(" "),
                         BlockParameters::Patterned { .. } => todo!("patterns not supported"),
                     },
-                    indent(body.iter().map(|i| format!("{}", i)).collect::<Vec<_>>().join("\n")),
+                    indent(body.to_string()),
                 ),
-            Instruction::Call(n) => write!(f, "call {}", n),
-            Instruction::NewVariant { name, labels } =>
+            InstructionKind::Call(n) => write!(f, "call {}", n),
+            InstructionKind::NewVariant { name, labels } =>
                 write!(f, "new variant {} {}",
                     name,
                     if labels.is_empty() { "".into() } else { format!("{}:", labels.join(":")) }
                 ),
-            Instruction::Impl => write!(f, "impl"),
-            Instruction::DefType(name, _) =>
+            InstructionKind::Impl => write!(f, "impl"),
+            InstructionKind::DefType(name, _) =>
                 write!(f, "def type {} ...", name), // TODO: type data
-            Instruction::Use => write!(f, "use"),
-            Instruction::DefFunc { name, locality, documentation: _ } =>
+            InstructionKind::Use => write!(f, "use"),
+            InstructionKind::DefFunc { name, locality, documentation: _ } =>
                 write!(f, "def func {} {} ...", name, match locality {
                     MethodLocality::Instance => "(instance)",
                     MethodLocality::Static => "(static)",
                 }), // TODO: documentation
         }
+    }
+}
+
+
+impl Display for InstructionBlock {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for i in self {
+            writeln!(f, "{}", i)?;
+        }
+
+        Ok(())
     }
 }
