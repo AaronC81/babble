@@ -6,8 +6,6 @@
 //! compiled with `pop`s interspersed, e.g: `<stmt 1>, pop, <stmt 2>, pop, <stmt 3>`, leaving the
 //! implicit return value of the block as the only item left on the stack.
 
-// TODO: how do matchblocks work with this?
-
 use std::{fmt::Display, slice::Iter};
 
 use crate::{parser::{Node, Literal, NodeKind, SendMessageComponents, SendMessageParameter, BlockParameters}, source::Location};

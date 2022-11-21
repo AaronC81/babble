@@ -130,7 +130,6 @@ impl Interpreter {
 
     /// Evaluate a single instruction block within this interpreter.
     pub fn evaluate(&mut self, instructions: &InstructionBlock) -> InterpreterResult {
-        // TODO: no error info
         let mut value_stack = vec![];
 
         for instruction in instructions {
