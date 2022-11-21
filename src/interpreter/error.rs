@@ -22,13 +22,13 @@ impl InterpreterError {
     /// currently.
     /// 
     /// If it already has details, returns the error unmodified.
-    pub fn add_details(self, node: &Node, interpreter: &Interpreter) -> Self {
+    pub fn add_details(self, loc: &Location, interpreter: &Interpreter) -> Self {
         if self.details.is_some() {
             self
         } else {
             Self {
                 details: Some(InterpreterErrorDetails {
-                    location: Some(node.location.clone()),
+                    location: Some(loc.clone()),
                     backtrace: interpreter.stack.clone(),
                 }),
                 ..self
