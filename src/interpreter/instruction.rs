@@ -33,6 +33,10 @@ impl InstructionBlock {
     pub fn iter(&self) -> Iter<Instruction> {
         self.0.iter()
     }
+
+    pub fn as_vec(&self) -> &Vec<Instruction> {
+        &self.0
+    }
 }
 
 impl IntoIterator for InstructionBlock {

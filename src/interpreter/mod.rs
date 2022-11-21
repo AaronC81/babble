@@ -142,7 +142,11 @@ impl Interpreter {
         if value_stack.len() == 1 {
             Ok(value_stack.pop().unwrap())
         } else {
-            unreachable!("incorrect number of values left on the stack after frame - got {}", value_stack.len())
+            let mut error: InterpreterError = InterpreterErrorKind::StackImbalance(value_stack.len()).into();
+            if instructions.as_vec().len() > 0 {
+                error = error.add_details(&instructions.iter().next().unwrap().location, self);
+            }
+            Err(error)
         }
     }
 
