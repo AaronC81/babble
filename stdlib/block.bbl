@@ -13,4 +13,6 @@ impl Block {
     func call: arg {
         self callWith: #{arg}
     }
+    
+    InternalTest case: "empty block" that: [] call equals: null.
 }

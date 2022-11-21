@@ -174,6 +174,13 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
             }
 
             NodeKind::StatementSequence(stmts) => {
+                // If the sequence is empty, push a `null`
+                // (Empty sequences would otherwise cause stack imbalance, since they push nothing
+                //  overall)
+                if stmts.is_empty() {
+                    return Ok(vec![InstructionKind::Push(Literal::Null).with_loc(&loc)].into());
+                }
+
                 // Compile with interspersed `pop`s
                 let mut instructions = InstructionBlock::new();
                 let mut is_first_stmt = true;
