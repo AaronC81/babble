@@ -338,14 +338,23 @@ impl Display for Instruction {
             InstructionKind::SetSelf => write!(f, "set (self)"),
             InstructionKind::Pop => write!(f, "pop"),
             InstructionKind::Push(l) => write!(f, "push {}", l),
-            InstructionKind::PushBlock { parameters, captures: _, body } =>
-                write!(f, "push block [ | {} |\n{}\n]",
-                    match parameters {
-                        BlockParameters::Named(names) => names.join(" "),
-                        BlockParameters::Patterned { .. } => todo!("patterns not supported"),
+            InstructionKind::PushBlock { parameters, captures: _, body } => {
+                let prefix;
+                let params;
+                match parameters {
+                    BlockParameters::Named(names) => {
+                        prefix = "";
+                        params = names.clone();
                     },
-                    indent(body.to_string()),
-                ),
+                    BlockParameters::Patterned { patterns, fatal } => {
+                        // TODO: proper pattern formatting
+                        if *fatal { prefix = "!" } else { prefix = "?" };
+                        params = patterns.iter().map(|x| "<pattern>".into()).collect();
+                    },
+                };
+
+                write!(f, "push block {}[ | {} |\n{}\n]", prefix, params.join(" "), indent(body.to_string()))
+            },
             InstructionKind::Duplicate => write!(f, "dup"),
             InstructionKind::Call(n) => write!(f, "call {}", n),
             InstructionKind::NewVariant { name, labels } =>
