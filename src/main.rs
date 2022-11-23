@@ -58,7 +58,7 @@ fn main() {
         input_contents = code.clone();
     } else if args.doc_gen {
         let interpreter = Interpreter::new().unwrap();
-        let output = doc_gen::generate_documentation(&interpreter);
+        let output = doc_gen::generate_html_documentation(&interpreter);
         println!("{}", output);
         return;
     } else {

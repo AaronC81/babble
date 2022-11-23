@@ -160,8 +160,7 @@ impl Enumerable {
     /// The block will be called for each item in the enumerable, with the block's result replacing
     /// the current accumulator value.
     ///
-    /// @param reduce: The block to apply, which should accept two parameters: the accumulator and
-    ///   the enumerable value.
+    /// @param reduce: The block to apply, which should accept two parameters: the accumulator and the enumerable value.
     /// @param acc: The initial accumulator value.
     /// @returns The accumulator value obtained after repeatedly applying the block.
     func reduce: fn acc: acc {

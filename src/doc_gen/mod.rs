@@ -1,14 +1,46 @@
+use askama::Template;
+use comrak::markdown_to_html;
+
 use crate::interpreter::{Interpreter, MethodLocality, TypeData, DocumentationState};
 
-struct ParsedDocumentationComments {
+struct TypeDocumentation {
+    pub id: String,
+    pub data: TypeData,
+    pub used_mixins: Vec<String>,
+    pub methods: Vec<MethodDocumentation>,
+}
+
+struct MethodParsedDocumentation {
     pub description: String,
     pub parameters: Vec<(String, String)>,
     pub return_value: Option<String>,
 }
 
-impl ParsedDocumentationComments {
+struct MethodDocumentation {
+    pub name: String,
+    pub locality: MethodLocality,
+    pub parsed: Option<MethodParsedDocumentation>,
+}
+
+#[derive(Template)]
+#[template(path = "index.html")]
+struct HtmlDocumentationTemplate {
+    types: Vec<TypeDocumentation>,
+}
+
+trait DocumentationTemplate {
+    fn from_types(types: Vec<TypeDocumentation>) -> Self;
+}
+
+impl DocumentationTemplate for HtmlDocumentationTemplate {
+    fn from_types(types: Vec<TypeDocumentation>) -> Self {
+        Self { types }
+    }
+}
+
+impl MethodParsedDocumentation {
     pub fn parse(string: &str) -> Self {
-        let mut result = ParsedDocumentationComments {
+        let mut result = MethodParsedDocumentation {
             description: "".into(),
             parameters: vec![],
             return_value: None,
@@ -32,65 +64,33 @@ impl ParsedDocumentationComments {
             }
         }
 
+        // Parse each field as Markdown
+        let options = comrak::ComrakOptions::default();
+        result.description = markdown_to_html(&result.description, &options);
+        for (_, param) in &mut result.parameters {
+            *param = markdown_to_html(param, &options);
+        }
+        if let Some(ref mut ret) = result.return_value {
+            *ret = markdown_to_html(ret, &options);
+        }
+
         result
     }
 }
 
 /// Iterates over the type repository for the given interpreter state, and generates a page of
 /// documentation for the types in it.
-pub fn generate_documentation(interpreter: &Interpreter) -> String {
+fn build_documentation_objects<T: DocumentationTemplate>(interpreter: &Interpreter) -> T {
     let mut types = interpreter.types.clone();
     types.sort_by_key(|t| t.borrow().id.clone());
 
-    let mut output = "".to_string();
-    output.push_str("# Table of Contents\n\n");
+    let mut type_docs = vec![];
     for t in &types {
         let t = t.borrow();
 
-        // Links only work if they're lowercase in VS Code
-        output.push_str(&format!("- [{}](#{})\n", t.id, t.id.to_lowercase()));
-    }
-    output.push_str("\n---\n\n");
-
-    for t in &types {
-        let t = t.borrow();
-        output.push_str(&format!("# {}\n\n", t.id));
-
-        // Output some info about the type itself
-        match &t.data {
-            TypeData::Fields { instance_fields, .. } => {
-                output.push_str("**Definition**: Struct with fields:\n\n");
-                for name in instance_fields {
-                    output.push_str(&format!("- `{}`\n", name));
-                }
-                output.push_str("\n");
-            },
-            TypeData::Variants(variants) => {
-                output.push_str("**Definition**: Enum with variants:\n\n");
-                for variant in variants {
-                    if variant.fields.is_empty() {
-                        output.push_str(&format!("- `{}`\n", variant.name));
-                    } else {
-                        output.push_str(&format!("- `{}`, fields:\n", variant.name));
-                        for name in &variant.fields {
-                            output.push_str(&format!("  - `{}`\n", name));
-                        }
-                    }
-                }
-                output.push_str("\n");
-            },
-            TypeData::Mixin => output.push_str("**Definition**: Mixin\n\n"),
-            TypeData::Empty => output.push_str("**Definition**: Primitive\n\n"),
-        };
-
-        if !t.used_mixins.is_empty() {
-            output.push_str("**Uses mixins**: \n");
-            for mixin in &t.used_mixins {
-                let mixin = mixin.borrow();
-                output.push_str(&format!("- [{}](#{})\n", mixin.id, mixin.id.to_lowercase()));
-            }
-            output.push_str("\n\n");
-        }
+        // Build type documentation
+        let data = t.data.clone();
+        let used_mixins = t.used_mixins.iter().map(|m| m.borrow().id.clone()).collect();
 
         // Gather all instance and static methods
         let mut all_methods = t.methods.iter().cloned()
@@ -103,6 +103,7 @@ pub fn generate_documentation(interpreter: &Interpreter) -> String {
             .collect::<Vec<_>>();
         all_methods.sort_by_key(|(m, _)| m.name.clone());
 
+        let mut method_docs = vec![];
         // Generate documentation for each
         for (m, l) in all_methods {
             let doc = match m.documentation {
@@ -111,31 +112,25 @@ pub fn generate_documentation(interpreter: &Interpreter) -> String {
                 DocumentationState::Hidden => continue,
             };
 
-            output.push_str(&match l {
-                MethodLocality::Instance => format!("## `{}`\n\n", m.name),
-                MethodLocality::Static => format!("## `static {}`\n\n", m.name),
+            method_docs.push(MethodDocumentation {
+                name: m.name.clone(),
+                locality: l,
+                parsed: doc.as_ref().map(|d| MethodParsedDocumentation::parse(d)),
             });
-            if let Some(doc) = doc {
-                let parsed = ParsedDocumentationComments::parse(doc);
-
-                output.push_str(&format!("{}\n\n", parsed.description));
-                if !parsed.parameters.is_empty() {
-                    output.push_str(&format!("**Parameters:**\n\n"));
-                    for (name, description) in parsed.parameters {
-                        output.push_str(&format!("- `{}` {}\n", name, description));
-                    }
-                    output.push_str(&format!("\n"));
-                }
-
-                if let Some(return_value) = parsed.return_value {
-                    output.push_str(&format!("**Returns:** {}\n\n", return_value));
-                }
-            } else {
-                output.push_str("_Undocumented._\n\n");
-            }
         }
 
-        output.push_str("---\n\n");
+        type_docs.push(TypeDocumentation {
+            id: t.id.clone(),
+            data,
+            used_mixins,
+            methods: method_docs,
+        });
     }
-    output
+    
+    T::from_types(type_docs)
+}
+
+pub fn generate_html_documentation(interpreter: &Interpreter) -> String {
+    let template = build_documentation_objects::<HtmlDocumentationTemplate>(interpreter);
+    template.render().unwrap()
 }

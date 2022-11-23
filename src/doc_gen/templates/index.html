@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babble</title>
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+        }
+
+        #body-wrapper {
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+        }
+
+        #sidebar {
+            flex: 1 0;
+            background-color: #b4c5e0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        #sidebar ul {
+            padding: 0;
+            list-style: none;
+        }
+
+        #sidebar ul li {
+            margin: 10px;
+            padding-left: 0;
+        }
+
+        #sidebar ul li a {
+            color: black;
+        }
+
+        #content {
+            flex: 4 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        #inner-content {
+            width: calc(100% - 40px);
+            height: 100%;
+            margin: 20px;
+        }
+
+        .v-space {
+            border: 0;
+            height: 0;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+
+            margin-top: 40px;
+            margin-bottom: 40px;
+        }
+
+        /* TODO: probably not portable, but fixes weird size issues */
+        code {
+            font-family: "SF Mono";
+        }
+    </style>
+</head>
+<body>
+    <div id="body-wrapper">
+        <div id="sidebar">
+            <ul>
+                {% for type in types %}
+                    <li><a href="#{{ type.id }}">{{ type.id }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div id="content">
+            <div id="inner-content">
+                {% for type in types %}
+                    <a name="{{ type.id }}"></a>
+                    <h1>{{ type.id }}</h1>
+                    <p>
+                        {% match type.data %}
+                            {% when TypeData::Empty %}
+                                Primitive type.
+                            {% when TypeData::Fields with { instance_fields, static_fields } %}
+                                {% if instance_fields.is_empty() && static_fields.is_empty() %}
+                                    Struct, empty.
+                                {% else %}
+                                    Struct with fields:
+                                    <ul>
+                                        {% for field in instance_fields %}
+                                            <li><code>{{ field }}</code></li>
+                                        {% endfor %}
+                                        {% for field in static_fields %}
+                                            <li><code><i>static</i> {{ field }}</code></li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            {% when TypeData::Variants with (variants) %}
+                                Enum with variants:
+                                <ul>
+                                    {% for variant in variants %}
+                                        {% if variant.fields.is_empty() %}
+                                            <li><code>{{ variant.name }}</code></li>
+                                        {% else %}
+                                            <li>
+                                                <code>{{ variant.name }}</code>, with fields:
+                                                <ul>
+                                                    {% for field in variant.fields %}
+                                                        <li><code>{{ field }}</code></li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            {% when TypeData::Mixin %}
+                                Mixin.
+                        {% endmatch %}
+                    </p>
+
+                    <p>
+                        {% if !type.used_mixins.is_empty() %}
+                            Uses mixins:
+                            <ul>
+                                {% for mixin in type.used_mixins %}
+                                    <li><code>{{ mixin }}</code></li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </p>
+
+                    {% for method in type.methods %}
+                        <h2>
+                            {% if method.locality == MethodLocality::Static %}
+                                <code><i>static</i> </code>
+                            {% endif %}
+                            <code>{{ method.name }}</code>
+                        </h2>
+
+                        {% match method.parsed %}
+                            {% when Some with (p) %}
+                                {{ p.description|safe }}
+
+                                <blockquote>
+                                    {% for (name, desc) in p.parameters %}
+                                        <p><b><code>{{ name }}</code></b></p>
+                                        <blockquote>
+                                            {{ desc|safe }}
+                                        </blockquote>
+                                    {% endfor %}
+                                    {% match p.return_value %}
+                                        {% when Some with (desc) %}
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                {{ desc|safe }}
+                                            </blockquote>
+                                        {% when None %}
+                                    {% endmatch %}
+                                </blockquote>
+                            {% when None %}
+                                <p>Undocumented.</p>
+                        {% endmatch %}
+                    {% endfor %}
+
+                    <hr class="v-space" />
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
