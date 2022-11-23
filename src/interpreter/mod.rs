@@ -150,6 +150,7 @@ impl Interpreter {
     }
 
     /// Evaluate a single instruction within this interpreter, modifying the given stack of values.
+    #[inline(always)]
     pub fn evaluate_inner(&mut self, instruction: &Instruction, value_stack: &mut Vec<ValueRef>) -> Result<(), InterpreterError> {
         match &instruction.kind {
             InstructionKind::Get(id) => {
@@ -437,6 +438,7 @@ impl Interpreter {
     /// arguments.
     /// 
     /// Returns an error if the method does not exist on the receiver.
+    #[inline(always)]
     pub fn send_message(&mut self, receiver: ValueRef, method_name: &str, args: Vec<ValueRef>) -> InterpreterResult {
         let receiver_ref = receiver.borrow();
 

@@ -58,6 +58,7 @@ impl Block {
     /// within that frame. Arguments are also created as locals.
     /// 
     /// Returns an error if the number of arguments does not match the expected arity.
+    #[inline(always)]
     pub fn call(&self, interpreter: &mut Interpreter, arguments: Vec<ValueRef>) -> InterpreterResult {
         if self.arity() != arguments.len() {
             return Err(InterpreterErrorKind::IncorrectArity {

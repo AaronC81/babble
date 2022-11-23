@@ -77,6 +77,7 @@ impl Method {
     /// stack frame. Intrinsic methods do not create a stack frame. Arguments are created as locals.
     /// 
     /// Returns an error if the number of arguments does not match the expected arity.
+    #[inline(always)]
     pub fn call(self: Rc<Self>, interpreter: &mut Interpreter, receiver: ValueRef, arguments: Vec<ValueRef>) -> InterpreterResult {        
         if self.arity() != arguments.len() {
             return Err(InterpreterErrorKind::IncorrectArity {
