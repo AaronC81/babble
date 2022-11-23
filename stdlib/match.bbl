@@ -14,7 +14,7 @@ impl Match {
     /// A shorthand constructror for `Match#Hit`.
     ///
     /// @param hit: The value to use.
-    /// @return: The new `Match#Hit` instance.
+    /// @returns The new `Match#Hit` instance.
     static func hit: value {
         Match#Hit value: value
     }
