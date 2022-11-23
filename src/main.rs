@@ -10,8 +10,11 @@
 use std::{fs::read_to_string, io::{stdin, stdout, Write}};
 
 use clap::Parser;
-use interpreter::{Interpreter, InterpreterError};
+use interpreter::{Interpreter, InterpreterError, instruction::InstructionKind};
 use source::SourceFile;
+use tokenizer::Tokenizer;
+
+use crate::interpreter::instruction::compile;
 
 mod source;
 mod tokenizer;
@@ -25,17 +28,21 @@ mod bench;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-   /// Path to a script to run
-   #[arg(short = 'f', long, conflicts_with = "code")]
-   file: Option<String>,
+    /// Path to a script to run
+    #[arg(short = 'f', long, conflicts_with = "code")]
+    file: Option<String>,
 
-   /// Raw code to run
-   #[arg(short = 'e', long, conflicts_with = "file")]
-   code: Option<String>,
+    /// Raw code to run
+    #[arg(short = 'e', long, conflicts_with = "file")]
+    code: Option<String>,
 
-   /// Rather than running any code, print Markdown stdlib documentation
+    /// Rather than running any code, print Markdown stdlib documentation
     #[arg(long, conflicts_with = "code", conflicts_with = "file")]
     doc_gen: bool,
+
+    /// Rather than running any code, print compiled assembly for input
+    #[arg(long)]
+    show_asm: bool,
 }
 
 fn main() {
@@ -59,6 +66,14 @@ fn main() {
     };
 
     let src = SourceFile::new(&input_name, &input_contents).rc();
+    if args.show_asm {
+        let tokens = Tokenizer::tokenize(src.clone()).expect("tokenization failed");
+        let node = crate::parser::Parser::parse_and_analyse(src.clone(), &tokens[..]).expect("parsing failed");
+        let compiled = compile(node).expect("compilation failed");
+        println!("{}", compiled);
+        return;
+    }
+
     if let Err(e) = Interpreter::new().map(|mut i| i.parse_and_evaluate(src)).flatten() {
         print_error(e);
     }

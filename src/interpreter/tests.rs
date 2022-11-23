@@ -5,10 +5,7 @@ use crate::{parser::Parser, tokenizer::Tokenizer, interpreter::{Interpreter, Int
 use super::{ValueRef, InterpreterError};
 
 pub fn evaluate(input: &str) -> Result<ValueRef, InterpreterError> {
-    let src = SourceFile::new_temp(input).rc();
-    let node = Parser::parse_and_analyse(src.clone(), &Tokenizer::tokenize(src.clone()).unwrap()[..]).unwrap();
-    let mut interpreter = Interpreter::new()?;
-    interpreter.evaluate(&node)
+    Interpreter::new()?.parse_and_evaluate(SourceFile::new_temp(input).rc())
 }
 
 #[test]

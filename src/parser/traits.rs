@@ -45,7 +45,11 @@ impl NodeWalk for Node {
             NodeKind::Use(mixin) => {
                 func(mixin);
             }
-            NodeKind::Literal(l) => l.walk_children(func),
+            NodeKind::Array(items) => {
+                for item in items {
+                    func(item);
+                }
+            }
 
             NodeKind::Sugar(SugarNodeKind::Return(value)) => {
                 func(value);
@@ -55,20 +59,8 @@ impl NodeWalk for Node {
             | NodeKind::EnumDefinition { name: _, variants: _ }
             | NodeKind::StructDefinition { name: _, instance_fields: _, static_fields: _ }
             | NodeKind::MixinDefinition { name: _ }
-            | NodeKind::Identifier(_) => (),
-        }
-    }
-}
-
-impl NodeWalk for Literal {
-    fn walk_children(&mut self, func: &mut impl FnMut(&mut Node)) {
-        match self {
-            Literal::Array(items) => {
-                for node in items {
-                    func(node);
-                }
-            }
-            _ => (),
+            | NodeKind::Identifier(_)
+            | NodeKind::Literal(_) => (),
         }
     }
 }

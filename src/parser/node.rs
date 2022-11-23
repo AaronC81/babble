@@ -52,7 +52,7 @@ impl SendMessageComponents {
         match self {
             SendMessageComponents::Parameterised(params) => {
                 params.iter().filter_map(|(_, param)| match param {
-                    SendMessageParameter::Parsed(node) => Some(&**node),
+                    SendMessageParameter::CallArgument(node) => Some(&**node),
                     _ => None,
                 }).collect()
             },
@@ -65,7 +65,7 @@ impl SendMessageComponents {
         match self {
             SendMessageComponents::Parameterised(params) => {
                 params.iter_mut().filter_map(|(_, param)| match param {
-                    SendMessageParameter::Parsed(node) => Some(&mut **node),
+                    SendMessageParameter::CallArgument(node) => Some(&mut **node),
                     _ => None,
                 }).collect()
             },
@@ -81,45 +81,21 @@ impl SendMessageComponents {
         match self {
             SendMessageComponents::Unary(_) | SendMessageComponents::Blank => vec![],
             SendMessageComponents::Parameterised(pl) => pl.iter().map(|(_, p)| match p {
-                SendMessageParameter::Defined(id) => id.clone(),
+                SendMessageParameter::DefinitionParameter(id) => id.clone(),
                 _ => unreachable!(),
             }).collect(),
         }
-    }
-
-    /// Evaluates the parameters in this set of components, or returns them if they are already
-    /// evaluated.
-    pub fn evaluate_parameters(&self, interpreter: &mut Interpreter) -> Result<Vec<ValueRef>, InterpreterError> {
-        Ok(match self {
-            SendMessageComponents::Unary(_) | SendMessageComponents::Blank => vec![],
-            SendMessageComponents::Parameterised(params) =>
-                params.iter()
-                    .map(|(_, p)| match p {
-                        SendMessageParameter::Parsed(n) => interpreter.evaluate(n),
-                        SendMessageParameter::Evaluated(v) => Ok(v.clone()),
-                        SendMessageParameter::Defined(_) => unreachable!("defined parameters not valid in evaluation"),
-                    })
-                    .collect::<Result<Vec<_>, _>>()?
-                    .iter()
-                    .map(|v| Value::soft_copy(v.clone()))
-                    .collect::<Vec<_>>()
-        })
     }
 }
 
 /// A parameter passed to a message send.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SendMessageParameter {
-    /// The parameter has been parsed, but not yet evaluated.
-    Parsed(Box<Node>),
-
-    /// The parameter has already been evaluated.
-    /// 
-    /// Exists to allow intrinsic methods to call methods easily.
-    Evaluated(ValueRef),
+    /// The parameter is a node tree passed to a method call.
+    CallArgument(Box<Node>),
 
     /// The parameter is part of a method definition, not a call.
-    Defined(String),
+    DefinitionParameter(String),
 }
 
 /// The parameters taken by a block.
@@ -141,6 +117,7 @@ pub enum BlockParameters {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NodeKind {
     Literal(Literal),
+    Array(Vec<Node>),
 
     SelfAccess,
     Identifier(String),

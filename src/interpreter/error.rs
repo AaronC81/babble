@@ -22,13 +22,13 @@ impl InterpreterError {
     /// currently.
     /// 
     /// If it already has details, returns the error unmodified.
-    pub fn add_details(self, node: &Node, interpreter: &Interpreter) -> Self {
+    pub fn add_details(self, loc: &Location, interpreter: &Interpreter) -> Self {
         if self.details.is_some() {
             self
         } else {
             Self {
                 details: Some(InterpreterErrorDetails {
-                    location: Some(node.location.clone()),
+                    location: Some(loc.clone()),
                     backtrace: interpreter.stack.clone(),
                 }),
                 ..self
@@ -118,6 +118,10 @@ pub enum InterpreterErrorKind {
     /// An error occurred while performing IO from user code.
     IoError(String),
 
+    /// An internal error caused by a block of instructions not leaving exactly 1 value on the value
+    /// stack.
+    StackImbalance(usize),
+
     /// Not really an error - used by `Program throw: ...` to unwind the stack
     Throw(ValueRef),
 }
@@ -187,6 +191,8 @@ impl Display for InterpreterErrorKind {
                 f.write_str(message),
             InterpreterErrorKind::IoError(err) =>
                 write!(f, "IO error: {}", err),
+            InterpreterErrorKind::StackImbalance(n) =>
+                write!(f, "internal error: expected 1 item on the value stack, got {}", n),
 
             InterpreterErrorKind::Throw(value) =>
                 write!(f, "uncaught throw of `{}`", value.borrow().to_language_string()),

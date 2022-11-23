@@ -4,7 +4,7 @@ use std::{rc::Rc, fmt::Debug};
 
 use crate::parser::Node;
 
-use super::{Interpreter, ValueRef, InterpreterResult, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariable};
+use super::{Interpreter, ValueRef, InterpreterResult, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariable, instruction::InstructionBlock};
 
 /// How a method is documented.
 #[derive(Debug, Clone)]
@@ -42,10 +42,10 @@ impl Method {
     }
 
     /// Constructs a new method which executes by evaluating parsed nodes.
-    pub fn new_parsed(name: &str, body: Node, internal_names: Vec<String>) -> Self {
+    pub fn new_compiled(name: &str, instructions: InstructionBlock, internal_names: Vec<String>) -> Self {
         Self {
             name: name.into(),
-            implementation: MethodImplementation::Parsed { body, internal_names },
+            implementation: MethodImplementation::Compiled { instructions, internal_names },
             documentation: DocumentationState::Undocumented,
         }
     }
@@ -77,6 +77,7 @@ impl Method {
     /// stack frame. Intrinsic methods do not create a stack frame. Arguments are created as locals.
     /// 
     /// Returns an error if the number of arguments does not match the expected arity.
+    #[inline(always)]
     pub fn call(self: Rc<Self>, interpreter: &mut Interpreter, receiver: ValueRef, arguments: Vec<ValueRef>) -> InterpreterResult {        
         if self.arity() != arguments.len() {
             return Err(InterpreterErrorKind::IncorrectArity {
@@ -91,7 +92,7 @@ impl Method {
             MethodImplementation::Internal(func) =>
                 (func)(interpreter, receiver, arguments),
             
-            MethodImplementation::Parsed { body, internal_names } => {
+            MethodImplementation::Compiled { instructions, internal_names } => {
                 // Create a new stack frame with the relevant parameters
                 interpreter.stack.push(StackFrame {
                     locals: internal_names.iter()
@@ -110,7 +111,7 @@ impl Method {
                 // This order may seem unintuitive - but when an error is fatal, then we want the
                 // stack trace from the error to be as correct as possible, so we leave the frames
                 // which errored on the stack
-                let result = interpreter.evaluate(&body);
+                let result = interpreter.evaluate(instructions);
                 if let Err(error) = &result && error.kind.is_fatal() {
                     return Err(error.clone());
                 }
@@ -126,9 +127,9 @@ pub enum MethodImplementation {
     /// The method is implemented intrinsically.
     Internal(Box<dyn Fn(&mut Interpreter, ValueRef, Vec<ValueRef>) -> InterpreterResult>),
     
-    /// The method is implemented using a parsed node, and a set of parameter names.
-    Parsed {
-        body: Node,
+    /// The method is implemented using compiled instructions, and a set of parameter names.
+    Compiled {
+        instructions: InstructionBlock,
         internal_names: Vec<String>,
     },
 }
@@ -136,7 +137,7 @@ impl Debug for MethodImplementation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Internal(_) => f.debug_tuple("Internal").finish(),
-            Self::Parsed { body, internal_names } => f.debug_struct("Parsed").field("body", body).field("internal_names", internal_names).finish(),
+            Self::Compiled { instructions, internal_names } => f.debug_struct("Compiled").field("instructions", instructions).field("internal_names", internal_names).finish(),
         }
     }
 }

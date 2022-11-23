@@ -60,7 +60,7 @@ fn desugar_return_internal(node: &mut Node, state: &mut DesugarReturnState) {
                                 }),
                                 variant_name: "Hit".into(),
                                 components: SendMessageComponents::Parameterised(vec![
-                                    ("value".into(), SendMessageParameter::Parsed(value.clone())),
+                                    ("value".into(), SendMessageParameter::CallArgument(value.clone())),
                                 ])
                             },
                             ..node.clone()
@@ -77,7 +77,7 @@ fn desugar_return_internal(node: &mut Node, state: &mut DesugarReturnState) {
                             ..node.clone()
                         }),
                         components: SendMessageComponents::Parameterised(vec![
-                            ("throw".into(), SendMessageParameter::Parsed(Box::new(Node {
+                            ("throw".into(), SendMessageParameter::CallArgument(Box::new(Node {
                                 kind: NodeKind::Identifier(EARLY_RETURN_TAG.to_string()),
                                 ..node.clone()
                             }))),
@@ -134,7 +134,7 @@ fn desugar_return_internal(node: &mut Node, state: &mut DesugarReturnState) {
                                         ..*body.clone()
                                     }),
                                     components: SendMessageComponents::Parameterised(vec![
-                                        ("catchTag".into(), SendMessageParameter::Parsed(Box::new(Node {
+                                        ("catchTag".into(), SendMessageParameter::CallArgument(Box::new(Node {
                                             kind: NodeKind::Block {
                                                 body: body.clone(),
                                                 captures: vec![],
@@ -159,7 +159,7 @@ fn desugar_return_internal(node: &mut Node, state: &mut DesugarReturnState) {
                                 ..*body.clone()
                             }),
                             components: SendMessageComponents::Parameterised(vec![
-                                ("valueOr".into(), SendMessageParameter::Parsed(Box::new(Node {
+                                ("valueOr".into(), SendMessageParameter::CallArgument(Box::new(Node {
                                     kind: NodeKind::Identifier(NORMAL_RETURN_VALUE.into()),
                                 ..*body.clone()
                                 }))),
