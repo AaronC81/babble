@@ -168,6 +168,15 @@ impl Enumerable {
         acc
     }
 
+    /// A single-element form of `reduce:acc:` which uses the first element of the enumerable as the
+    /// initial accumulator value, and iterates over every element after the first.
+    ///
+    /// @param reduce: The block to apply, which should accept two parameters: the accumulator and the enumerable value.
+    /// @returns The accumulator value obtained after repeatedly applying the block.
+    func reduce: fn {
+        self skip: 1 $ reduce: fn acc: self first.
+    }
+
     /// Adds together the elements in this enumerable, by starting with the integer 0 and repeatedly
     /// calling `add:`.
     ///
@@ -271,5 +280,81 @@ impl Enumerable {
             fn call: x $ ifFalse: [ return false ].
         ].
         true
+    }
+
+    /// Finds the smallest element of this enumerable, assuming that all elements of the enuemrable
+    /// implement `Orderable`.
+    ///
+    /// @returns The smallest element, according to the values' `Orderable` implementation.
+    func min {
+        self reduce: [ |acc x| acc lessThan: x $ ifTrue: [ acc ] else: [ x ] ]
+    }
+
+    /// Finds the largest element of this enumerable, assuming that all elements of the enuemrable
+    /// implement `Orderable`.
+    ///
+    /// @returns The largest element, according to the values' `Orderable` implementation.
+    func max {
+        self reduce: [ |acc x| acc greaterThan: x $ ifTrue: [ acc ] else: [ x ] ]
+    }
+
+    /// Combines two enumerables into a single array. The elements of the array are themselves
+    /// two-element arrays, where the first element is from this enumerable and the second element
+    /// is from the other enumerable.
+    ///
+    /// If either enumerable ends, the overall array ends. This means that the result array will
+    /// have the length of the shortest of the two enumerables.
+    ///
+    /// @param zip: The other enumerable to zip with.
+    /// @returns An array of two-element arrays from the combined enumerables.
+    func zip: other {
+        arrayA = self toArray.
+        arrayB = other toArray.
+
+        result = #{}.
+        #{ (arrayA length) (arrayB length) } min times: [ |i|
+            result append: #{ (arrayA get: i) (arrayB get: i) }
+        ].
+        result
+    }
+
+    /// Splits this enumerable into two by evaluating the given predicate. The first array contains
+    /// all elements for which the predicate returned `true`, and the second array contains all
+    /// elements for which the predicate returned `false`.
+    ///
+    /// @param partition: The predicate to use, which should take one parameter.
+    /// @returns A two-element array, containing `true` and `false` arrays.
+    func partition: fn {
+        trues = #{}.
+        falses = #{}.
+        self forEach: [ |x|
+            fn call: x $ ifTrue: [ trues append: x ] else: [ falses append: x ].
+        ].
+        #{ (trues) (falses) }
+    }
+
+    /// Creates a sliding window over the elements in this enumerable of the given size, and builds
+    /// an array whose elements are arrays of that size.
+    ///
+    /// Each resulting sub-array will overlap with the previous one, except for the elements being
+    /// "shifted left" by one to push the left-most element off the side and insert a new right-most
+    /// element.
+    ///
+    /// If the given window size is less than the size of this enumerable, returns an empty array.
+    ///
+    /// @param window: The window size to use.
+    /// @returns An array of arrays of the given size.
+    func window: n {
+        result = #{}.
+
+        // Convert to array and validate size
+        arr = self toArray.
+        arr length lessThan: n $ ifTrue: [ return result ].
+
+        // Iterate over all windows and push them onto the result
+        arr length sub: n $ add: 1 $ times: [ |i|
+            result append: (arr skip: i $ take: n).
+        ].
+        result
     }
 }
