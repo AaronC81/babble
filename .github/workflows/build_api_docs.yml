@@ -14,8 +14,7 @@ jobs:
     - uses: actions-rs/toolchain@v1
       with:
         toolchain: nightly
-    - name: Cargo version
-      run: cargo --version
+        override: true
     - name: Build
       run: cargo build
     - name: Run tests
