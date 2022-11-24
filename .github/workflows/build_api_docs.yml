@@ -1,0 +1,30 @@
+name: Test and build docs
+
+on:
+  push: {}
+  pull_request: {}
+
+jobs:
+  build-docs:
+    continue-on-error: false
+      
+    runs-on: ubuntu-latest    
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+    - name: Build
+      run: cargo build
+    - name: Run tests
+      run: cargo test
+    - name: Build documentation
+      run: |
+        mkdir doc
+        cargo run -- --doc-gen > doc/index.html
+    - name: Deploy to GitHub Actions
+      uses: JamesIves/github-pages-deploy-action@3.7.1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: gh-pages
+        folder: doc
