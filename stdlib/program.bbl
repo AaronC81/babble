@@ -1,3 +1,7 @@
+/// A globally-unique value created exclusively by the `catchTag:` method on `Program`, to ensure
+/// that a thrown value will always be caught by one exact known catch block.
+///
+/// Instances of this struct should **not** be created manually.
 struct ThrowTag id static next.
 ThrowTag next = 1.
 impl ThrowTag {

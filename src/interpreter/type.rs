@@ -215,6 +215,17 @@ impl Type {
     pub fn rc(self) -> TypeRef {
         Rc::new(RefCell::new(self))
     }
+
+    /// Adds documentation to this type definition.
+    pub fn add_documentation(&mut self, documentation: &str) {
+        self.documentation = DocumentationState::Documented(documentation.into());
+    }
+
+    /// Consumes this type definition and returns a new one with documentation added.
+    pub fn with_documentation(mut self, documentation: &str) -> Self {
+        self.add_documentation(documentation);
+        self
+    }
 }
 
 pub type TypeRef = Rc<RefCell<Type>>;

@@ -88,7 +88,12 @@ fn representable(_: &mut Interpreter) -> Type {
         ],
         data: TypeData::Mixin,
         ..Type::new("Representable")
-    }
+    }.with_documentation("\
+        Indicates that a type can be converted to a string.
+
+        This mixin is implemented automatically on all types, and the definition of `repr` is
+        powered by interpreter magic.
+    ")
 }
 
 fn equatable(_: &mut Interpreter) -> Type {
@@ -108,11 +113,20 @@ fn equatable(_: &mut Interpreter) -> Type {
         ],
         data: TypeData::Mixin,
         ..Type::new("Equatable")
-    }
+    }.with_documentation("\
+        Indicates that values of a type can be compared for equality.
+
+        This mixin is implemented automatically on all types, and the definition of `equals:` is
+        powered by interpreter magic.
+    ")
 }
 
 fn null(interpreter: &mut Interpreter) -> Type {
-    Type::new("Null").with_derived_core_mixins(interpreter)
+    Type::new("Null")
+        .with_derived_core_mixins(interpreter)
+        .with_documentation("
+            The type of `null`, which represents the absence of a value.
+        ")
 }
 
 fn integer(interpreter: &mut Interpreter) -> Type {
@@ -228,7 +242,14 @@ fn integer(interpreter: &mut Interpreter) -> Type {
         ],
 
         ..Type::new("Integer")
-    }.with_derived_core_mixins(interpreter).with_mixin("Orderable", interpreter)
+    }
+    .with_derived_core_mixins(interpreter)
+    .with_mixin("Orderable", interpreter)
+    .with_documentation("
+        A whole number.
+
+        This type is implemented as a 64-bit signed integer.
+    ")    
 }
 
 fn string(interpreter: &mut Interpreter) -> Type {
@@ -297,7 +318,11 @@ fn string(interpreter: &mut Interpreter) -> Type {
         ],
 
         ..Type::new("String")
-    }.with_derived_core_mixins(interpreter)
+    }
+    .with_derived_core_mixins(interpreter)
+    .with_documentation("
+        A string of UTF-8 characters.
+    ")
 }
 
 fn array(interpreter: &mut Interpreter) -> Type {
@@ -412,7 +437,12 @@ fn array(interpreter: &mut Interpreter) -> Type {
         ],
 
         ..Type::new("Array")
-    }.with_derived_core_mixins(interpreter)
+    }
+    .with_derived_core_mixins(interpreter)
+    .with_documentation("
+        An ordered collection of values. Arrays can have items added or removed from them at will,
+        changing their size dynamically.
+    ")
 }
 
 fn console(_: &mut Interpreter) -> Type {
@@ -453,6 +483,9 @@ fn console(_: &mut Interpreter) -> Type {
 
         ..Type::new("Console")
     }
+    .with_documentation("
+        An interface to standard input and output streams on the host machine.
+    ")
 }
 
 fn block(interpreter: &mut Interpreter) -> Type {
@@ -498,7 +531,13 @@ fn block(interpreter: &mut Interpreter) -> Type {
         ],
 
         ..Type::new("Block")
-    }.with_derived_core_mixins(interpreter)
+    }
+    .with_derived_core_mixins(interpreter)
+    .with_documentation("
+        The type of a block created with `[ ... ]` syntax. Blocks are objects representing snippets
+        of code which can be executed with parameters, optionally performing pattern matching on
+        those parameters, as well as capturing local variables from their scope.
+    ")
 }
 
 fn boolean(interpreter: &mut Interpreter) -> Type {
@@ -534,7 +573,11 @@ fn boolean(interpreter: &mut Interpreter) -> Type {
         ],
 
         ..Type::new("Boolean")
-    }.with_derived_core_mixins(interpreter)
+    }
+    .with_derived_core_mixins(interpreter)
+    .with_documentation("
+        Logical true and false values.
+    ")
 }
 
 fn internal_test(_: &mut Interpreter) -> Type {
@@ -637,6 +680,9 @@ fn program(_: &mut Interpreter) -> Type {
         ],
         ..Type::new("Program")
     }
+    .with_documentation("
+        A special type containing static methods for interacting with the interpreter itself.
+    ")
 }
 
 fn reflection(_: &mut Interpreter) -> Type {
@@ -674,6 +720,10 @@ fn reflection(_: &mut Interpreter) -> Type {
         ],
         ..Type::new("Reflection")
     }
+    .with_documentation("
+        A special type containing static methods for retrieving metadata information about values or
+        types.
+    ")
 }
 
 fn file(interpreter: &mut Interpreter) -> Type {
@@ -731,7 +781,11 @@ fn file(interpreter: &mut Interpreter) -> Type {
         ],
 
         ..Type::new("File")
-    }.with_derived_core_mixins(interpreter)
+    }
+    .with_derived_core_mixins(interpreter)
+    .with_documentation("
+        Represents a handle to an open file on the host machine's filesystem.
+    ")
 }
 
 /// Wraps a (possibly closed) file, and its path.

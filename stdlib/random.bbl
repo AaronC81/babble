@@ -1,3 +1,6 @@
+/// Provides static methods for producing random values.
+///
+/// This uses `/dev/random` as a source of randomness, and as such will only work on Unix systems.
 struct Random.
 impl Random {
     /// Returns the requested number of random bytes.

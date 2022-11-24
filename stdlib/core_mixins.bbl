@@ -9,7 +9,7 @@ impl Equatable {
     }
 }
 
-/// Indicates that a type is orderable.
+/// Indicates that values of a type are orderable.
 ///
 /// Requirements:
 ///   - `greaterThan:`

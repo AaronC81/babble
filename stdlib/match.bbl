@@ -1,3 +1,6 @@
+/// Encodes the result of a pattern match when calling a `?[ ... ]` block. The match can either be
+/// a _hit_, where the block was executed and returned the wrapped value, or a _miss_, where the
+/// pattern did not match.
 enum Match {
     Hit value.
     Miss.

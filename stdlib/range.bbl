@@ -1,3 +1,4 @@
+/// Represents a span of consecutive integers between an inclusive start and exclusive end value.
 struct Range start end.
 
 impl Range {

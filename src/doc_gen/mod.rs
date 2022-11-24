@@ -128,7 +128,7 @@ fn build_documentation_objects<T: DocumentationTemplate>(interpreter: &Interpret
         let options = ComrakOptions::default();
         let mut description: Option<String> = t.documentation.clone().into();
         description = description.as_ref()
-            .map(|d| markdown_to_html(d, &options));
+            .map(|d| markdown_to_html(&d.split("\n").map(|l| l.trim()).collect::<Vec<_>>().join("\n"), &options));
 
         type_docs.push(TypeDocumentation {
             id: t.id.clone(),
