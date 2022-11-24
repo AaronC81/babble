@@ -357,4 +357,37 @@ impl Enumerable {
         ].
         result
     }
+
+    /// Sorts the elements of this enumerable using the given key function, from lowest key to
+    /// highest key. The returned keys must implement `Orderable`.
+    ///
+    /// @param sortBy: The key function to use, which should accept one parameter.
+    /// @returns A sorted array.
+    func sortBy: fn {
+        arr = self toArray.
+
+        // A zero or one item array is vacuously sorted
+        arr length lessThanOrEquals: 1 $ ifTrue: [ return arr ].
+
+        // Use the first item as a pivot, and partition based on whether its keys are less than or 
+        // greater than it
+        pivot = arr first.
+        pivotKey = fn call: pivot.
+        partitioned = arr skip: 1 $ partition: [ |x| fn call: x $ lessThan: pivotKey ].
+
+        // Build result array from partitioned items
+        result = #{}.
+        result appendAll: (partitioned first sortBy: fn).
+        result append: pivot.
+        result appendAll: (partitioned last sortBy: fn).
+        result
+    }
+
+    /// Sorts the elements of this enumerable, from lowest to highest. The elements must implement
+    /// `Orderable`.
+    ///
+    /// @returns A sorted array.
+    func sort {
+        self sortBy: [ |x| x ]
+    }
 }

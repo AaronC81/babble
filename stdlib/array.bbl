@@ -77,6 +77,16 @@ impl Array {
     InternalTest case: "last non-empty" that: #{ 1 2 3 } last equals: 3.
     InternalTest case: "last empty"     that: #{ } last       equals: null.
 
+    /// Appends all elements from an enumerable to this array.
+    ///
+    /// @params appendAll: The enumerable to append items from.
+    func appendAll: items {
+        items forEach: [ |x|
+            self append: x.
+        ].
+        self
+    }
+
     use Enumerable.
     InternalTest defer: [
         InternalTest case: "toArray" that: #{ 1 2 3 } toArray equals: #{ 1 2 3 }.
@@ -123,5 +133,8 @@ impl Array {
         InternalTest case: "window ok" that: (#{ 1 2 3 4 5 6 } window: 3) equals: #{ #{ 1 2 3 } #{ 2 3 4 } #{ 3 4 5 } #{ 4 5 6 } }.
         InternalTest case: "window equal" that: (#{ 1 2 3 } window: 3) equals: #{ #{ 1 2 3 } }.
         InternalTest case: "window less" that: (#{ 1 2 } window: 3) equals: #{ }.
+
+        InternalTest case: "sort" that: (#{ 3 1 2 6 4 0 5 } sort) equals: #{ 0 1 2 3 4 5 6 }.
+        InternalTest case: "sortBy" that: (#{ "foo" "g" "abcd" "yo" } sortBy: [ |x| x length ]) equals: #{ "g" "yo" "foo" "abcd" }.
     ]
 }
