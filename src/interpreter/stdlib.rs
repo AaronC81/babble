@@ -613,6 +613,8 @@ fn internal_test(_: &mut Interpreter) -> Type {
             Value::new_array(&[]).rc(),
         ],
 
+        documentation: DocumentationState::Hidden,
+
         ..Type::new("InternalTest")
     }
 }
