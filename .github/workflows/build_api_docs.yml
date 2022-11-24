@@ -22,7 +22,7 @@ jobs:
     - name: Build documentation
       run: |
         mkdir doc
-        cargo run -- --doc-gen > doc/index.html
+        cargo run --release -- --doc-gen > doc/index.html
     - name: Deploy to GitHub Actions
       uses: JamesIves/github-pages-deploy-action@3.7.1
       with:
