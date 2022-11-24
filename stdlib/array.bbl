@@ -79,7 +79,7 @@ impl Array {
 
     /// Appends all elements from an enumerable to this array.
     ///
-    /// @params appendAll: The enumerable to append items from.
+    /// @param appendAll: The enumerable to append items from.
     func appendAll: items {
         items forEach: [ |x|
             self append: x.
