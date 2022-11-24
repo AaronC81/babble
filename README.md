@@ -1,12 +1,11 @@
-# Babble
-
 <img
     src="res/logo.png"
     alt="Babble's logo, showing a colon character inside matching square braces - both items of punctuation which appear often in Babble code."
     width="150"
-    height="150" />
-
-<hr />
+    height="150"
+    align="left" />
+    
+# Babble
 
 **[API documentation](https://aaronc81.github.io/babble)**
 
