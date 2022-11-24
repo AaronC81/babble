@@ -1,0 +1,3785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babble</title>
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+        }
+
+        /* TODO: probably not portable, but fixes weird size issues */
+        code {
+            font-family: "SF Mono";
+        }
+
+        a {
+            color: black;
+        }
+
+        #body-wrapper {
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+        }
+
+        #sidebar {
+            flex: 0 0 200px;
+            background-color: #b4c5e0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        #sidebar ul {
+            padding: 0;
+            list-style: none;
+        }
+
+        #sidebar ul li {
+            margin: 10px;
+            padding-left: 0;
+        }
+
+        #sidebar #logo {
+            width: 50%;
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+            padding-top: 20px;
+        }
+
+        #content {
+            flex: 4 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        #inner-content {
+            width: calc(100% - 40px);
+            height: 100%;
+            margin: 20px;
+        }
+
+        .v-space {
+            border: 0;
+            height: 0;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+
+            margin-top: 40px;
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div id="body-wrapper">
+        <div id="sidebar">
+            <!-- Taken from logo.svg, but with width/height removed and id added -->
+            <svg id="logo" viewBox="0 0 1000 1000" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                <title>Artboard</title>
+                <g id="Artboard" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                    <path d="M950,50 L950,950 L700,950 L700,831 L825,831 L825,169 L700,169 L700,50 L950,50 Z M300,169 L175,169 L175,831 L300,831 L300,950 L50,950 L50,50 L300,50 L300,169 Z" id="Combined-Shape" fill="#000000"></path>
+                    <g id="Group" transform="translate(392.000000, 204.000000)" fill="#000000">
+                        <circle id="Oval" cx="108" cy="108" r="108"></circle>
+                        <circle id="Oval" cx="108" cy="484" r="108"></circle>
+                    </g>
+                </g>
+            </svg>
+
+            <ul>
+                
+                    <li><a href="#Array">Array</a></li>
+                
+                    <li><a href="#Block">Block</a></li>
+                
+                    <li><a href="#Boolean">Boolean</a></li>
+                
+                    <li><a href="#Console">Console</a></li>
+                
+                    <li><a href="#Enumerable">Enumerable</a></li>
+                
+                    <li><a href="#Equatable">Equatable</a></li>
+                
+                    <li><a href="#File">File</a></li>
+                
+                    <li><a href="#Integer">Integer</a></li>
+                
+                    <li><a href="#Match">Match</a></li>
+                
+                    <li><a href="#Null">Null</a></li>
+                
+                    <li><a href="#Orderable">Orderable</a></li>
+                
+                    <li><a href="#Program">Program</a></li>
+                
+                    <li><a href="#Random">Random</a></li>
+                
+                    <li><a href="#Range">Range</a></li>
+                
+                    <li><a href="#Reflection">Reflection</a></li>
+                
+                    <li><a href="#Representable">Representable</a></li>
+                
+                    <li><a href="#String">String</a></li>
+                
+                    <li><a href="#ThrowTag">ThrowTag</a></li>
+                
+            </ul>
+        </div>
+        <div id="content">
+            <div id="inner-content">
+                
+                    <a name="Array"></a>
+                    <h1>Array</h1>
+                    
+                            <p>An ordered collection of values. Arrays can have items added or removed from them at will,
+changing their size dynamically.</p>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    Primitive type.
+                                
+                        </p>
+
+                        <p>
+                            
+                                <b>Uses mixins:</b>
+                                <ul>
+                                    
+                                        <li><a href="#Equatable"><code>Equatable</code></a></li>
+                                    
+                                        <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                        <li><a href="#Enumerable"><code>Enumerable</code></a></li>
+                                    
+                                </ul>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+                        <h2>
+                            
+                            <code>append:</code>
+                        </h2>
+
+                        
+                                <p>Adds a new item to the end of this array.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>append:</code></b></p>
+                                        <blockquote>
+                                            <p>The new item to add.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                    
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>appendAll:</code>
+                        </h2>
+
+                        
+                                <p>Appends all elements from an enumerable to this array.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>s</code></b></p>
+                                        <blockquote>
+                                            <p>appendAll: The enumerable to append items from.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                    
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>delete:</code>
+                        </h2>
+
+                        
+                                <p>Deletes an item at a specific index, and shifts the array elements down to
+compensate. If the array does not cover the index, returns <code>null</code>.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>delete:</code></b></p>
+                                        <blockquote>
+                                            <p>The zero-indexed index to delete.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The deleted item, or <code>null</code> if there was no item at that index.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>first</code>
+                        </h2>
+
+                        
+                                <p>Returns the first item of this array.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The first item of the array, or <code>null</code> if it is empty.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>forEach:</code>
+                        </h2>
+
+                        
+                                <p>Calls a function for each element of the array, passing it as a parameter.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>forEach:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to call, which should accept one parameter.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                    
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>get:</code>
+                        </h2>
+
+                        
+                                <p>Gets an item from this array.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>get:</code></b></p>
+                                        <blockquote>
+                                            <p>The zero-indexed index of the item to get.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The item, or <code>null</code> if the index is out of bounds.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>insert:at:</code>
+                        </h2>
+
+                        
+                                <p>Inserts a new item at a specific index within this array. If the array is not long
+enough, it is extended with <code>null</code>s so that the new item is at the end of the array.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>insert:</code></b></p>
+                                        <blockquote>
+                                            <p>The new item to add.</p>
+
+                                        </blockquote>
+                                    
+                                        <p><b><code>at:</code></b></p>
+                                        <blockquote>
+                                            <p>The zero-indexed index at which to insert it.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                    
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>isEmpty</code>
+                        </h2>
+
+                        
+                                <p>Checks if this array is empty.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p><code>true</code> if this array is empty, or <code>false</code> otherwise.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>last</code>
+                        </h2>
+
+                        
+                                <p>Returns the last item of this array.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The last item of the array, or <code>null</code> if it is empty.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>length</code>
+                        </h2>
+
+                        
+                                <p>The length of the array.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The number of items in the array.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>new</code>
+                        </h2>
+
+                        
+                                <p>Constructs a new array.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A new array with length 0.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>newOf:length:</code>
+                        </h2>
+
+                        
+                                <p>Constructs a new array by repeating one element.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>newOf:</code></b></p>
+                                        <blockquote>
+                                            <p>The element to repeat.</p>
+
+                                        </blockquote>
+                                    
+                                        <p><b><code>length:</code></b></p>
+                                        <blockquote>
+                                            <p>The number of times to repeat the element.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A new array.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>pop</code>
+                        </h2>
+
+                        
+                                <p>Deletes the last item of this array and returns it. If the array is empty, returns <code>null</code>.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The last (now-deleted) item of this array, or <code>null</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>set:value:</code>
+                        </h2>
+
+                        
+                                <p>Sets an item in this array. If the given index does not already exist in the array,
+it is extended with <code>null</code>s to match the required length.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>set:</code></b></p>
+                                        <blockquote>
+                                            <p>The zero-indexed index of the item to set.</p>
+
+                                        </blockquote>
+                                    
+                                        <p><b><code>value:</code></b></p>
+                                        <blockquote>
+                                            <p>The value to write into the array.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                    
+                                </blockquote>
+                            
+                    
+
+                    <hr class="v-space" />
+                
+                    <a name="Block"></a>
+                    <h1>Block</h1>
+                    
+                            <p>The type of a block created with <code>[ ... ]</code> syntax. Blocks are objects representing snippets
+of code which can be executed with parameters, optionally performing pattern matching on
+those parameters, as well as capturing local variables from their scope.</p>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    Primitive type.
+                                
+                        </p>
+
+                        <p>
+                            
+                                <b>Uses mixins:</b>
+                                <ul>
+                                    
+                                        <li><a href="#Equatable"><code>Equatable</code></a></li>
+                                    
+                                        <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                </ul>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+                        <h2>
+                            
+                            <code>arity</code>
+                        </h2>
+
+                        
+                                <p>How many arguments this block takes.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>An integer representing the number of arguments this block takes.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>call</code>
+                        </h2>
+
+                        
+                                <p>Calls this block with no arguments.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The result of the block.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>call:</code>
+                        </h2>
+
+                        
+                                <p>Calls this block with one argument.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>call</code></b></p>
+                                        <blockquote>
+                                            <p>The single argument to pass.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The result of the block.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>callWith:</code>
+                        </h2>
+
+                        
+                                <p>Calls this block with the given array of arguments.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>callWith:</code></b></p>
+                                        <blockquote>
+                                            <p>The array of arguments to pass to the block.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The result of the block.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>whileTrue:</code>
+                        </h2>
+
+                        
+                                <p>Repeatedly executes another block (the <em>body</em>) while this block (the <em>condition</em>)
+continues to return <code>true</code>. If the condition returns <code>false</code> the first time it is
+executed, the body is never executed.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>whileTrue:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to execute as a condition.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                    
+                                </blockquote>
+                            
+                    
+
+                    <hr class="v-space" />
+                
+                    <a name="Boolean"></a>
+                    <h1>Boolean</h1>
+                    
+                            <p>Logical true and false values.</p>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    Enum with variants:
+                                    <ul>
+                                        
+                                            
+                                                <li><code>False</code></li>
+                                            
+                                        
+                                            
+                                                <li><code>True</code></li>
+                                            
+                                        
+                                    </ul>
+                                
+                        </p>
+
+                        <p>
+                            
+                                <b>Uses mixins:</b>
+                                <ul>
+                                    
+                                        <li><a href="#Equatable"><code>Equatable</code></a></li>
+                                    
+                                        <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                </ul>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+                        <h2>
+                            
+                            <code>and:</code>
+                        </h2>
+
+                        
+                                <p>Computes boolean AND with another boolean.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>and:</code></b></p>
+                                        <blockquote>
+                                            <p>The other boolean.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p><code>true</code> if both booleans are <code>true</code>, otherwise <code>false</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>ifFalse:</code>
+                        </h2>
+
+                        
+                                <p>Executes the block if this boolean is <code>false</code>.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>ifFalse:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to execute.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                    
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>ifTrue:</code>
+                        </h2>
+
+                        
+                                <p>Executes a block if this is <code>true</code>.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>ifTrue:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to execute if this is <code>true</code>.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>This boolean.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>ifTrue:else:</code>
+                        </h2>
+
+                        
+                                <p>Executes one block if this boolean is <code>true</code>, or another if it is <code>false</code>.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>ifTrue:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to execute in the <code>true</code> case.</p>
+
+                                        </blockquote>
+                                    
+                                        <p><b><code>else:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to execute in the <code>false</code> case.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The result of whichever block was executed.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>not</code>
+                        </h2>
+
+                        
+                                <p>Logically negates this boolean.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p><code>true</code> if this is <code>false</code>, or <code>false</code> if this is <code>true</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>or:</code>
+                        </h2>
+
+                        
+                                <p>Computes boolean OR with another boolean.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>or:</code></b></p>
+                                        <blockquote>
+                                            <p>The other boolean.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p><code>true</code> if either boolean is <code>true</code>, otherwise <code>false</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>toMatch</code>
+                        </h2>
+
+                        
+                                <p>Converts this boolean to a <code>Match</code>, where <code>true</code> is a hit with value <code>null</code>, and <code>false</code> is
+a miss.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The <code>Match</code> instance.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+
+                    <hr class="v-space" />
+                
+                    <a name="Console"></a>
+                    <h1>Console</h1>
+                    
+                            <p>An interface to standard input and output streams on the host machine.</p>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    Primitive type.
+                                
+                        </p>
+
+                        <p>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>input</code>
+                        </h2>
+
+                        
+                                <p>Reads a line of input from the console.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The line as a string.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>print:</code>
+                        </h2>
+
+                        
+                                <p>Prints an object to the console, with no trailing newline.</p>
+<p>Additionally, flushes the console buffer, to ensure that the output is actually
+displayed, since many consoles will not usually show content until a newline is
+printed.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>print:</code></b></p>
+                                        <blockquote>
+                                            <p>The object to print.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                    
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>println:</code>
+                        </h2>
+
+                        
+                                <p>Prints an object to the console, followed by a newline.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>println:</code></b></p>
+                                        <blockquote>
+                                            <p>The object to print.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                    
+                                </blockquote>
+                            
+                    
+
+                    <hr class="v-space" />
+                
+                    <a name="Enumerable"></a>
+                    <h1>Enumerable</h1>
+                    
+                            <p>Extends a type which represents a container of ordered items to provide various functional
+programming methods.</p>
+<p>Requirements:</p>
+<ul>
+<li><code>forEach:</code></li>
+</ul>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    Mixin.
+                            
+                        </p>
+
+                        <p>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+                        <h2>
+                            
+                            <code>all:</code>
+                        </h2>
+
+                        
+                                <p>Determines whether all elements of the enumerable match a predicate.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>any:</code></b></p>
+                                        <blockquote>
+                                            <p>The predicate to use, which should accept one parameter.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p><code>true</code> if all elements match the predicate, <code>false</code> otherwise.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>any:</code>
+                        </h2>
+
+                        
+                                <p>Determines whether any element of the enumerable matches a predicate.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>any:</code></b></p>
+                                        <blockquote>
+                                            <p>The predicate to use, which should accept one parameter.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p><code>true</code> if any element matches the predicate, <code>false</code> otherwise.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>chunk:</code>
+                        </h2>
+
+                        
+                                <p>Partitions this enumerable into an array of chunks of a given size.</p>
+<p>If the enumerable is not evenly divisible by the chunk size, the last chunk will be smaller
+and contain the leftover elements. (If you would like all chunks to be the same size, see
+<code>chunkExact:</code>.)</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>chunk:</code></b></p>
+                                        <blockquote>
+                                            <p>The size of each chunk.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>An array of chunk arrays.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>chunkExact:</code>
+                        </h2>
+
+                        
+                                <p>Partitions this enumerable into an array of chunks of a given size.</p>
+<p>If the enumerable is not evenly divisible by the chunk size, the remaining elements will
+be omitted from the result. (If you would like the last chunk to be smaller, see <code>chunk:</code>.)</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>chunk:</code></b></p>
+                                        <blockquote>
+                                            <p>The size of each chunk.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>An array of chunk arrays.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>contains:</code>
+                        </h2>
+
+                        
+                                <p>Determines whether this enumerable contains an item which equals the given item.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>contains:</code></b></p>
+                                        <blockquote>
+                                            <p>The item to find.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p><code>true</code> if the item is found, or <code>false</code> otherwise.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>filter:</code>
+                        </h2>
+
+                        
+                                <p>Constructs a new array by retaining elements from this enumerable where a block returns
+<code>true</code>.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>map:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to use as a condition, which should accept one parameter.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The new array.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>find:</code>
+                        </h2>
+
+                        
+                                <p>Find the first value in the enumerable matching a predicate.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>find:</code></b></p>
+                                        <blockquote>
+                                            <p>The predicate to use, which should accept one parameter.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The first value matching the predicate, or <code>null</code> if none is found.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>join</code>
+                        </h2>
+
+                        
+                                <p>Joins together the strings in this enumerable by repeatedly calling <code>concat:</code>.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The concatenated value.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>join:</code>
+                        </h2>
+
+                        
+                                <p>Joins together the strings in this enumerable with a separator between them, by repeatedly
+calling <code>concat:</code>.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The concatenated value.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>map:</code>
+                        </h2>
+
+                        
+                                <p>Constructs a new array by applying a block to each element of this enumerable, in order.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>map:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to apply, which should accept one parameter.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The new array.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>max</code>
+                        </h2>
+
+                        
+                                <p>Finds the largest element of this enumerable, assuming that all elements of the enuemrable
+implement <code>Orderable</code>.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The largest element, according to the values' <code>Orderable</code> implementation.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>min</code>
+                        </h2>
+
+                        
+                                <p>Finds the smallest element of this enumerable, assuming that all elements of the enuemrable
+implement <code>Orderable</code>.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The smallest element, according to the values' <code>Orderable</code> implementation.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>partition:</code>
+                        </h2>
+
+                        
+                                <p>Splits this enumerable into two by evaluating the given predicate. The first array contains
+all elements for which the predicate returned <code>true</code>, and the second array contains all
+elements for which the predicate returned <code>false</code>.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>partition:</code></b></p>
+                                        <blockquote>
+                                            <p>The predicate to use, which should take one parameter.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A two-element array, containing <code>true</code> and <code>false</code> arrays.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>reduce:</code>
+                        </h2>
+
+                        
+                                <p>A single-element form of <code>reduce:acc:</code> which uses the first element of the enumerable as the
+initial accumulator value, and iterates over every element after the first.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>reduce:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to apply, which should accept two parameters: the accumulator and the enumerable value.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The accumulator value obtained after repeatedly applying the block.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>reduce:acc:</code>
+                        </h2>
+
+                        
+                                <p>Reduces this enumerable into a single value, by starting with an accumulator value and
+repeatedly applying a block to it with each element of the enumerable.</p>
+<p>The block will be called for each item in the enumerable, with the block's result replacing
+the current accumulator value.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>reduce:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to apply, which should accept two parameters: the accumulator and the enumerable value.</p>
+
+                                        </blockquote>
+                                    
+                                        <p><b><code>acc:</code></b></p>
+                                        <blockquote>
+                                            <p>The initial accumulator value.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The accumulator value obtained after repeatedly applying the block.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>reverse</code>
+                        </h2>
+
+                        
+                                <p>Returns an element-wise copy of this enumerable, reversed, as an array. The original is not
+modified.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The reversed array.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>skip:</code>
+                        </h2>
+
+                        
+                                <p>Skips the first <code>n</code> elements from this enumerable, and takes the rest.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>take:</code></b></p>
+                                        <blockquote>
+                                            <p>The number of elements to skip.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>An array of all elements after the first <code>n</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>skipWhile:</code>
+                        </h2>
+
+                        
+                                <p>Builds an array with elements from this enumerable, skipping elements from the start until
+the predicate function returns <code>false</code> for the first time.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>takeWhile:</code></b></p>
+                                        <blockquote>
+                                            <p>The predicate function, which should accept one parameter.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The elements taken after the predicate became <code>false</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>sort</code>
+                        </h2>
+
+                        
+                                <p>Sorts the elements of this enumerable, from lowest to highest. The elements must implement
+<code>Orderable</code>.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A sorted array.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>sortBy:</code>
+                        </h2>
+
+                        
+                                <p>Sorts the elements of this enumerable using the given key function, from lowest key to
+highest key. The returned keys must implement <code>Orderable</code>.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>sortBy:</code></b></p>
+                                        <blockquote>
+                                            <p>The key function to use, which should accept one parameter.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A sorted array.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>sum</code>
+                        </h2>
+
+                        
+                                <p>Adds together the elements in this enumerable, by starting with the integer 0 and repeatedly
+calling <code>add:</code>.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The summed value.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>take:</code>
+                        </h2>
+
+                        
+                                <p>Takes the first <code>n</code> elements from this enumerable.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>take:</code></b></p>
+                                        <blockquote>
+                                            <p>The number of elements to take.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>An array of the first <code>n</code> elements.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>takeWhile:</code>
+                        </h2>
+
+                        
+                                <p>Builds an array with elements from this enumerable, taking elements from the start until the
+predicate function returns <code>false</code> for the first time.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>takeWhile:</code></b></p>
+                                        <blockquote>
+                                            <p>The predicate function, which should accept one parameter.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The elements taken until the predicate became <code>false</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>toArray</code>
+                        </h2>
+
+                        
+                                <p>Converts the contents of this enumerable into an array.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The array.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>window:</code>
+                        </h2>
+
+                        
+                                <p>Creates a sliding window over the elements in this enumerable of the given size, and builds
+an array whose elements are arrays of that size.</p>
+<p>Each resulting sub-array will overlap with the previous one, except for the elements being
+&quot;shifted left&quot; by one to push the left-most element off the side and insert a new right-most
+element.</p>
+<p>If the given window size is less than the size of this enumerable, returns an empty array.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>window:</code></b></p>
+                                        <blockquote>
+                                            <p>The window size to use.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>An array of arrays of the given size.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>withIndex</code>
+                        </h2>
+
+                        
+                                <p>Constructs a new array composed of new 2-element arrays: the first element is the index of
+the source item (starting from 0), and the second element is the source item.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The new array of 2-element arrays, of the form <code>#{ index item }</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>zip:</code>
+                        </h2>
+
+                        
+                                <p>Combines two enumerables into a single array. The elements of the array are themselves
+two-element arrays, where the first element is from this enumerable and the second element
+is from the other enumerable.</p>
+<p>If either enumerable ends, the overall array ends. This means that the result array will
+have the length of the shortest of the two enumerables.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>zip:</code></b></p>
+                                        <blockquote>
+                                            <p>The other enumerable to zip with.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>An array of two-element arrays from the combined enumerables.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+
+                    <hr class="v-space" />
+                
+                    <a name="Equatable"></a>
+                    <h1>Equatable</h1>
+                    
+                            <p>Indicates that values of a type can be compared for equality.</p>
+<p>This mixin is implemented automatically on all types, and the definition of <code>equals:</code> is
+powered by interpreter magic.</p>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    Mixin.
+                            
+                        </p>
+
+                        <p>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+                        <h2>
+                            
+                            <code>equals:</code>
+                        </h2>
+
+                        
+                                <p>Determines whether this object is value-equal to another object.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>equals:</code></b></p>
+                                        <blockquote>
+                                            <p>The other object.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p><code>true</code> if the two objects are equal, or <code>false</code> otherwise.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>notEquals:</code>
+                        </h2>
+
+                        
+                                <p>Determines whether this object is not value-equal to another object.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>equals:</code></b></p>
+                                        <blockquote>
+                                            <p>The other object.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p><code>true</code> if the two objects are not equal, or <code>false</code> otherwise.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+
+                    <hr class="v-space" />
+                
+                    <a name="File"></a>
+                    <h1>File</h1>
+                    
+                            <p>Represents a handle to an open file on the host machine's filesystem.</p>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    Primitive type.
+                                
+                        </p>
+
+                        <p>
+                            
+                                <b>Uses mixins:</b>
+                                <ul>
+                                    
+                                        <li><a href="#Equatable"><code>Equatable</code></a></li>
+                                    
+                                        <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                </ul>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+                        <h2>
+                            
+                            <code>close</code>
+                        </h2>
+
+                        
+                                <p>Closes the file. After this, further I/O operations will error.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                    
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>open:</code>
+                        </h2>
+
+                        
+                                <p>Opens a file for reading.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>open:</code></b></p>
+                                        <blockquote>
+                                            <p>The path to the file.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The opened <code>File</code> instance.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>open:in:</code>
+                        </h2>
+
+                        
+                                <p>Opens a file, passes it to a block, then closes the file when the block exits.</p>
+<p>If the block subverts normal control flow, such as by throwing a value or returning, then
+the file will <strong>not</strong> be closed.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>open:</code></b></p>
+                                        <blockquote>
+                                            <p>The path to the file.</p>
+
+                                        </blockquote>
+                                    
+                                        <p><b><code>in:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to execute, which should take one argument, the path to the file.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The result of the block.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>readAllText</code>
+                        </h2>
+
+                        
+                                <p>Reads the file from the current position until the end, returning its contents.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The text read from the file.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>readByte</code>
+                        </h2>
+
+                        
+                                <p>Reads one byte from the file, or returns <code>null</code> if no byte is available.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The read byte, or <code>null</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>readBytes:</code>
+                        </h2>
+
+                        
+                                <p>Reads a particular number of bytes from the file, or possibly less (including zero)
+if the file ends or the bytes are not available.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>readBytes:</code></b></p>
+                                        <blockquote>
+                                            <p>The number of bytes to read.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>An array of bytes read from the file, no longer than the requested number.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+
+                    <hr class="v-space" />
+                
+                    <a name="Integer"></a>
+                    <h1>Integer</h1>
+                    
+                            <p>A whole number.</p>
+<p>This type is implemented as a 64-bit signed integer.</p>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    Primitive type.
+                                
+                        </p>
+
+                        <p>
+                            
+                                <b>Uses mixins:</b>
+                                <ul>
+                                    
+                                        <li><a href="#Equatable"><code>Equatable</code></a></li>
+                                    
+                                        <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                        <li><a href="#Orderable"><code>Orderable</code></a></li>
+                                    
+                                </ul>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+                        <h2>
+                            
+                            <code>add:</code>
+                        </h2>
+
+                        
+                                <p>Adds the given integer to this one.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>add:</code></b></p>
+                                        <blockquote>
+                                            <p>The integer to add.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The two integers, added.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>div:</code>
+                        </h2>
+
+                        
+                                <p>Performs integer division with another integer.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>div:</code></b></p>
+                                        <blockquote>
+                                            <p>The divisor.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>This integer divided by the other integer.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>fromBigEndianBytes:</code>
+                        </h2>
+
+                        
+                                <p>Converts an array of big-endian bytes into an integer.</p>
+<p>If any of the items of the sequence is outside of the range 0..255, returns <code>null</code>.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>fromBigEndianBytes:</code></b></p>
+                                        <blockquote>
+                                            <p>The array of bytes.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>An integer constructed from these bytes, or <code>null</code> if one of the items was invalid.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>fromLittleEndianBytes:</code>
+                        </h2>
+
+                        
+                                <p>Converts an array of little-endian bytes into an integer.</p>
+<p>If any of the items of the sequence is outside of the range 0..255, returns <code>null</code>.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>fromLittleEndianBytes:</code></b></p>
+                                        <blockquote>
+                                            <p>The array of bytes.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>An integer constructed from these bytes, or <code>null</code> if one of the items was invalid.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>greaterThan:</code>
+                        </h2>
+
+                        
+                                <p>Returns true if the given integer is strictly larger than this one.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>greaterThan:</code></b></p>
+                                        <blockquote>
+                                            <p>The other integer.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p><code>true</code> if the other integer is larger than this one, otherwise <code>false</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>leftShift:</code>
+                        </h2>
+
+                        
+                                <p>Shifts this integer left by the specified amount.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>leftShift:</code></b></p>
+                                        <blockquote>
+                                            <p>The amount to shift by.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>This integer shifted left by the other integer.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>modulo:</code>
+                        </h2>
+
+                        
+                                <p>Computes the remainder of integer division with a given divisor.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>modulo:</code></b></p>
+                                        <blockquote>
+                                            <p>The divisor.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The remainder of dividing this integer with the divisor.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>mul:</code>
+                        </h2>
+
+                        
+                                <p>Multiplies the given integer with this one.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>mul:</code></b></p>
+                                        <blockquote>
+                                            <p>The integer to multiply with.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The two integers, multiplied.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>negate</code>
+                        </h2>
+
+                        
+                                <p>Flips the sign of this integer.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>If this integer is positive, the same integer but negative, and vice versa.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>rightShift:</code>
+                        </h2>
+
+                        
+                                <p>Shifts this integer right by the specified amount.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>leftShift:</code></b></p>
+                                        <blockquote>
+                                            <p>The amount to shift by.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>This integer shifted right by the other integer.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>sub:</code>
+                        </h2>
+
+                        
+                                <p>Subtracts the given integer from this one.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>sub:</code></b></p>
+                                        <blockquote>
+                                            <p>The integer to subtract.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>This integer with the other integer subtracted.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>times:</code>
+                        </h2>
+
+                        
+                                <p>Executes the block the number of times equal to this integer.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>times:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to execute, which may optionally take a parameter for a counter.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                    
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>zero</code>
+                        </h2>
+
+                        
+                                <p>The constant integer 0.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <ol start="0">
+<li></li>
+</ol>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+
+                    <hr class="v-space" />
+                
+                    <a name="Match"></a>
+                    <h1>Match</h1>
+                    
+                            <p>Encodes the result of a pattern match when calling a <code>?[ ... ]</code> block. The match can either be
+a <em>hit</em>, where the block was executed and returned the wrapped value, or a <em>miss</em>, where the
+pattern did not match.</p>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    Enum with variants:
+                                    <ul>
+                                        
+                                            
+                                                <li>
+                                                    <code>Hit</code>, with fields:
+                                                    <ul>
+                                                        
+                                                            <li><code>value</code></li>
+                                                        
+                                                    </ul>
+                                                </li>
+                                            
+                                        
+                                            
+                                                <li><code>Miss</code></li>
+                                            
+                                        
+                                    </ul>
+                                
+                        </p>
+
+                        <p>
+                            
+                                <b>Uses mixins:</b>
+                                <ul>
+                                    
+                                        <li><a href="#Equatable"><code>Equatable</code></a></li>
+                                    
+                                        <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                </ul>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+                        <h2>
+                            
+                            <code>flatten</code>
+                        </h2>
+
+                        
+                                <p>Assuming that this match contains another match (if it is a hit), flattens one level of
+nesting.</p>
+<p>For example, <code>Match#Hit value: (Match#Hit value: x))</code> becomes <code>Match#Hit value: x</code>. If
+either match was a miss, returns a miss.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The flattened match, or a miss if this is a miss or the inner value is not a hit.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>hit:</code>
+                        </h2>
+
+                        
+                                <p>A shorthand constructror for <code>Match#Hit</code>.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>hit:</code></b></p>
+                                        <blockquote>
+                                            <p>The value to use.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The new <code>Match#Hit</code> instance.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>isHit</code>
+                        </h2>
+
+                        
+                                <p>Whether this match is a hit.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p><code>true</code> if this match is a hit, or <code>false</code> otherwise.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>isMiss</code>
+                        </h2>
+
+                        
+                                <p>Whether this match is a miss.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p><code>true</code> if this match is a miss, or <code>false</code> otherwise.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>map:</code>
+                        </h2>
+
+                        
+                                <p>If this match is a hit, applies a function to the value and returns a new hit. If it is a
+miss, returns miss.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>map:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to execute on the value, taking one parameter.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A new hit, or a miss if it was already a miss.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>oneOf:</code>
+                        </h2>
+
+                        
+                                <p>Composes a new block from an array of other blocks, which will call each block in the array
+and return the first hit value.</p>
+<p>If none of the blocks return a hit, the composed block will return a miss.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>oneOf:</code></b></p>
+                                        <blockquote>
+                                            <p>The blocks to compose, each taking one parameter.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A new block taking one parameter, which executes each block in turn.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>value</code>
+                        </h2>
+
+                        
+                                <p>Undocumented.</p>
+                        
+                    
+                        <h2>
+                            
+                            <code>valueOr:</code>
+                        </h2>
+
+                        
+                                <p>If this match is a hit, returns its value. If it is a miss, returns the given value.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>valueOr:</code></b></p>
+                                        <blockquote>
+                                            <p>The default value to return if this is a miss.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The match's inner value, or the default value.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>valueOrElse:</code>
+                        </h2>
+
+                        
+                                <p>If this match is a hit, returns its value. If it is a miss, executes the given block and
+returns its return value.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>valueOrElse:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to execute if this is a miss, taking no parameters.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The match's inner value, or the value returned by the block.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>withExplicitMiss:</code>
+                        </h2>
+
+                        
+                                <p>Wraps a single-argument pattern block by allowing the block to throw a tag to return an
+overall miss.</p>
+<p>This allows the implementation of 'guard clauses', to be more specific than is possible in
+a pattern about what should be matched. You can perform arbitrarily-complex checks in the
+block's body, and pretend that the initial pattern never matched by throwing the tag if
+necessary.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>withExplicitMiss:</code></b></p>
+                                        <blockquote>
+                                            <p>A two-argument block, the first being the match subject, and the second being a tag to throw. It should return a match.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A new block taking just the match subject, which will return the wrapped block's value, or a miss if the block throws the tag.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+
+                    <hr class="v-space" />
+                
+                    <a name="Null"></a>
+                    <h1>Null</h1>
+                    
+                            <p>The type of <code>null</code>, which represents the absence of a value.</p>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    Primitive type.
+                                
+                        </p>
+
+                        <p>
+                            
+                                <b>Uses mixins:</b>
+                                <ul>
+                                    
+                                        <li><a href="#Equatable"><code>Equatable</code></a></li>
+                                    
+                                        <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                </ul>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+
+                    <hr class="v-space" />
+                
+                    <a name="Orderable"></a>
+                    <h1>Orderable</h1>
+                    
+                            <p>Indicates that values of a type are orderable.</p>
+<p>Requirements:</p>
+<ul>
+<li><code>greaterThan:</code></li>
+</ul>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    Mixin.
+                            
+                        </p>
+
+                        <p>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+                        <h2>
+                            
+                            <code>greaterThanOrEquals:</code>
+                        </h2>
+
+                        
+                                <p>Undocumented.</p>
+                        
+                    
+                        <h2>
+                            
+                            <code>lessThan:</code>
+                        </h2>
+
+                        
+                                <p>Undocumented.</p>
+                        
+                    
+                        <h2>
+                            
+                            <code>lessThanOrEquals:</code>
+                        </h2>
+
+                        
+                                <p>Undocumented.</p>
+                        
+                    
+
+                    <hr class="v-space" />
+                
+                    <a name="Program"></a>
+                    <h1>Program</h1>
+                    
+                            <p>A special type containing static methods for interacting with the interpreter itself.</p>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    Primitive type.
+                                
+                        </p>
+
+                        <p>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>catchEquals:in:</code>
+                        </h2>
+
+                        
+                                <p>Runs the given body block, and exits if an object is thrown in it with <code>throw:</code> and
+it equals the given object according to <code>equals:</code>. If they are not equal, the object is
+rethrown.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>catchEquals:</code></b></p>
+                                        <blockquote>
+                                            <p>The value to compare against.</p>
+
+                                        </blockquote>
+                                    
+                                        <p><b><code>in:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to execute.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The value returned by the block, or the thrown value if the block exits early.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>catchIfTrue:in:</code>
+                        </h2>
+
+                        
+                                <p>Runs the given body block, and exits if an object is thrown in it with <code>throw:</code> and
+the predicate block returns <code>true</code> for that thrown object. If the predicate block
+returns <code>false</code>, the object is rethrown.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>catchIfTrue:</code></b></p>
+                                        <blockquote>
+                                            <p>The predicate.</p>
+
+                                        </blockquote>
+                                    
+                                        <p><b><code>in:</code></b></p>
+                                        <blockquote>
+                                            <p>The body to execute.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The value returned by the block, or the thrown value if the block exits early.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>catchTag:</code>
+                        </h2>
+
+                        
+                                <p>Runs the given body block, passing it a unique instance of <code>ThrowTag</code>, and exits if the tag
+is thrown with <code>throw:</code>.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>catchTag:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to execute, accepting one parameter, the tag.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The value returned by the block, or the tag if the block exits early.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>error:</code>
+                        </h2>
+
+                        
+                                <p>Exits the interpreter immediately, with a fatal error.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>error:</code></b></p>
+                                        <blockquote>
+                                            <p>The error message to exit with.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>This method will never return.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>exit</code>
+                        </h2>
+
+                        
+                                <p>Exits the interpreter immediately, with a success exit code.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>This method will never return.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>loop:</code>
+                        </h2>
+
+                        
+                                <p>Run the given block repeatedly.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>loop:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to execute.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>This method will never return.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>throw:</code>
+                        </h2>
+
+                        
+                                <p>Throws an object up the call stack. This can be used to implement complex control
+flow mechanisms, such as loop breaks.</p>
+<p>This must be executed inside a block called by a catch method, such as
+<code>catchIfTrue:in:</code>. (There may be additional blocks or method calls between the throw
+and catch.) If the thrown object reaches the top of the call stack and is uncaught,
+the interpreter exits with a fatal error.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>throw:</code></b></p>
+                                        <blockquote>
+                                            <p>The object to throw.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>This method will never return.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+
+                    <hr class="v-space" />
+                
+                    <a name="Random"></a>
+                    <h1>Random</h1>
+                    
+                            <p>Provides static methods for producing random values.</p>
+<p>This uses <code>/dev/random</code> as a source of randomness, and as such will only work on Unix systems.</p>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    
+                                        Struct, empty.
+                                    
+                                
+                        </p>
+
+                        <p>
+                            
+                                <b>Uses mixins:</b>
+                                <ul>
+                                    
+                                        <li><a href="#Equatable"><code>Equatable</code></a></li>
+                                    
+                                        <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                </ul>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>bytes:</code>
+                        </h2>
+
+                        
+                                <p>Returns the requested number of random bytes.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>bytes:</code></b></p>
+                                        <blockquote>
+                                            <p>The number of bytes to return.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>An array of random bytes.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>sample:</code>
+                        </h2>
+
+                        
+                                <p>Returns a random element of the given array.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>sample:</code></b></p>
+                                        <blockquote>
+                                            <p>The array to sample from.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A random element from the array.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>upTo:</code>
+                        </h2>
+
+                        
+                                <p>Returns a random integer from 0 up to (but not including) the given limit.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>upTo:</code></b></p>
+                                        <blockquote>
+                                            <p>The limit.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A random integer.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+
+                    <hr class="v-space" />
+                
+                    <a name="Range"></a>
+                    <h1>Range</h1>
+                    
+                            <p>Represents a span of consecutive integers between an inclusive start and exclusive end value.</p>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    
+                                        Struct with fields:
+                                        <ul>
+                                            
+                                                <li><code>start</code></li>
+                                            
+                                                <li><code>end</code></li>
+                                            
+                                            
+                                        </ul>
+                                    
+                                
+                        </p>
+
+                        <p>
+                            
+                                <b>Uses mixins:</b>
+                                <ul>
+                                    
+                                        <li><a href="#Equatable"><code>Equatable</code></a></li>
+                                    
+                                        <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                        <li><a href="#Enumerable"><code>Enumerable</code></a></li>
+                                    
+                                </ul>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+                        <h2>
+                            
+                            <code>end</code>
+                        </h2>
+
+                        
+                                <p><strong>Field accessor.</strong></p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The value of <code>end</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>forEach:</code>
+                        </h2>
+
+                        
+                                <p>Calls a function for each integer within the range, passing it as a parameter.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>forEach:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to call, which should accept one parameter.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                    
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>start</code>
+                        </h2>
+
+                        
+                                <p><strong>Field accessor.</strong></p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The value of <code>start</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>start:end:</code>
+                        </h2>
+
+                        
+                                <p><strong>Constructor.</strong></p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A new instance of <code>Range</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>upTo:</code>
+                        </h2>
+
+                        
+                                <p>Constructs a new range with a start of 0 and a given end.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>upTo:</code></b></p>
+                                        <blockquote>
+                                            <p>The end integer to use.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The new range.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+
+                    <hr class="v-space" />
+                
+                    <a name="Reflection"></a>
+                    <h1>Reflection</h1>
+                    
+                            <p>A special type containing static methods for retrieving metadata information about values or
+types.</p>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    Primitive type.
+                                
+                        </p>
+
+                        <p>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>type:</code>
+                        </h2>
+
+                        
+                                <p>Gets the type of an object.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>type:</code></b></p>
+                                        <blockquote>
+                                            <p>The object whose type to fetch.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The object's type.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>variant:</code>
+                        </h2>
+
+                        
+                                <p>Gets the name of the variant of an enum instance.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>variant:</code></b></p>
+                                        <blockquote>
+                                            <p>The enum instance.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The variant's name as a string, or <code>null</code> if it is not an enum variant.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+
+                    <hr class="v-space" />
+                
+                    <a name="Representable"></a>
+                    <h1>Representable</h1>
+                    
+                            <p>Indicates that a type can be converted to a string.</p>
+<p>This mixin is implemented automatically on all types, and the definition of <code>repr</code> is
+powered by interpreter magic.</p>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    Mixin.
+                            
+                        </p>
+
+                        <p>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+                        <h2>
+                            
+                            <code>repr</code>
+                        </h2>
+
+                        
+                                <p>A debug string representation of this value.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The string representation.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+
+                    <hr class="v-space" />
+                
+                    <a name="String"></a>
+                    <h1>String</h1>
+                    
+                            <p>A string of UTF-8 characters.</p>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    Primitive type.
+                                
+                        </p>
+
+                        <p>
+                            
+                                <b>Uses mixins:</b>
+                                <ul>
+                                    
+                                        <li><a href="#Equatable"><code>Equatable</code></a></li>
+                                    
+                                        <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                </ul>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+                        <h2>
+                            
+                            <code>charAt:</code>
+                        </h2>
+
+                        
+                                <p>Gets a single character from this string.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>charAt:</code></b></p>
+                                        <blockquote>
+                                            <p>The index of the character to get.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A substring of a single character, or <code>null</code> if the index is out of bounds.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>charFromAsciiCode:</code>
+                        </h2>
+
+                        
+                                <p>Constructs a new single-character string from an ASCII character code.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>charsFromAsciiCode:</code></b></p>
+                                        <blockquote>
+                                            <p>The character code as an integer.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A single-character string, or <code>null</code> if the code is out of bounds.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>chars</code>
+                        </h2>
+
+                        
+                                <p>Gets the characters within this string.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>An array of this string's characters.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>concat:</code>
+                        </h2>
+
+                        
+                                <p>Appends another string to this one, and returns the concatenated string.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>concat:</code></b></p>
+                                        <blockquote>
+                                            <p>The other string.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A new string, with the given string appearing after this one.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>isWhitespace</code>
+                        </h2>
+
+                        
+                                <p>Whether this string is composed entirely of whitespace.</p>
+<p>This currently only supports ASCII whitespace characters: \r, \n, \t, and space.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p><code>true</code> if the string is entirely ASCII whitespace, <code>false</code> otherwise.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>length</code>
+                        </h2>
+
+                        
+                                <p>The length of this string.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The number of characters in this string.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>split:</code>
+                        </h2>
+
+                        
+                                <p>Splits a string using another string as a separator.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>split:</code></b></p>
+                                        <blockquote>
+                                            <p>The separator to split on.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>An array of separated strings.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>strip</code>
+                        </h2>
+
+                        
+                                <p>Returns a copy of this string with whitespace stripped from the beginning and end.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The new string with whitespace stripped.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>toInteger</code>
+                        </h2>
+
+                        
+                                <p>Parses this string as an integer. If the string is not a valid integer, returns <code>null</code>.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>An integer, or <code>null</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+
+                    <hr class="v-space" />
+                
+                    <a name="ThrowTag"></a>
+                    <h1>ThrowTag</h1>
+                    
+                            <p>A globally-unique value created exclusively by the <code>catchTag:</code> method on <code>Program</code>, to ensure
+that a thrown value will always be caught by one exact known catch block.</p>
+<p>Instances of this struct should <strong>not</strong> be created manually.</p>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    
+                                        Struct with fields:
+                                        <ul>
+                                            
+                                                <li><code>id</code></li>
+                                            
+                                            
+                                                <li><code><i>static</i> next</code></li>
+                                            
+                                        </ul>
+                                    
+                                
+                        </p>
+
+                        <p>
+                            
+                                <b>Uses mixins:</b>
+                                <ul>
+                                    
+                                        <li><a href="#Equatable"><code>Equatable</code></a></li>
+                                    
+                                        <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                </ul>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+                        <h2>
+                            
+                            <code>id</code>
+                        </h2>
+
+                        
+                                <p><strong>Field accessor.</strong></p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The value of <code>id</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>id:</code>
+                        </h2>
+
+                        
+                                <p><strong>Constructor.</strong></p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A new instance of <code>ThrowTag</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>new</code>
+                        </h2>
+
+                        
+                                <p>Undocumented.</p>
+                        
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>next</code>
+                        </h2>
+
+                        
+                                <p><strong>Static field accessor.</strong></p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The value of <code>next</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+
+                    <hr class="v-space" />
+                
+            </div>
+        </div>
+    </div>
+</body>
+</html>
