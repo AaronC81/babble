@@ -1,5 +1,17 @@
 # Babble
 
+<img
+    src="res/logo.png"
+    alt="Babble's logo, showing a colon character inside matching square braces - both items of punctuation which appear often in Babble code."
+    width="150"
+    height="150" />
+
+<hr />
+
+**[API documentation](https://aaronc81.github.io/babble)**
+
+<hr />
+
 Babble is a **very experimental interpreted programming language**, which takes inspiration from
 Smalltalk and Ruby's syntax, and Rust's algebraic data type model.
 
