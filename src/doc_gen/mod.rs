@@ -1,5 +1,5 @@
 use askama::Template;
-use comrak::markdown_to_html;
+use comrak::{markdown_to_html, ComrakOptions};
 
 use crate::interpreter::{Interpreter, MethodLocality, TypeData, DocumentationState};
 
@@ -8,6 +8,7 @@ struct TypeDocumentation {
     pub data: TypeData,
     pub used_mixins: Vec<String>,
     pub methods: Vec<MethodDocumentation>,
+    pub description: Option<String>,
 }
 
 struct MethodParsedDocumentation {
@@ -65,7 +66,7 @@ impl MethodParsedDocumentation {
         }
 
         // Parse each field as Markdown
-        let options = comrak::ComrakOptions::default();
+        let options = ComrakOptions::default();
         result.description = markdown_to_html(&result.description, &options);
         for (_, param) in &mut result.parameters {
             *param = markdown_to_html(param, &options);
@@ -87,6 +88,10 @@ fn build_documentation_objects<T: DocumentationTemplate>(interpreter: &Interpret
     let mut type_docs = vec![];
     for t in &types {
         let t = t.borrow();
+
+        if let DocumentationState::Hidden = t.documentation {
+            continue;
+        }
 
         // Build type documentation
         let data = t.data.clone();
@@ -119,11 +124,18 @@ fn build_documentation_objects<T: DocumentationTemplate>(interpreter: &Interpret
             });
         }
 
+        // Parse description as Markdown
+        let options = ComrakOptions::default();
+        let mut description: Option<String> = t.documentation.clone().into();
+        description = description.as_ref()
+            .map(|d| markdown_to_html(d, &options));
+
         type_docs.push(TypeDocumentation {
             id: t.id.clone(),
             data,
             used_mixins,
             methods: method_docs,
+            description,
         });
     }
     

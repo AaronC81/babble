@@ -23,6 +23,9 @@ pub use block::*;
 mod method;
 pub use method::*;
 
+mod doc;
+pub use doc::*;
+
 use self::instruction::{compile, InstructionBlock, InstructionKind, Instruction};
 
 pub mod stdlib;
@@ -356,7 +359,7 @@ impl Interpreter {
                 t.borrow_mut().used_mixins.push(mixin);
             },
 
-            InstructionKind::DefType(name, data) => {
+            InstructionKind::DefType { name, data, documentation } => {
                 // Check no equivalently-named type already exists
                 if self.resolve_type(name).is_some() {
                     return Err(InterpreterErrorKind::DuplicateTypeDefinition(name.into()).into());
@@ -370,6 +373,10 @@ impl Interpreter {
                 // Create new type
                 let mut t = Type {
                     data: data.clone(),
+                    documentation: match documentation {
+                        Some(d) => DocumentationState::Documented(d.into()),
+                        None => DocumentationState::Undocumented,
+                    },
                     ..Type::new(name)
                 };
 

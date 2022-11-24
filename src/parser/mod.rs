@@ -26,7 +26,7 @@ pub use traits::*;
 #[cfg(test)]
 mod tests;
 
-use crate::{tokenizer::{Token, TokenKind, TokenKeyword}, source::{Location, SourceFile}, interpreter::Variant};
+use crate::{tokenizer::{Token, TokenKind, TokenKeyword}, source::{Location, SourceFile}, interpreter::{Variant, DocumentationState}};
 
 /// An error found while parsing.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -605,10 +605,11 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_enum_definition(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
-        // Definitions should always begin with `enum`
+        // Definitions should always begin with `enum` - parse docs while we're here too
         let &Token { ref location, kind: TokenKind::Keyword(TokenKeyword::Enum) } = self.here() else {
             self.token_error()?;
         };
+        let documentation = self.parse_doc_comments();
         let location = location.clone();
         self.advance();
 
@@ -643,15 +644,16 @@ impl<'a> Parser<'a> {
         Ok(Node {
             location,
             context: inner_context,
-            kind: NodeKind::EnumDefinition { name, variants },
+            kind: NodeKind::EnumDefinition { name, variants, documentation },
         })
     }
 
     fn parse_struct_definition(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
-        // Definitions should always begin with `struct`
+        // Definitions should always begin with `struct` - parse docs while we're here too 
         let &Token { ref location, kind: TokenKind::Keyword(TokenKeyword::Struct) } = self.here() else {
             self.token_error()?;
         };
+        let documentation = self.parse_doc_comments();
         let location = location.clone();
         self.advance();
         
@@ -665,15 +667,17 @@ impl<'a> Parser<'a> {
                 name,
                 instance_fields,
                 static_fields,
+                documentation,
             }
         })
     }
 
     fn parse_mixin_definition(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
-        // Definitions should always begin with `mixin`
+        // Definitions should always begin with `mixin` - parse docs while we're here too
         let &Token { kind: TokenKind::Keyword(TokenKeyword::Mixin), ref location } = self.here() else {
             self.token_error()?;
         };
+        let documentation = self.parse_doc_comments();
         let location = location.clone();
         self.advance();
 
@@ -694,7 +698,7 @@ impl<'a> Parser<'a> {
         Ok(Node {
             location,
             context,
-            kind: NodeKind::MixinDefinition { name },
+            kind: NodeKind::MixinDefinition { name, documentation },
         })
     }
 
@@ -737,6 +741,25 @@ impl<'a> Parser<'a> {
         }
 
         Ok((name, instance_fields, static_fields))
+    }
+
+    fn parse_doc_comments(&self) -> Option<String> {
+        let mut doc_comments = vec![];
+
+        for token in self.backtrack() {
+            let TokenKind::DocComment(ref comment) = token.kind else {
+                break;
+            };
+
+            // Gather doc comments - remember we're encountering them in reverse order
+            doc_comments.insert(0, comment.trim().clone());
+        }
+        
+        if doc_comments.is_empty() {
+            None
+        } else {
+            Some(doc_comments.join("\n"))
+        }
     }
 
     fn parse_use(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {

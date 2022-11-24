@@ -153,14 +153,17 @@ pub enum NodeKind {
     EnumDefinition {
         name: String,
         variants: Vec<Variant>,
+        documentation: Option<String>,
     },
     StructDefinition {
         name: String,
         instance_fields: Vec<String>,
         static_fields: Vec<String>,
+        documentation: Option<String>,
     },
     MixinDefinition {
         name: String,
+        documentation: Option<String>,
     },
     Use(Box<Node>),
 

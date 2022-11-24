@@ -102,57 +102,66 @@
                 {% for type in types %}
                     <a name="{{ type.id }}"></a>
                     <h1>{{ type.id }}</h1>
-                    <p>
-                        {% match type.data %}
-                            {% when TypeData::Empty %}
-                                Primitive type.
-                            {% when TypeData::Fields with { instance_fields, static_fields } %}
-                                {% if instance_fields.is_empty() && static_fields.is_empty() %}
-                                    Struct, empty.
-                                {% else %}
-                                    Struct with fields:
+                    {% match type.description %}
+                        {% when Some with (p) %}
+                            {{ p|safe }}
+                        {% when None %}
+                            <p>Undocumented.</p>
+                    {% endmatch %}
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            {% match type.data %}
+                                {% when TypeData::Empty %}
+                                    Primitive type.
+                                {% when TypeData::Fields with { instance_fields, static_fields } %}
+                                    {% if instance_fields.is_empty() && static_fields.is_empty() %}
+                                        Struct, empty.
+                                    {% else %}
+                                        Struct with fields:
+                                        <ul>
+                                            {% for field in instance_fields %}
+                                                <li><code>{{ field }}</code></li>
+                                            {% endfor %}
+                                            {% for field in static_fields %}
+                                                <li><code><i>static</i> {{ field }}</code></li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                {% when TypeData::Variants with (variants) %}
+                                    Enum with variants:
                                     <ul>
-                                        {% for field in instance_fields %}
-                                            <li><code>{{ field }}</code></li>
-                                        {% endfor %}
-                                        {% for field in static_fields %}
-                                            <li><code><i>static</i> {{ field }}</code></li>
+                                        {% for variant in variants %}
+                                            {% if variant.fields.is_empty() %}
+                                                <li><code>{{ variant.name }}</code></li>
+                                            {% else %}
+                                                <li>
+                                                    <code>{{ variant.name }}</code>, with fields:
+                                                    <ul>
+                                                        {% for field in variant.fields %}
+                                                            <li><code>{{ field }}</code></li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </li>
+                                            {% endif %}
                                         {% endfor %}
                                     </ul>
-                                {% endif %}
-                            {% when TypeData::Variants with (variants) %}
-                                Enum with variants:
+                                {% when TypeData::Mixin %}
+                                    Mixin.
+                            {% endmatch %}
+                        </p>
+
+                        <p>
+                            {% if !type.used_mixins.is_empty() %}
+                                <b>Uses mixins:</b>
                                 <ul>
-                                    {% for variant in variants %}
-                                        {% if variant.fields.is_empty() %}
-                                            <li><code>{{ variant.name }}</code></li>
-                                        {% else %}
-                                            <li>
-                                                <code>{{ variant.name }}</code>, with fields:
-                                                <ul>
-                                                    {% for field in variant.fields %}
-                                                        <li><code>{{ field }}</code></li>
-                                                    {% endfor %}
-                                                </ul>
-                                            </li>
-                                        {% endif %}
+                                    {% for mixin in type.used_mixins %}
+                                        <li><a href="#{{ mixin }}"><code>{{ mixin }}</code></a></li>
                                     {% endfor %}
                                 </ul>
-                            {% when TypeData::Mixin %}
-                                Mixin.
-                        {% endmatch %}
-                    </p>
-
-                    <p>
-                        {% if !type.used_mixins.is_empty() %}
-                            Uses mixins:
-                            <ul>
-                                {% for mixin in type.used_mixins %}
-                                    <li><a href="#{{ mixin }}"><code>{{ mixin }}</code></a></li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </p>
+                            {% endif %}
+                        </p>
+                    </blockquote>
 
                     {% for method in type.methods %}
                         <h2>

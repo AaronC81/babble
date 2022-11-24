@@ -126,7 +126,11 @@ pub enum InstructionKind {
 
     /// Defines a `struct`, `enum`, or `mixin`, based on the given `TypeData`. Pushes the type onto
     /// the stack.
-    DefType(String, TypeData),
+    DefType {
+        name: String,
+        data: TypeData,
+        documentation: Option<String>,
+    },
 
     /// Peeks the stack to get a mixin, which is imported into the current type. Must be inside an
     /// `impl` context.
@@ -311,12 +315,24 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
                 ].into()
             }
             
-            NodeKind::EnumDefinition { name, variants } => 
-                vec![InstructionKind::DefType(name, TypeData::Variants(variants)).with_loc(&loc)].into(),
-            NodeKind::StructDefinition { name, instance_fields, static_fields } =>
-                vec![InstructionKind::DefType(name, TypeData::Fields { instance_fields, static_fields }).with_loc(&loc)].into(),
-            NodeKind::MixinDefinition { name } =>
-                vec![InstructionKind::DefType(name, TypeData::Mixin).with_loc(&loc)].into(),
+            NodeKind::EnumDefinition { name, variants, documentation } => 
+                vec![InstructionKind::DefType {
+                    name,
+                    data: TypeData::Variants(variants),
+                    documentation,
+                }.with_loc(&loc)].into(),
+            NodeKind::StructDefinition { name, instance_fields, static_fields, documentation } =>
+                vec![InstructionKind::DefType {
+                    name,
+                    data: TypeData::Fields {instance_fields, static_fields },
+                    documentation,
+                }.with_loc(&loc)].into(),
+            NodeKind::MixinDefinition { name, documentation } =>
+                vec![InstructionKind::DefType {
+                    name,
+                    data: TypeData::Mixin,
+                    documentation
+                }.with_loc(&loc)].into(),
             NodeKind::Use(target) => {
                 let mut instructions = compile(*target)?;
                 instructions.push(InstructionKind::Use.with_loc(&loc));
@@ -368,7 +384,7 @@ impl Display for Instruction {
                     if labels.is_empty() { "".into() } else { format!("{}:", labels.join(":")) }
                 ),
             InstructionKind::Impl => write!(f, "impl"),
-            InstructionKind::DefType(name, _) =>
+            InstructionKind::DefType { name, data: _, documentation: _ } =>
                 write!(f, "def type {} ...", name), // TODO: type data
             InstructionKind::Use => write!(f, "use"),
             InstructionKind::DefFunc { name, locality, documentation: _ } =>

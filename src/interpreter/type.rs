@@ -6,7 +6,7 @@ use std::{rc::Rc, fmt::Debug, cell::RefCell};
 
 use crate::{interpreter::TypeInstance};
 
-use super::{InterpreterErrorKind, Value, Method, MethodRef, MethodLocality, InterpreterError, ValueRef};
+use super::{InterpreterErrorKind, Value, Method, MethodRef, MethodLocality, InterpreterError, ValueRef, DocumentationState};
 
 /// A type which can be instantiated to create a [`Value`].
 #[derive(Debug)]
@@ -17,6 +17,7 @@ pub struct Type {
     pub static_methods: Vec<MethodRef>,
     pub static_fields: Vec<ValueRef>,
     pub used_mixins: Vec<TypeRef>,
+    pub documentation: DocumentationState,
 }
 impl PartialEq for Type { fn eq(&self, other: &Self) -> bool { self.id == other.id } }
 impl Eq for Type {}
@@ -31,6 +32,7 @@ impl Type {
             static_methods: vec![],
             static_fields: vec![],
             used_mixins: vec![],
+            documentation: DocumentationState::Undocumented,
         }
     }
 

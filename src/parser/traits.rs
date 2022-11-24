@@ -56,9 +56,9 @@ impl NodeWalk for Node {
             }
 
             | NodeKind::SelfAccess
-            | NodeKind::EnumDefinition { name: _, variants: _ }
-            | NodeKind::StructDefinition { name: _, instance_fields: _, static_fields: _ }
-            | NodeKind::MixinDefinition { name: _ }
+            | NodeKind::EnumDefinition { name: _, variants: _, documentation: _ }
+            | NodeKind::StructDefinition { name: _, instance_fields: _, static_fields: _, documentation: _ }
+            | NodeKind::MixinDefinition { name: _, documentation: _ }
             | NodeKind::Identifier(_)
             | NodeKind::Literal(_) => (),
         }

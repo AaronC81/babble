@@ -4,21 +4,7 @@ use std::{rc::Rc, fmt::Debug};
 
 use crate::parser::Node;
 
-use super::{Interpreter, ValueRef, InterpreterResult, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariable, instruction::InstructionBlock};
-
-/// How a method is documented.
-#[derive(Debug, Clone)]
-pub enum DocumentationState {
-    /// The method has documentation comments.
-    Documented(String),
-
-    /// The method does not have documentation comments, but is still visible when generating
-    /// documentation.
-    Undocumented,
-
-    /// The method explicitly should not appear in documentation.
-    Hidden,
-}
+use super::{Interpreter, ValueRef, InterpreterResult, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariable, instruction::InstructionBlock, DocumentationState};
 
 /// A named method, defined on a type for use in code.
 #[derive(Debug)]
