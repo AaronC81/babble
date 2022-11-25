@@ -13,6 +13,14 @@ impl Array {
         x
     ] call equals: #{ 1 5 3 }.
 
+    // Test that arrays aren't treated like value types
+    InternalTest case: "array soft copy" that: [
+        x = #{ 1 2 3 }.
+        y = x.
+        y append: 4.
+        x
+    ] call equals: #{ 1 2 3 4 }.
+
     /// Constructs a new array by repeating one element.
     ///
     /// @param newOf: The element to repeat.

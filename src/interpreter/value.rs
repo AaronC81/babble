@@ -285,11 +285,11 @@ impl Value {
             TypeInstance::Fields { .. }
             | TypeInstance::Type(_)
             | TypeInstance::Block(_)
-            | TypeInstance::PrimitiveOther(_) => value.clone(),
+            | TypeInstance::PrimitiveOther(_)
+            | TypeInstance::PrimitiveArray(_) => value.clone(),
 
             TypeInstance::PrimitiveInteger(i) => Value::new_integer(i).rc(),
             TypeInstance::PrimitiveString(ref s) => Value::new_string(s).rc(),
-            TypeInstance::PrimitiveArray(ref a) => Value::new_array(a).rc(),
             TypeInstance::PrimitiveNull => Value::new_null().rc(),
         }
     }
