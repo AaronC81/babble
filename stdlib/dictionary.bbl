@@ -109,6 +109,14 @@ impl Dictionary {
         self mapping map: &last
     }
 
+    /// Determines whether this dictionary contains the given key.
+    ///
+    /// @param containsKey: The key to check for.
+    /// @returns `true` if the key is present in this dictionary, `false` otherwise.
+    func containsKey: key {
+        self keys contains: key
+    }
+
     [
         d = Dictionary new.
         d set: 1 value: 100.
@@ -117,5 +125,32 @@ impl Dictionary {
         d set: 2 value: 400.
         InternalTest case: "Dictionary keys" that: d keys equals: #{ 1 2 3 }.
         InternalTest case: "Dictionary values" that: d values equals: #{ 100 400 300 }.
+        InternalTest case: "Dictionary containsKey pos" that: (d containsKey: 2) equals: true.
+        InternalTest case: "Dictionary containsKey neg" that: (d containsKey: 5) equals: false.
+    ] call.
+
+    /// Gets a key from this dictionary, or if it doesn't exist, inserts it with the given value and
+    /// returns that.
+    ///
+    /// @param get: The key to retrive (or insert if it doesn't exist).
+    /// @returns The value mapped to that key, or the newly-inserted value.
+    func get: key orInsert: value {
+        self containsKey: key $ ifFalse: [
+            self set: key value: value.
+        ].
+        self get: key.
+    }
+    [
+        d = Dictionary new.
+        d set: 1 value: 100.
+        d set: 2 value: 200.
+        d set: 3 value: 300.
+        d set: 2 value: 400.
+        InternalTest case: "Dictionary get:orInsert: existing"
+                     that: ((d get: 1 orInsert: 500 $ equals: 100) and: (d get: 1 $ equals: 100))
+                     equals: true.
+        InternalTest case: "Dictionary get:orInsert: new"
+                     that: ((d get: 4 orInsert: 600 $ equals: 600) and: (d get: 4 $ equals: 600))
+                     equals: true.
     ] call.
 }

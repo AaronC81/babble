@@ -390,4 +390,18 @@ impl Enumerable {
     func sort {
         self sortBy: [ |x| x ]
     }
+
+    /// Using the given function to compute keys, builds a new dictionary whose values are arrays
+    /// of elements from this enumerable matching the given key.
+    ///
+    /// @params groupBy: The key function, which should take one parameter.
+    /// @returns A new grouped dictionary.
+    func groupBy: fn {
+        result = Dictionary new.
+        self forEach: [ |i|
+            k = fn call: i.
+            result get: k orInsert: #{} $ append: i.
+        ].
+        result
+    }
 }
