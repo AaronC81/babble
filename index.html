@@ -103,6 +103,8 @@
                 
                     <li><a href="#Console">Console</a></li>
                 
+                    <li><a href="#Dictionary">Dictionary</a></li>
+                
                     <li><a href="#Enumerable">Enumerable</a></li>
                 
                     <li><a href="#Equatable">Equatable</a></li>
@@ -975,6 +977,250 @@ printed.</p>
                                         <p><b><code>println:</code></b></p>
                                         <blockquote>
                                             <p>The object to print.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                    
+                                </blockquote>
+                            
+                    
+
+                    <hr class="v-space" />
+                
+                    <a name="Dictionary"></a>
+                    <h1>Dictionary</h1>
+                    
+                            <p>A data structure which maps unique keys to values.</p>
+<p>Keys are compared to each other using the <code>equals:</code> method of <code>Equatable</code>.</p>
+<p>The current implementation of this dictionary is pretty bad - it simply uses an underlying list
+with linear search. The preservation of ordering of items inserted into a dictionary should not
+be relied upon, in the event that this implementation changes.</p>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    
+                                        Struct with fields:
+                                        <ul>
+                                            
+                                                <li><code>mapping</code></li>
+                                            
+                                            
+                                        </ul>
+                                    
+                                
+                        </p>
+
+                        <p>
+                            
+                                <b>Uses mixins:</b>
+                                <ul>
+                                    
+                                        <li><a href="#Equatable"><code>Equatable</code></a></li>
+                                    
+                                        <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                        <li><a href="#Enumerable"><code>Enumerable</code></a></li>
+                                    
+                                </ul>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+                        <h2>
+                            
+                            <code>delete:</code>
+                        </h2>
+
+                        
+                                <p>Deletes a key from this dictionary.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>delete:</code></b></p>
+                                        <blockquote>
+                                            <p>The key to delete.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                    
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>forEach:</code>
+                        </h2>
+
+                        
+                                <p>Iterates over the key-value pairs of this dictionary. Each element is a two-element array,
+where the first element is the key and the second is the value.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>fn:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to execute for each key-value pair, which should take one parameter.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                    
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>get:</code>
+                        </h2>
+
+                        
+                                <p>Gets a key from this dictionary.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>get:</code></b></p>
+                                        <blockquote>
+                                            <p>The key to retrieve.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The value mapped to that key, or <code>null</code> if the key is not present in the dictionary.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>mapping</code>
+                        </h2>
+
+                        
+                                <p><strong>Field accessor.</strong></p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The value of <code>mapping</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>mapping:</code>
+                        </h2>
+
+                        
+                                <p><strong>Constructor.</strong></p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A new instance of <code>Dictionary</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>mappingIndex:</code>
+                        </h2>
+
+                        
+                                <p>Given a key, returns the index of the key-value pair in the <code>mapping</code> list, or <code>null</code> if the
+key does not exist in the dictionary.</p>
+<p>This exists as an implementation detail of the dictionary's current structure, so shouldn't
+be used externally.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>key:</code></b></p>
+                                        <blockquote>
+                                            <p>The key to find.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The index of the key-value pair in the <code>mapping</code> list, or <code>null</code> if the key does not exist in the dictionary.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>new</code>
+                        </h2>
+
+                        
+                                <p>Creates an empty dictionary.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>An empty dictionary.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>set:value:</code>
+                        </h2>
+
+                        
+                                <p>Sets a key in this dictionary to the given value. If the key already exists, its value is
+replaced.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>set:</code></b></p>
+                                        <blockquote>
+                                            <p>The key to insert.</p>
+
+                                        </blockquote>
+                                    
+                                        <p><b><code>value:</code></b></p>
+                                        <blockquote>
+                                            <p>The value to map to that key.</p>
 
                                         </blockquote>
                                     
