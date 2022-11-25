@@ -122,12 +122,13 @@ impl Interpreter {
         Ok(result)
     }
 
-    /// Tokenize, parse, and compile a source file, **panicking** if this fails, and then evaluate
-    /// it within this interpreter.
+    /// Tokenize, parse, and compile a source file, and then evaluate it within this interpreter.
     pub fn parse_and_evaluate(&mut self, source_file: Rc<SourceFile>) -> InterpreterResult {
-        let tokens = Tokenizer::tokenize(source_file.clone()).expect("tokenization failed");
-        let node = Parser::parse_and_analyse(source_file.clone(), &tokens[..]).expect("parsing failed");
-        let compiled = compile(node).expect("compilation failed");
+        let tokens = Tokenizer::tokenize(source_file.clone())
+            .map_err(|e| InterpreterErrorKind::TokenizerError(e).into())?;
+        let node = Parser::parse_and_analyse(source_file.clone(), &tokens[..])
+            .map_err(|e| InterpreterErrorKind::ParserError(e).into())?;
+        let compiled = compile(node)?;
         self.evaluate(&compiled)
     }
 

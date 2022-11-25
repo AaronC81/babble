@@ -2,7 +2,7 @@
 
 use std::fmt::Display;
 
-use crate::{source::Location, parser::{Node, Pattern}};
+use crate::{source::Location, parser::{Node, Pattern, ParserError}, tokenizer::TokenizerError};
 
 use super::{ValueRef, StackFrame, Interpreter};
 
@@ -124,6 +124,12 @@ pub enum InterpreterErrorKind {
 
     /// Not really an error - used by `Program throw: ...` to unwind the stack
     Throw(ValueRef),
+
+    /// This interpreter error was actually a tokenizer error.
+    TokenizerError(TokenizerError),
+
+    /// This interpreter error was actually a parser error.
+    ParserError(ParserError),
 }
 
 impl InterpreterErrorKind {
@@ -196,6 +202,11 @@ impl Display for InterpreterErrorKind {
 
             InterpreterErrorKind::Throw(value) =>
                 write!(f, "uncaught throw of `{}`", value.borrow().to_language_string()),
+
+            InterpreterErrorKind::TokenizerError(e) =>
+                write!(f, "tokenizer error: {:?}", e),
+            InterpreterErrorKind::ParserError(e) =>
+                write!(f, "parser error: {:?}", e),
         }
     }
 }
