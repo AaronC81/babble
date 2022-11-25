@@ -94,4 +94,28 @@ impl Dictionary {
         d delete: 2.
         InternalTest case: "Dictionary delete" that: (d get: 2) equals: null.
     ] call.
+
+    /// Returns an array of the keys in this dictionary.
+    ///
+    /// @returns This dictionary's keys.
+    func keys {
+        self mapping map: &first
+    }
+
+    /// Returns an array of the values in this dictionary.
+    ///
+    /// @returns This dictionary's keys.
+    func values {
+        self mapping map: &last
+    }
+
+    [
+        d = Dictionary new.
+        d set: 1 value: 100.
+        d set: 2 value: 200.
+        d set: 3 value: 300.
+        d set: 2 value: 400.
+        InternalTest case: "Dictionary keys" that: d keys equals: #{ 1 2 3 }.
+        InternalTest case: "Dictionary values" that: d values equals: #{ 100 400 300 }.
+    ] call.
 }
