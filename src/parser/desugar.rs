@@ -2,6 +2,12 @@
 
 use super::{Node, NodeWalk, NodeKind, SugarNodeKind, SendMessageComponents, SendMessageParameter, BlockParameters};
 
+/// Desugars all child sugar nodes of the given node.
+pub fn desugar_all(root: &mut Node) {
+    desugar_return(root);
+    desugar_shorthand_block(root);
+}
+
 /// Desugars uses of the `return` keyword.
 /// 
 /// A function like the following:
@@ -176,3 +182,42 @@ fn desugar_return_internal(node: &mut Node, state: &mut DesugarReturnState) {
         }
     }
 }
+
+/// Desugars usages of the `&foo` shorthand block syntax.
+/// 
+/// A call like the following:
+/// 
+/// ```
+/// %{ "a" "b" "c" } sortBy: &length
+/// ```
+/// 
+/// Is desugared into:
+/// 
+/// ```
+/// %{ "a" "b" "c" } sortBy: [ |x| x length ]
+/// ```
+pub fn desugar_shorthand_block(root: &mut Node) {
+    if let NodeKind::Sugar(SugarNodeKind::ShorthandBlock(method)) = &root.kind {
+        *root = Node {
+            kind: NodeKind::Block {
+                body: Box::new(Node {
+                    kind: NodeKind::SendMessage {
+                        receiver: Box::new(Node {
+                            kind: NodeKind::Identifier(SHORTHAND_BLOCK_PARAMETER.into()),
+                            ..root.clone()
+                        }),
+                        components: SendMessageComponents::Unary(method.clone())
+                    },
+                    ..root.clone()
+                }),
+                parameters: BlockParameters::Named(vec![SHORTHAND_BLOCK_PARAMETER.into()]),
+                captures: vec![],
+            },
+            ..root.clone()
+        }
+    }
+
+    root.walk_children(&mut |n| desugar_shorthand_block(n));
+}
+
+const SHORTHAND_BLOCK_PARAMETER: &str = "___desugarShorthandBlockParameter";

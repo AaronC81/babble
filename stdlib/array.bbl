@@ -135,6 +135,6 @@ impl Array {
         InternalTest case: "window less" that: (#{ 1 2 } window: 3) equals: #{ }.
 
         InternalTest case: "sort" that: (#{ 3 1 2 6 4 0 5 } sort) equals: #{ 0 1 2 3 4 5 6 }.
-        InternalTest case: "sortBy" that: (#{ "foo" "g" "abcd" "yo" } sortBy: [ |x| x length ]) equals: #{ "g" "yo" "foo" "abcd" }.
+        InternalTest case: "sortBy" that: (#{ "foo" "g" "abcd" "yo" } sortBy: &length) equals: #{ "g" "yo" "foo" "abcd" }.
     ]
 }

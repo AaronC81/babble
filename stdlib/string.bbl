@@ -31,8 +31,8 @@ impl String {
     ///
     /// @returns The new string with whitespace stripped.
     func strip {
-        self chars skipWhile: [ |c| c isWhitespace ]
-                 $ reverse skipWhile: [ |c| c isWhitespace ]
+        self chars skipWhile: &isWhitespace
+                 $ reverse skipWhile: &isWhitespace
                  $ reverse join
     }
     InternalTest case: "strip" that: " \n  abc \r\t  " strip equals: "abc".

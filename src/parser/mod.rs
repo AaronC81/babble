@@ -116,7 +116,7 @@ impl<'a> Parser<'a> {
 
     pub fn parse_and_analyse(source_file: Rc<SourceFile>, tokens: &'a [Token]) -> Result<Node, ParserError> {
         let mut parsed = Self::parse(source_file, tokens)?;
-        desugar::desugar_return(&mut parsed);
+        desugar::desugar_all(&mut parsed);
         capture_analysis::populate_captures(&mut parsed);
         Ok(parsed)
     }
@@ -426,6 +426,20 @@ impl<'a> Parser<'a> {
             Ok(Node {
                 kind: NodeKind::Array(items),
                 location,
+                context,
+            })
+        } else if let Token { kind: TokenKind::Ampersand, location } = self.here() {
+            let location = location.clone();
+            self.advance();
+            let Token { kind: TokenKind::Identifier(i), .. } = self.here() else {
+                self.token_error()?
+            };
+            let method_name = i.clone();
+            self.advance();
+
+            Ok(Node {
+                kind: NodeKind::Sugar(SugarNodeKind::ShorthandBlock(method_name)),
+                location: location.clone(),
                 context,
             })
         } else if let Token { kind: TokenKind::Keyword(kw), location } = self.here() {

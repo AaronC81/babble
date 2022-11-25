@@ -170,7 +170,13 @@ pub enum NodeKind {
     Sugar(SugarNodeKind),
 }
 
+/// A sub-kind of a [NodeKind::Sugar].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SugarNodeKind {
+    /// The node is a `return` statement, which will be desugared into a throw/catch.
     Return(Box<Node>),
+
+    /// The node is a shorthand block, which will be desugared into a normal block which takes one
+    /// argument and calls the given method name on it.
+    ShorthandBlock(String),
 }

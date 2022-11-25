@@ -60,7 +60,8 @@ impl NodeWalk for Node {
             | NodeKind::StructDefinition { name: _, instance_fields: _, static_fields: _, documentation: _ }
             | NodeKind::MixinDefinition { name: _, documentation: _ }
             | NodeKind::Identifier(_)
-            | NodeKind::Literal(_) => (),
+            | NodeKind::Literal(_) 
+            | NodeKind::Sugar(SugarNodeKind::ShorthandBlock(_)) => (),
         }
     }
 }
