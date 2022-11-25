@@ -1,0 +1,97 @@
+/// A data structure which maps unique keys to values.
+///
+/// Keys are compared to each other using the `equals:` method of `Equatable`.
+///
+/// The current implementation of this dictionary is pretty bad - it simply uses an underlying list
+/// with linear search. The preservation of ordering of items inserted into a dictionary should not
+/// be relied upon, in the event that this implementation changes.
+struct Dictionary mapping.
+impl Dictionary {
+    /// Creates an empty dictionary.
+    ///
+    /// @returns An empty dictionary.
+    static func new {
+        self mapping: #{}
+    }
+    
+    /// Given a key, returns the index of the key-value pair in the `mapping` list, or `null` if the
+    /// key does not exist in the dictionary.
+    ///
+    /// This exists as an implementation detail of the dictionary's current structure, so shouldn't
+    /// be used externally.
+    ///
+    /// @param key: The key to find.
+    /// @returns The index of the key-value pair in the `mapping` list, or `null` if the key does not exist in the dictionary. 
+    func mappingIndex: key {
+        x = self withIndex find: ![ | #{ (i) #{ (k) (_) } } | k equals: key ].
+        x equals: null $ ifTrue: [ return null ].
+        x first.
+    }
+
+    /// Iterates over the key-value pairs of this dictionary. Each element is a two-element array,
+    /// where the first element is the key and the second is the value.
+    ///
+    /// @param fn: The block to execute for each key-value pair, which should take one parameter.
+    func forEach: fn {
+        self mapping forEach: fn
+    }
+    use Enumerable.
+
+    /// Sets a key in this dictionary to the given value. If the key already exists, its value is
+    /// replaced.
+    ///
+    /// @param set: The key to insert.
+    /// @param value: The value to map to that key.
+    func set: key value: value {
+        // Is this key already in the dictionary?
+        index = self mappingIndex: key.
+        index equals: null $ ifTrue: [
+            // No - insert new
+            self mapping append: #{ (key) (value) }.
+        ] else: [
+            // Yes - replace existing
+            self mapping set: index value: #{ (key) (value) }.
+        ].
+        null
+    }
+
+    /// Gets a key from this dictionary.
+    ///
+    /// @param get: The key to retrieve.
+    /// @returns The value mapped to that key, or `null` if the key is not present in the dictionary.
+    func get: key {
+        index = self mappingIndex: key.
+        index equals: null $ ifTrue: [ return null ].
+        self mapping get: index $ last.
+    }
+
+    [
+        d = Dictionary new.
+        d set: 1 value: 100.
+        d set: 2 value: 200.
+        d set: 3 value: 300.
+        d set: 2 value: 400.
+        InternalTest case: "Dictionary get/set"
+                     that: ((d get: 1 $ equals: 100) and: (d get: 2 $ equals: 400))
+                     equals: true.
+    ] call.
+
+    /// Deletes a key from this dictionary.
+    ///
+    /// @param delete: The key to delete.
+    func delete: key {
+        index = self mappingIndex: key.
+        index equals: null $ ifTrue: [ return null ].
+        self mapping delete: index.
+        null
+    }
+    [
+        d = Dictionary new.
+        d set: 1 value: 100.
+        d set: 2 value: 200.
+        d set: 3 value: 300.
+        d set: 2 value: 400.
+        d delete: 2.
+        InternalTest case: "Dictionary delete" that: (d get: 2) equals: null.
+    ] call.
+}
