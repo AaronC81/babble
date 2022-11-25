@@ -679,6 +679,16 @@ fn program(_: &mut Interpreter) -> Type {
                 @param in: The body to execute.
                 @returns The value returned by the block, or the thrown value if the block exits early.
             ").rc(),
+
+            Method::new_internal("eval:", |i, _, a| {
+                let code = a[0].borrow().to_string()?;
+                i.parse_and_evaluate(SourceFile::new("<eval>", &code).rc())
+            }).with_documentation("
+                Parses, compiles, and executes a string of Babble code.
+
+                As you might guess, this is **extremely dangerous** to use in combination with any
+                user input. Be careful!
+            ").rc(),
         ],
         ..Type::new("Program")
     }

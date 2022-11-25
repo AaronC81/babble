@@ -27,6 +27,8 @@ impl Program {
         InternalTest case: "catchIfTrue:in:" that: result equals: 2.
     ] call.
 
+    InternalTest case: "eval" that: (Program eval: "2 add: 2") equals: 4.
+
     /// Runs the given body block, and exits if an object is thrown in it with `throw:` and
     /// it equals the given object according to `equals:`. If they are not equal, the object is
     /// rethrown.
