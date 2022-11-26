@@ -9,6 +9,12 @@ impl Integer {
     InternalTest case: "negation"       that: ((3 negate) add: 5) equals: 2.
     InternalTest case: "modulo"         that: (11 modulo: 3)      equals: 2.
 
+    // Test that binary operations have been desugared correctly
+    InternalTest case: "+ desugar"      that: (1 + 2)   equals: 3.
+    InternalTest case: "- desugar"      that: (5 - 2)   equals: 3.
+    InternalTest case: "* desugar"      that: (5 * 2)   equals: 10.
+    InternalTest case: "/ desugar"      that: (15 / 3)  equals: 5.
+
     /// Executes the block the number of times equal to this integer.
     /// 
     /// @param times: The block to execute, which may optionally take a parameter for a counter.

@@ -27,13 +27,17 @@ pub enum TokenKind {
     NewLine,
     Assignment,
     Pipe,
-    Star,
     Hash,
     Keyword(TokenKeyword),
     QuestionMark,
     ExclamationMark,
     Dollar,
     Ampersand,
+
+    Plus,
+    Dash,
+    Star,
+    ForwardSlash,
 
     BlockStart,
     BlockEnd,
@@ -195,12 +199,14 @@ impl<'a> Tokenizer<'a> {
                     '{' => self.tokens.push(TokenKind::LeftBrace.at(self.here_loc())),
                     '}' => self.tokens.push(TokenKind::RightBrace.at(self.here_loc())),
                     '|' => self.tokens.push(TokenKind::Pipe.at(self.here_loc())),
-                    '*' => self.tokens.push(TokenKind::Star.at(self.here_loc())),
                     '#' => self.tokens.push(TokenKind::Hash.at(self.here_loc())),
                     '?' => self.tokens.push(TokenKind::QuestionMark.at(self.here_loc())),
                     '!' => self.tokens.push(TokenKind::ExclamationMark.at(self.here_loc())),
                     '$' => self.tokens.push(TokenKind::Dollar.at(self.here_loc())),
                     '&' => self.tokens.push(TokenKind::Ampersand.at(self.here_loc())),
+                    '+' => self.tokens.push(TokenKind::Plus.at(self.here_loc())),
+                    '-' => self.tokens.push(TokenKind::Dash.at(self.here_loc())),
+                    '*' => self.tokens.push(TokenKind::Star.at(self.here_loc())),
 
                     // Start of a comment
                     '/' if self.peek() == '/' => {
@@ -216,6 +222,9 @@ impl<'a> Tokenizer<'a> {
                             self.state = TokenizerState::Comment;
                         }
                     }
+
+                    // Forward slash, but not a comment
+                    '/' => self.tokens.push(TokenKind::ForwardSlash.at(self.here_loc())),
 
                     _ => return Err(TokenizerError::UnexpectedCharacter(here, self.here_loc())),
                 }

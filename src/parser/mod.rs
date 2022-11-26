@@ -183,7 +183,7 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_parameterised_send(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
-        let mut result = self.parse_unary_send(context.clone())?;
+        let mut result = self.parse_binary_send(context.clone())?;
         loop {
             if let Some(components) = self.try_parse_only_send_parameters(context.clone())? {
                 let location = result.location.clone();
@@ -200,6 +200,7 @@ impl<'a> Parser<'a> {
             if self.here().kind == TokenKind::Dollar {
                 self.advance();
                 result = self.try_parse_append_send_unaries(result, context.clone())?;
+                result = self.try_parse_append_send_binaries(result, context.clone())?;
                 // ...and repeat
             } else {
                 break
@@ -216,7 +217,7 @@ impl<'a> Parser<'a> {
             while let Token { kind: TokenKind::LabelIdentifier(id), .. } = self.here() {
                 let id = id.clone();
                 self.advance();
-                let value = self.parse_unary_send(context.clone())?;
+                let value = self.parse_binary_send(context.clone())?;
                 parameters.push((id, SendMessageParameter::CallArgument(Box::new(value))));
             }
 
@@ -224,6 +225,29 @@ impl<'a> Parser<'a> {
         } else {
             Ok(None)
         }
+    }
+
+    fn parse_binary_send(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
+        let mut result = self.parse_unary_send(context.clone())?;
+        result = self.try_parse_append_send_binaries(result, context.clone())?;
+        Ok(result)
+    }
+
+    fn try_parse_append_send_binaries(&mut self, mut node: Node, context: LexicalContextRef) -> Result<Node, ParserError> {
+        while let Some(op) = BinaryOperation::from_token_kind(&self.here().kind) {
+            let location = self.here().location.clone();
+            self.advance();
+            node = Node {
+                kind: NodeKind::Sugar(SugarNodeKind::BinaryMessage {
+                    left: Box::new(node),
+                    right: Box::new(self.parse_unary_send(context.clone())?),
+                    op,
+                }),
+                location: self.here().location.clone(),
+                context: LexicalContext::new_with_parent(context.clone()).rc(),
+            };
+        }
+        Ok(node)
     }
 
     fn parse_unary_send(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {

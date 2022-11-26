@@ -54,6 +54,10 @@ impl NodeWalk for Node {
             NodeKind::Sugar(SugarNodeKind::Return(value)) => {
                 func(value);
             }
+            NodeKind::Sugar(SugarNodeKind::BinaryMessage { left, right, op: _ }) => {
+                func(left);
+                func(right);
+            }
 
             | NodeKind::SelfAccess
             | NodeKind::EnumDefinition { name: _, variants: _, documentation: _ }

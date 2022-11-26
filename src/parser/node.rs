@@ -1,6 +1,6 @@
 //! Implements the syntax tree built by the parser.
 
-use crate::{source::Location, interpreter::{ValueRef, Interpreter, Variant, InterpreterError, Value}};
+use crate::{source::Location, interpreter::{ValueRef, Interpreter, Variant, InterpreterError, Value}, tokenizer::TokenKind};
 
 use super::{LexicalContextRef, Literal, Pattern};
 
@@ -179,4 +179,45 @@ pub enum SugarNodeKind {
     /// The node is a shorthand block, which will be desugared into a normal block which takes one
     /// argument and calls the given method name on it.
     ShorthandBlock(String),
+
+    /// The node is a binary operation, which will be desugared into a parameterised method call.
+    BinaryMessage {
+        left: Box<Node>,
+        right: Box<Node>,
+        op: BinaryOperation,
+    }
+}
+
+/// The binary operation used by a [SugarNodeKind::BinaryMessage].
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum BinaryOperation {
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+}
+
+impl BinaryOperation {
+    /// Converts a [TokenKind] into the corresponding [BinaryOperation] which it represents.
+    pub fn from_token_kind(kind: &TokenKind) -> Option<Self> {
+        match kind {
+            TokenKind::Plus => Some(Self::Add),
+            TokenKind::Dash => Some(Self::Subtract),
+            TokenKind::Star => Some(Self::Multiply),
+            TokenKind::ForwardSlash => Some(Self::Divide),
+            _ => None,
+        }
+    }
+
+    /// Returns the one-argument **parameter** name which corresponds to this operation. This does
+    /// not include the ending colon, even though the method takes one parameter, for simplicity of
+    /// building a node tree.
+    pub fn parameter_name(&self) -> &'static str {
+        match self {
+            Self::Add => "add",
+            Self::Subtract => "sub",
+            Self::Multiply => "mul",
+            Self::Divide => "div",
+        }
+    }
 }

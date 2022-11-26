@@ -5,7 +5,7 @@ use super::{Node, NodeWalk, NodeKind, SugarNodeKind, SendMessageComponents, Send
 /// Desugars all child sugar nodes of the given node.
 pub fn desugar_all(root: &mut Node) {
     desugar_return(root);
-    desugar_shorthand_block(root);
+    desugar_simple(root);
 }
 
 /// Desugars uses of the `return` keyword.
@@ -183,7 +183,11 @@ fn desugar_return_internal(node: &mut Node, state: &mut DesugarReturnState) {
     }
 }
 
-/// Desugars usages of the `&foo` shorthand block syntax.
+/// Desugars simple syntactical sugars which only need to look at a single node at a time.
+/// 
+/// These are...
+/// 
+/// # Shorthand blocks
 /// 
 /// A call like the following:
 /// 
@@ -196,7 +200,24 @@ fn desugar_return_internal(node: &mut Node, state: &mut DesugarReturnState) {
 /// ```
 /// %{ "a" "b" "c" } sortBy: [ |x| x length ]
 /// ```
-pub fn desugar_shorthand_block(root: &mut Node) {
+/// 
+/// # Binary messages
+/// 
+/// A call like the following:
+/// 
+/// ```
+/// 3 * 4 + 2
+/// ```
+/// 
+/// Is desugared into:
+/// 
+/// ```
+/// (3 mul: 4) add: 2
+/// ```
+/// 
+/// (Babble does not use operator precedence)
+pub fn desugar_simple(root: &mut Node) {
+    // Shorthand blocks
     if let NodeKind::Sugar(SugarNodeKind::ShorthandBlock(method)) = &root.kind {
         *root = Node {
             kind: NodeKind::Block {
@@ -217,7 +238,20 @@ pub fn desugar_shorthand_block(root: &mut Node) {
         }
     }
 
-    root.walk_children(&mut |n| desugar_shorthand_block(n));
+    // Binary messages
+    if let NodeKind::Sugar(SugarNodeKind::BinaryMessage { left, right, op }) = &root.kind {
+        *root = Node {
+            kind: NodeKind::SendMessage {
+                receiver: left.clone(),
+                components: SendMessageComponents::Parameterised(vec![
+                    (op.parameter_name().into(), SendMessageParameter::CallArgument(right.clone()))
+                ]),
+            },
+            ..root.clone()
+        }
+    }
+
+    root.walk_children(&mut |n| desugar_simple(n));
 }
 
 const SHORTHAND_BLOCK_PARAMETER: &str = "___desugarShorthandBlockParameter";
