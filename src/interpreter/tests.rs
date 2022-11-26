@@ -27,6 +27,16 @@ fn test_message_precedence() {
         evaluate("(5 add: 5) sub: (3 add: 4).").unwrap(),
         Value::new_integer(3).rc(),
     );
+
+    assert_eq!(
+        evaluate("5 + 2 negate.").unwrap(),
+        Value::new_integer(3).rc(),
+    );
+
+    assert_eq!(
+        evaluate("5 mul: 3 + 2").unwrap(),
+        Value::new_integer(25).rc(),
+    );
 }
 
 #[test]
