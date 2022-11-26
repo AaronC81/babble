@@ -68,7 +68,7 @@ impl Match {
         [ |subject|
             returnValue = Match#Miss.
             Program catchTag: [ |tag|
-                returnValue = fn call: subject call: tag.
+                returnValue = fn callWith: #{ subject. tag }.
             ].
             returnValue
         ]

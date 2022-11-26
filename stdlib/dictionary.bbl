@@ -23,7 +23,7 @@ impl Dictionary {
     /// @param key: The key to find.
     /// @returns The index of the key-value pair in the `mapping` list, or `null` if the key does not exist in the dictionary. 
     func mappingIndex: key {
-        x = self withIndex find: ![ | #{ (i) #{ (k) (_) } } | k equals: key ].
+        x = self withIndex find: ![ | #{ i. #{ k. _ } } | k equals: key ].
         x equals: null $ ifTrue: [ return null ].
         x first.
     }
@@ -47,10 +47,10 @@ impl Dictionary {
         index = self mappingIndex: key.
         index equals: null $ ifTrue: [
             // No - insert new
-            self mapping append: #{ (key) (value) }.
+            self mapping append: #{ key. value }.
         ] else: [
             // Yes - replace existing
-            self mapping set: index value: #{ (key) (value) }.
+            self mapping set: index value: #{ key. value }.
         ].
         null
     }

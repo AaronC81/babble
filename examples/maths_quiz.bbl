@@ -24,7 +24,7 @@ impl MathsQuiz {
                     $ concat: op symbol
                     $ concat: " " 
                     $ concat: b repr.
-        answer = op resultCalc callWith: #{ (a) (b) }.
+        answer = op resultCalc callWith: #{ a. b }.
         Question text: text answer: answer.
     }
 

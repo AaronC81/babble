@@ -164,7 +164,7 @@ impl Enumerable {
     /// @param acc: The initial accumulator value.
     /// @returns The accumulator value obtained after repeatedly applying the block.
     func reduce: fn acc: acc {
-        self forEach: [ |x| acc = fn callWith: #{ (acc) (x) } ].
+        self forEach: [ |x| acc = fn callWith: #{ acc. x } ].
         acc
     }
 
@@ -312,8 +312,8 @@ impl Enumerable {
         arrayB = other toArray.
 
         result = #{}.
-        #{ (arrayA length) (arrayB length) } min times: [ |i|
-            result append: #{ (arrayA get: i) (arrayB get: i) }
+        #{ arrayA length. arrayB length } min times: [ |i|
+            result append: #{ arrayA get: i. arrayB get: i }
         ].
         result
     }

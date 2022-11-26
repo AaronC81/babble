@@ -331,6 +331,12 @@ impl<'a> Parser<'a> {
                 if let Token { kind: TokenKind::Pipe, .. } = self.here() {
                     self.advance();
                     loop {
+                        // Terminators (.) are permitted to break up expressions
+                        if let Token { kind: TokenKind::Terminator, .. } = self.here() {
+                            self.advance();
+                            continue
+                        }
+
                         if let TokenKind::Pipe = &self.here().kind {
                             self.advance();
                             break
@@ -415,6 +421,12 @@ impl<'a> Parser<'a> {
             // Parse expressions until the closing brace
             let mut items = vec![];
             loop {
+                // Terminators (.) are permitted to break up expressions
+                if let Token { kind: TokenKind::Terminator, .. } = self.here() {
+                    self.advance();
+                    continue
+                }
+
                 if let Token { kind: TokenKind::RightBrace, .. } = self.here() {
                     self.advance();
                     break;
