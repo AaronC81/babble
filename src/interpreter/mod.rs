@@ -412,6 +412,7 @@ impl Interpreter {
                 let internal_names = match block.parameters {
                     BlockParameters::Named(n) => n,
                     BlockParameters::Patterned { .. } => unreachable!(),
+                    BlockParameters::All(_) => unreachable!(),
                 };
                 
                 let mut method = Method::new_compiled(&name, block.body, internal_names);

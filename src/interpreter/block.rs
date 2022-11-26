@@ -43,11 +43,13 @@ impl Block {
         }
     }
     
-    /// The number of parameters which this block takes.
-    pub fn arity(&self) -> usize {
+    /// The number of parameters which this block takes. If the block takes a variable number of
+    /// arguments using [BlockParameters::All], this will return -1.
+    pub fn arity(&self) -> isize {
         match &self.parameters {
-            BlockParameters::Named(n) => n.len(),
-            BlockParameters::Patterned { patterns, .. } => patterns.len(),
+            BlockParameters::Named(n) => n.len() as isize,
+            BlockParameters::All(_) => -1,
+            BlockParameters::Patterned { patterns, .. } => patterns.len() as isize,
         }
     }
 
@@ -60,11 +62,11 @@ impl Block {
     /// Returns an error if the number of arguments does not match the expected arity.
     #[inline(always)]
     pub fn call(&self, interpreter: &mut Interpreter, arguments: Vec<ValueRef>) -> InterpreterResult {
-        if self.arity() != arguments.len() {
+        if self.arity() >= 0 && self.arity() as usize != arguments.len() {
             return Err(InterpreterErrorKind::IncorrectArity {
                 name: "anonymous block".into(),
                 expected: arguments.len(),
-                got: self.arity(),
+                got: self.arity() as usize,
             }.into())
         }
 
@@ -78,6 +80,16 @@ impl Block {
                     .map(|(name, value)| LocalVariable { name, value }.rc())
                     .collect::<Vec<_>>()
             },
+
+            // For all parameter, just use the array
+            BlockParameters::All(name) => {
+                vec![
+                    LocalVariable {
+                        name: name.into(),
+                        value: Value::new_array(&arguments).rc(),
+                    }.rc()
+                ]
+            }
 
             // For patterned parameters, match each argument against the corresponding pattern, and
             // deal with it according to the preference of the block if this fails

@@ -374,26 +374,50 @@ impl<'a> Parser<'a> {
                 }
                 BlockParameters::Patterned { patterns, fatal }
             } else {
-                // Parse named parameters
-                let mut parameters = vec![];
+                // Parse named (or any) parameters
+                let parameters;
                 if let Token { kind: TokenKind::Pipe, .. } = self.here() {
                     self.advance();
-                    loop {
-                        match &self.here().kind {
-                            TokenKind::Identifier(i) => {
-                                parameters.push(i.clone());
-                                self.advance();
-                            },
 
-                            TokenKind::Pipe => {
-                                self.advance();
-                                break;
-                            },
-                            _ => return Err(ParserError::UnexpectedToken(self.here().clone()))
+                    // Test for all parameter, indicated with a star
+                    if let TokenKind::Star = self.here().kind {
+                        // We should expect one parameter name, which will be an array
+                        self.advance();
+                        let name = if let Token { kind: TokenKind::Identifier(id), .. } = self.here() {
+                            id.clone()
+                        } else {
+                            return Err(ParserError::UnexpectedToken(self.here().clone()))
+                        };
+                        parameters = BlockParameters::All(name);
+                        self.advance();
+
+                        // Now there should be the end of the parameter list
+                        let TokenKind::Pipe = self.here().kind else { self.token_error()? };
+                        self.advance();
+                    } else {
+                        // These are normal named parameters
+                        let mut named_parameters = vec![];
+                        loop {
+                            match &self.here().kind {
+                                TokenKind::Identifier(i) => {
+                                    named_parameters.push(i.clone());
+                                    self.advance();
+                                },
+
+                                TokenKind::Pipe => {
+                                    self.advance();
+                                    break;
+                                },
+                                _ => return Err(ParserError::UnexpectedToken(self.here().clone()))
+                            }
                         }
+                        parameters = BlockParameters::Named(named_parameters);
                     }
+                } else {
+                    // No parameters expected
+                    parameters = BlockParameters::Named(vec![]);
                 }
-                BlockParameters::Named(parameters)
+                parameters
             };
 
             let mut body = vec![];

@@ -2,6 +2,8 @@
 
 use std::{rc::Rc, cell::{RefCell, Ref, RefMut}, any::Any, fmt::Debug, ops::{Deref, DerefMut}};
 
+use crate::parser::BlockParameters;
+
 use super::{Interpreter, InterpreterErrorKind, Block, TypeData, Variant, TypeRef, InterpreterError};
 
 /// A value within the interpreter, which is an instance of some type.
@@ -243,8 +245,8 @@ impl Value {
             }
 
             TypeInstance::Block(b) => match b.parameters {
-                crate::parser::BlockParameters::Named(_) => "[ block ]".into(),
-                crate::parser::BlockParameters::Patterned { fatal, .. } => if fatal {
+                BlockParameters::Named(_) | BlockParameters::All(_) => "[ block ]".into(),
+                BlockParameters::Patterned { fatal, .. } => if fatal {
                     "![ block ]".into()
                 } else {
                     "?[ block ]".into()

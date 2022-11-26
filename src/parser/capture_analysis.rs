@@ -64,6 +64,7 @@ fn handle_node(node: &mut Node, stack: &mut Vec<AnalysisStackFrame>) {
             // Ensure that we don't try to capture our own parameters
             frame.assignments.extend(match parameters {
                 BlockParameters::Named(names) => names.clone(),
+                BlockParameters::All(name) => vec![name.clone()],
                 BlockParameters::Patterned { patterns, .. } => patterns.iter()
                     .flat_map(|p| p.all_bindings())
                     .collect(),

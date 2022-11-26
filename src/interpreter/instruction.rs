@@ -367,6 +367,10 @@ impl Display for Instruction {
                         prefix = "";
                         params = names.clone();
                     },
+                    BlockParameters::All(name) => {
+                        prefix = "";
+                        params = vec![format!("*{}", name)];
+                    }
                     BlockParameters::Patterned { patterns, fatal } => {
                         // TODO: proper pattern formatting
                         if *fatal { prefix = "!" } else { prefix = "?" };

@@ -104,6 +104,9 @@ pub enum BlockParameters {
     /// The block takes simple, named parameters.
     Named(Vec<String>),
 
+    /// The block takes any number of simple parameters, and collects them into a named array.
+    All(String),
+
     /// The block takes patterns as parameters, and depending on `fatal`, will either wrap the
     /// block's return value in a `Match` or cause a fatal error to indicate that the arguments did
     /// not match a pattern.

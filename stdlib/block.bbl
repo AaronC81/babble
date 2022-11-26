@@ -15,4 +15,8 @@ impl Block {
     }
     
     InternalTest case: "empty block" that: [] call equals: null.
+
+    InternalTest case: "*args many" that: ([ |*x| x length ] callWith: #{ 1 2 3 }) equals: 3.
+    InternalTest case: "*args one"  that: ([ |*x| x length ] call: 1)              equals: 1.
+    InternalTest case: "*args none" that: ([ |*x| x length ] call)                 equals: 0.
 }
