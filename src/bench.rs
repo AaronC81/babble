@@ -19,7 +19,7 @@ fn bench_factorial(b: &mut Bencher) {
                 func benchFactorial {
                     self lessThanOrEquals: 1 $
                         ifTrue: [ 1 ]
-                        else:   [ (self sub: 1) benchFactorial $ mul: self ]
+                        else:   [ (self - 1) benchFactorial $ * self ]
                 }
             }
             
@@ -34,7 +34,7 @@ fn bench_iteration(b: &mut Bencher) {
         evaluate("
             sum = 0.
             10000 times: [
-                sum = sum add: 1.
+                sum = sum + 1.
             ]
         ").unwrap()
     }));

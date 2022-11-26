@@ -352,7 +352,7 @@ impl Enumerable {
         arr length lessThan: n $ ifTrue: [ return result ].
 
         // Iterate over all windows and push them onto the result
-        arr length sub: n $ add: 1 $ times: [ |i|
+        arr length - n $ + 1 $ times: [ |i|
             result append: (arr skip: i $ take: n).
         ].
         result

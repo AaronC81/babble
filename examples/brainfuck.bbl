@@ -15,13 +15,13 @@ impl Tape {
     }
     
     func next {
-        self index = self index add: 1.
+        self index = self index + 1.
         self index greaterThanOrEquals: self size $ ifTrue: [
             Program error: "tape out of range".
         ].
     }
     func prev {
-        self index = self index sub: 1.
+        self index = self index - 1.
         self index lessThan: 0 $ ifTrue: [
             Program error: "tape out of range".
         ].
@@ -42,8 +42,8 @@ impl Interpreter {
 
         // Otherwise, execute the current instruction
         ins = self currentInstruction.
-        ins equals: "+" $ ifTrue: [ self tape write: (self tape read add: 1) ].
-        ins equals: "-" $ ifTrue: [ self tape write: (self tape read sub: 1) ].
+        ins equals: "+" $ ifTrue: [ self tape write: (self tape read + 1) ].
+        ins equals: "-" $ ifTrue: [ self tape write: (self tape read - 1) ].
         ins equals: ">" $ ifTrue: [ self tape next ].
         ins equals: "<" $ ifTrue: [ self tape prev ].
         ins equals: "[" $ ifTrue: [
@@ -51,9 +51,9 @@ impl Interpreter {
                 // Seek the matching ] and jump past it
                 bracketDepth = 1
                 [ bracketDepth greaterThan: 0 ] whileTrue: [
-                    self index = self index add: 1.
-                    self currentInstruction equals: "[" $ ifTrue: [ bracketDepth = bracketDepth add: 1 ].
-                    self currentInstruction equals: "]" $ ifTrue: [ bracketDepth = bracketDepth sub: 1 ].
+                    self index = self index + 1.
+                    self currentInstruction equals: "[" $ ifTrue: [ bracketDepth = bracketDepth + 1 ].
+                    self currentInstruction equals: "]" $ ifTrue: [ bracketDepth = bracketDepth - 1 ].
                 ]
             ]
         ].
@@ -62,9 +62,9 @@ impl Interpreter {
                 // Seek the matching [ and jump to it
                 bracketDepth = 1
                 [ bracketDepth greaterThan: 0 ] whileTrue: [
-                    self index = self index sub: 1.
-                    self currentInstruction equals: "[" $ ifTrue: [ bracketDepth = bracketDepth sub: 1 ].
-                    self currentInstruction equals: "]" $ ifTrue: [ bracketDepth = bracketDepth add: 1 ].
+                    self index = self index - 1.
+                    self currentInstruction equals: "[" $ ifTrue: [ bracketDepth = bracketDepth - 1 ].
+                    self currentInstruction equals: "]" $ ifTrue: [ bracketDepth = bracketDepth + 1 ].
                 ]
             ]
         ].
@@ -72,7 +72,7 @@ impl Interpreter {
         // TODO: , command
 
         // Move onto the next instruction
-        self index = self index add: 1.
+        self index = self index + 1.
     }
 
     func currentInstruction {

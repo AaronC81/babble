@@ -17,7 +17,7 @@ impl Range {
         i = self start.
         [ i lessThan: self end ] whileTrue: [
             fn call: i.
-            i = i add: 1.
+            i = i + 1.
         ].
     }
 

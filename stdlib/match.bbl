@@ -98,8 +98,8 @@ impl Match {
         self isHit ifTrue: [ Match#Hit value: (fn call: self value) ]
                    else:   [ Match#Miss ]
     }
-    InternalTest case: "match map: hit"  that: ((Match hit: 2) map: [ |x| x add: 1 ]) equals: (Match hit: 3).
-    InternalTest case: "match map: miss" that: ((Match#Miss)   map: [ |x| x add: 1 ]) equals: (Match#Miss).
+    InternalTest case: "match map: hit"  that: ((Match hit: 2) map: [ |x| x + 1 ]) equals: (Match hit: 3).
+    InternalTest case: "match map: miss" that: ((Match#Miss)   map: [ |x| x + 1 ]) equals: (Match#Miss).
 
     /// If this match is a hit, returns its value. If it is a miss, executes the given block and
     /// returns its return value.

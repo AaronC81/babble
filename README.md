@@ -21,7 +21,7 @@ Here's what it looks like to print the numbers 1 to 50:
 
 ```smalltalk
 50 times: [ |i|
-    Console println: (i add: 1).
+    Console println: i + 1.
 ].
 ```
 
@@ -34,7 +34,7 @@ We could also try implementing this using a plain-old conditional loop, too:
 ```smalltalk
 i = 0.
 [ i lessThan: 50 ] whileTrue: [
-    i = i add: 1.
+    i = i + 1.
     Console println: i.
 ].
 ```

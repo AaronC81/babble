@@ -1,6 +1,6 @@
 // Iterate many times, using the addition to iterate from one rather than zero
 50 times: [ |x|
-    x = x add: 1.
+    x = x + 1.
 
     // Calculate the output string using concatenation, replacing with the original number if the
     // resulting string is empty (neither fizz nor buzz)

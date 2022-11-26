@@ -27,12 +27,12 @@ impl Integer {
                 action call.
             ].
 
-            counter = counter add: 1.
+            counter = counter + 1.
         ].
     }
     [
         sum = 0.
-        5 times: [ |x| sum = sum add: (x add: 1). ].
+        5 times: [ |x| sum = sum + x + 1 ].
         InternalTest case: "times" that: sum equals: 15.
     ] call.
 
@@ -46,7 +46,7 @@ impl Integer {
         result = 0.
         bytes forEach: [ |byte|
             Range upTo: 256 $ contains: byte $ ifFalse: [ return null ].
-            result = result leftShift: 8 $ add: byte.
+            result = result leftShift: 8 $ + byte.
         ].
         result
     }

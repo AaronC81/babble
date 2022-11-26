@@ -49,7 +49,7 @@ impl Array {
         i = 0.
         [ i lessThan: self length ] whileTrue: [
             fn call: (self get: i).
-            i = i add: 1.
+            i = i + 1.
         ].
         null
     }
@@ -58,7 +58,7 @@ impl Array {
     ///
     /// @returns The last (now-deleted) item of this array, or `null`.
     func pop {
-        self delete: (self length sub: 1)
+        self delete: (self length - 1)
     }
     [
         x = #{ 1 2 3 }.
@@ -80,7 +80,7 @@ impl Array {
     ///
     /// @returns The last item of the array, or `null` if it is empty.
     func last {
-        self get: (self length sub: 1)
+        self get: (self length - 1)
     }
     InternalTest case: "last non-empty" that: #{ 1 2 3 } last equals: 3.
     InternalTest case: "last empty"     that: #{ } last       equals: null.
@@ -99,7 +99,7 @@ impl Array {
     InternalTest defer: [
         InternalTest case: "toArray" that: #{ 1 2 3 } toArray equals: #{ 1 2 3 }.
         InternalTest case: "reverse" that: #{ 1 2 3 } reverse equals: #{ 3 2 1 }.
-        InternalTest case: "map" that: (#{ 1 2 3 } map: [ |x| x add: 1 ]) equals: #{ 2 3 4 }.
+        InternalTest case: "map" that: (#{ 1 2 3 } map: [ |x| x + 1 ]) equals: #{ 2 3 4 }.
         InternalTest case: "filter" that: (#{ 1 2 3 } filter: [ |x| x lessThan: 3 ]) equals: #{ 1 2 }.
         InternalTest case: "find pos" that: (#{ 1 8 3 } find: [ |x| x modulo: 2 $ equals: 0 ]) equals: 8.
         InternalTest case: "find neg" that: (#{ 1 7 3 } find: [ |x| x modulo: 2 $ equals: 0 ]) equals: null.
