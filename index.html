@@ -1033,6 +1033,33 @@ be relied upon, in the event that this implementation changes.</p>
                     
                         <h2>
                             
+                            <code>containsKey:</code>
+                        </h2>
+
+                        
+                                <p>Determines whether this dictionary contains the given key.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>containsKey:</code></b></p>
+                                        <blockquote>
+                                            <p>The key to check for.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p><code>true</code> if the key is present in this dictionary, <code>false</code> otherwise.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
                             <code>delete:</code>
                         </h2>
 
@@ -1097,6 +1124,55 @@ where the first element is the key and the second is the value.</p>
                                             <p><b><i>Returns:</i></b></p>
                                             <blockquote>
                                                 <p>The value mapped to that key, or <code>null</code> if the key is not present in the dictionary.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>get:orInsert:</code>
+                        </h2>
+
+                        
+                                <p>Gets a key from this dictionary, or if it doesn't exist, inserts it with the given value and
+returns that.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>get:</code></b></p>
+                                        <blockquote>
+                                            <p>The key to retrive (or insert if it doesn't exist).</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The value mapped to that key, or the newly-inserted value.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>keys</code>
+                        </h2>
+
+                        
+                                <p>Returns an array of the keys in this dictionary.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>This dictionary's keys.</p>
 
                                             </blockquote>
                                         
@@ -1226,6 +1302,27 @@ replaced.</p>
                                     
                                     
                                     
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>values</code>
+                        </h2>
+
+                        
+                                <p>Returns an array of the values in this dictionary.</p>
+
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>This dictionary's keys.</p>
+
+                                            </blockquote>
+                                        
                                 </blockquote>
                             
                     
@@ -1446,6 +1543,34 @@ be omitted from the result. (If you would like the last chunk to be smaller, see
                                             <p><b><i>Returns:</i></b></p>
                                             <blockquote>
                                                 <p>The first value matching the predicate, or <code>null</code> if none is found.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>groupBy:</code>
+                        </h2>
+
+                        
+                                <p>Using the given function to compute keys, builds a new dictionary whose values are arrays
+of elements from this enumerable matching the given key.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>s</code></b></p>
+                                        <blockquote>
+                                            <p>groupBy: The key function, which should take one parameter.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A new grouped dictionary.</p>
 
                                             </blockquote>
                                         
