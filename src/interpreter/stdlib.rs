@@ -290,14 +290,22 @@ fn string(interpreter: &mut Interpreter) -> Type {
                 @returns A substring of a single character, or `null` if the index is out of bounds.
             ").rc(),
 
-            Method::new_internal("toInteger", |_, recv, _| {
-                Ok(recv.borrow().to_string()?.parse::<i64>()
+            Method::new_internal("toInteger:", |_, recv, a| {
+                let base = a[0].borrow().to_integer()?;
+                if base < 2 || base > 36 {
+                    return Err(InterpreterErrorKind::ProgramError("invalid integer base".into()).into())
+                }
+                
+                Ok(i64::from_str_radix(&recv.borrow().to_string()?, base as u32)
                     .map(Value::new_integer)
                     .unwrap_or_else(|_| Value::new_null())
                     .rc())
             }).with_documentation("
-                Parses this string as an integer. If the string is not a valid integer, returns `null`.
+                Parses this string as an integer of the given base. If the string is not a valid integer, returns `null`.
 
+                If the base is outside of the range 2..36 inclusive, raises an error.
+
+                @params toInteger: The base to parse the integer in.
                 @returns An integer, or `null`.
             ").rc(),
         ],

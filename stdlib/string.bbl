@@ -37,6 +37,16 @@ impl String {
     }
     InternalTest case: "strip" that: " \n  abc \r\t  " strip equals: "abc".
 
+    /// Parses this string as a base-10 integer. If the string is not a valid integer, returns `null`.
+    ///
+    /// @returns An integer, or `null`.
+    func toInteger {
+        self toInteger: 10
+    }
+    InternalTest case: "toInteger: valid"   that: ("2a" toInteger: 16) equals: 42.
+    InternalTest case: "toInteger: invalid" that: ("2a" toInteger: 10) equals: null.
+    InternalTest case: "toInteger" that: ("25" toInteger) equals: 25.
+
     /// Splits a string using another string as a separator.
     ///
     /// @param split: The separator to split on.
