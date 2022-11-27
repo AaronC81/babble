@@ -7,7 +7,7 @@
     
 # Babble
 
-**[API documentation](https://aaronc81.github.io/babble)**
+**[Language Tour](doc/tour.bbl)** | **[API documentation](https://aaronc81.github.io/babble)**
 
 <hr />
 
@@ -84,5 +84,5 @@ cargo run -- -f <file>
 - [x] Complex assignment targets (e.g struct fields)
 - [ ] Collection types and literals
     - [x] Arrays
-    - [ ] Dictionaries
+    - [x] Dictionaries
     - [ ] Sets
