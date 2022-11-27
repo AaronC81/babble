@@ -44,14 +44,28 @@ impl Match {
             outerResult
         ]
     }
+
+    /// A shorthand for `oneOf` which immediately calls the block against the given value.
+    ///
+    /// @param value: The value to match against.
+    /// @param oneOf: The blocks to try matching this against, each taking one parameter.
+    /// @returns The return value of the first block which returns a hit, or a miss if none do.
+    static func value: value toOneOf: values {
+        Match oneOf: values $ call: value
+    }
+
     [
-        composed = Match oneOf: #{
+        candidates = #{
             ?[ | 1 | 100 ]
             ?[ | 2 | 200 ]
             ?[ | 3 | 300 ]
         }.
+        composed = Match oneOf: candidates.
         InternalTest case: "match oneOf: hit"  that: (composed call: 2) equals: (Match hit: 200).
         InternalTest case: "match oneOf: miss" that: (composed call: 5) equals: Match#Miss.
+
+        InternalTest case: "match value:toOneOf: hit"  that: (Match value: 2 toOneOf: candidates) equals: (Match hit: 200).
+        InternalTest case: "match value:toOneOf: miss"  that: (Match value: 5 toOneOf: candidates) equals: Match#Miss.
     ] call.
 
     /// Wraps a single-argument pattern block by allowing the block to throw a tag to return an

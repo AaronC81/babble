@@ -83,4 +83,15 @@ impl String {
     }
     InternalTest case: "split single-char" that: ("abc,def,gh,xyz,12 3" split: ",") equals: #{ "abc" "def" "gh" "xyz" "12 3" }.
     InternalTest case: "split multi-char" that: ("abc, def, gh,xyz, 12 3, " split: ", ") equals: #{ "abc" "def" "gh,xyz" "12 3" "" }.
+
+    /// Replaces occurrences of one character with another.
+    ///
+    /// @param replace: The character to replace.
+    /// @param with: The character to replace it with.
+    /// @returns A new string with the character replaced wherever it appears.
+    func replace: old with: new {
+        self split: old $ join: new
+    }
+    InternalTest case: "replace pos" that: ("hello" replace: "l" with: "w") equals: "hewwo".
+    InternalTest case: "replace neg" that: ("hello" replace: "t" with: "w") equals: "hello".
 }
