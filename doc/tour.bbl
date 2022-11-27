@@ -1,0 +1,383 @@
+// This is a "Learn X in Y minutes"-style tour of the Babble programming language. It assumes that
+// you've used other programming languages before, but not in particular with any of the languages
+// that Babble has taken inspiration from.
+//
+// This file is best read in VS Code with Babble's syntax highlighting enabled (see the README).
+//
+// Babble's comments are denoted by //, like this one!
+//
+// Lines of Babble code end with a `.`, though this is allowed to be omitted at the end of a block.
+
+// -------------------------------------------------------------------------------------------------
+// 1. Primitive Types
+// -------------------------------------------------------------------------------------------------
+
+// Integers:
+3. // => 3
+
+// There are binary operators for core maths:
+3 + 4. // => 7
+5 - 2. // => 3
+3 * 4. // => 12
+6 / 2. // => 3
+
+// Division always produces another integer:
+7 / 2. // => 3
+
+// To keep Babble's precedence rules simple, chains of binary expressions are always evaluated
+// left-to-right. Parentheses can be used to group expressions to override this:
+2 + 3 * 4.   // => 20
+2 + (3 * 4). // => 14
+
+// Booleans:
+true
+false
+
+// Null, which represents the absence of a value:
+null
+
+// -------------------------------------------------------------------------------------------------
+// 2. Method Calls
+// -------------------------------------------------------------------------------------------------
+
+// Calling methods looks different to other languages you might be used to.
+//
+// Methods with no arguments, *unary* methods, are called by writing the method name after the
+// expression you'd like to call the method on (the *receiver*):
+3 negate.       // => -3
+"hello" length. // => 5
+
+// Methods which need arguments, *parameterised* methods, are called using the name of each argument
+// followed by a colon, then the argument value.
+8 modulo: 3. // => 2
+"hello" replace: "l" with: "w". // => "hewwo"
+
+// We talk about method names in terms of the parameters the method take - the above examples are
+// calling method we would name `negate`, `length`, `modulo:` and `replace:with:`.
+
+// Those binary operators from before are just a shortcut for parameterised method calls:
+3 + 2.    // is equivalent to...
+3 add: 2. // => 5
+
+// Call and operator precedence has a straightforward definition: unary calls bind tightest,
+// followed by binary calls, then parameterised calls:
+5 mul: 3 negate + 2 negate.          // is equivalent to...
+5 mul: ((3 negate) add: (2 negate)). // => -25
+
+// Chains of parameterised method calls can start looking a bit messy since you'll need to wrap them
+// in parentheses, so Babble provides the `$` operator which wraps everything to its left in
+// parentheses:
+(("hello" replace: "l" with: "ll") replace: "e" with: "ee") replace: "h" with: "y".   // => is equivalent to...
+"hello" replace: "l" with: "ll" $ replace: "e" with: "ee" $ replace: "h" with: "y". // "yeellllo"
+
+// -------------------------------------------------------------------------------------------------
+// 3. Variables and Collections
+// -------------------------------------------------------------------------------------------------
+
+// Local variables are created when they are first assigned to:
+x = 3.
+y = 4.
+z = 5.
+
+// They can be mutated freely:
+x = 6.
+
+// Every object has an `equals:` method:
+x equals: 6. // => true
+x equals: 7. // => false
+
+// Print out variables to the console:
+Console println: x. // => prints "6"
+
+// Arrays can be created using the `#{}` syntax:
+a = #{ "first" "second" "third" }.
+
+// Array elements in this syntax can be separated using `.` if necessary:
+b = #{ x. y. z }. // would be interpreted as a sequence of unary method calls `#{ ((x y) z) }`
+                  // without the separators
+
+// Get and set array elements with `get:` and `set:value:` - indexes are 0-based:
+a get: 1. // => "second"
+
+a set: 0 value: "1st".
+a. // => #{ "1st" "second" "third" }
+
+// Arrays can change size dynamically:
+a append: "end".
+a delete: 0.
+a insert: "start" at: 0.
+a. // => #{ "start" "second" "third" "end" }
+
+// -------------------------------------------------------------------------------------------------
+// 4. Blocks
+// -------------------------------------------------------------------------------------------------
+
+// Blocks are snippets of code which you can call with parameters. They're like functions, except
+// they don't necessarily need to have a name, and you can pass them around like any other value.
+//
+// Blocks return the last value inside them.
+//
+// They're similar to `lambda` in Python, or JavaScript's `=>` syntax.
+
+// A block with no parameters - call it with `call`
+message = [
+    "hello"
+].
+message call. // => "hello"
+
+// A block with one parameter, inside pipes `|` - call it with `call:`
+increment = [ |x|
+    x + 1
+].
+increment call: 3. // => 4
+
+// A block with multiple parameters - call it with `callWith:` and pass an array of parameters
+add = [ |x y|
+    x + y
+].
+add callWith: #{ 3 4 }. // => 7
+
+// Blocks capture local variables when they are created, and can mutate them:
+x = 3.
+mutatingIncrement = [
+    x = x + 1
+].
+mutatingIncrement call.
+mutatingIncrement call.
+x. // => 5
+
+// There is a shorthand for blocks which take a single parameter and call a unary method on it,
+// which is useful for list manipulation, indicated with `&`:
+a = #{ "hey" "hi" "hello" }.
+a map: [ |x| x length ]. // => #{ 3 2 5 }, or equivalently...
+a map: &length.          // => #{ 3 2 5 }
+
+// -------------------------------------------------------------------------------------------------
+// 5. Control Flow
+// -------------------------------------------------------------------------------------------------
+
+// There are many methods which take blocks and execute them only conditionally, or multiple times.
+// This is how Babble's control flow is implemented!
+
+// Booleans have an `ifTrue:` method, which takes a block and executes it if the receiver is `true`:
+d6Roll = Random sample: #{ 1 2 3 4 5 6 }.
+d6Roll equals: 6 $ ifTrue: [
+    Console println: "Wow, you rolled a 6!"
+].
+
+// `ifTrue:else:` executes the first block on `true`, and the second on `false`, returning the
+// result of whichever executed:
+d4Roll = Random sample: #{ 1 2 3 4 }.
+d4Result = d4Roll equals: 4 $ ifTrue: [
+    "Nice roll!"
+] else: [
+    "Better luck next time..."
+].
+Console println: d4Result.
+
+// Count-based looping can be accomplished with integers' `times:` method, which takes a block and
+// executes it that many times, passing a counter:
+5 times: [ |i|
+    Console println: i.
+]. // => prints 0, 1, 2, 3, 4
+
+// Loop over every element in an array with `forEach:`:
+#{ "first" "second" "third" } forEach: [ |e|
+    Console println: e.
+]. // => prints "first", "second", "third"
+
+// Blocks have a `whileTrue:` method which executes a given block repeatedly, while the receiver
+// block returns `true`:
+i = 0.
+[ i lessThan: 5 ] whileTrue: [
+    Console println: i.
+    i = i + 1.
+]. // => prints 0, 1, 2, 3, 4
+
+// -------------------------------------------------------------------------------------------------
+// 6. Data Types
+// -------------------------------------------------------------------------------------------------
+
+// There are two ways of defining data structures in Babble - structs and enums. (If you have used
+// Rust, these line up exactly with the same names there!)
+
+// Structs have a name and a list of fields. They automatically have field accessors named after
+// their fields, and a constructor whose name is the sequence of the fields in order, and the fields
+// are mutable:
+struct Person name age.
+me = Person name: "Aaron" age: 22. // Constructor is `name:age:`.
+me name. // => "Aaron"
+me age = me age + 1. // (Happy birthday!)
+
+// Structs can have static fields, which exist on the struct itself rather than its instances:
+struct Counter static count.
+Counter count = 0.
+
+// Enums have a number of variants, and each instance of the enum is an instance of one of those
+// specific variants. Enums can optionally have fields per-variant. Instantiating a variant uses
+// special syntax with a #
+enum Shape {
+    Rectangle width height.
+    Circle radius.
+    Square length.
+}
+rect = Shape#Rectangle width: 300 height: 100.
+rect width. // => 300
+
+// Once you have a data type, methods can be added to it using an `impl` block:
+impl Person {
+    // Unary method definition
+    func haveBirthday {
+        // Use `self` to get the receiver
+        self age = self age + 1
+    }
+
+    // Parameterised method definition, which in this case is also static
+    // (Exists on the type rather than its instances)
+    //
+    //     .---- External name (what the parameter is named when calling this method)
+    //     |        .---- Internal name (what local variable this parameter's value is bound to)
+    //     v        v
+    static func newborn: name {
+        // The receiver of a static method is the type itself, so this calls the constructor
+        self name: name age: 0.
+    }
+}
+p = Person newborn: "Baby".
+p haveBirthday.
+p age. // => 1
+
+// You can use `impl` blocks on any type, any number of times, so you can even extend existing types
+impl Integer {
+    static func meaningOfLife {
+        42
+    }
+}
+
+// If you'd like to define some methods, but they don't make sense to be part of an instantiable
+// type (e.g. some utility methods), you can define a struct with no fields which can't be
+// instantiated, and `impl` static methods on it:
+struct Utilities.
+impl Utilities {
+    // ...
+}
+
+// -------------------------------------------------------------------------------------------------
+// 7. Pattern Matching
+// -------------------------------------------------------------------------------------------------
+
+// Blocks don't just have to take simple, named parameters!
+//
+// You can use pattern matching to destructure values and bind them to local variables, and abort
+// calling the block if the pattern doesn't match.
+//
+// One form of these blocks can be created by prefixing the block with `?`, and using the pattern
+// instead of the normal parameter list:
+addInts = ?[
+    // Ensure that both parameters are `Integer` instances, and bind them to `a` and `b`
+    | a = Integer. b = Integer |
+    a + b
+].
+rectArea = ?[
+    // Ensure that the parameter is a `Rectangle` variant of `Shape`, and extract the width and
+    // height into `w` and `h` respectively, ensuring that they are integers
+    | Shape#Rectangle width: (w = Integer) height: (h = Integer) |
+    w * h
+].
+
+// `?[ ... ]` blocks are called like normal blocks, but will instead return a variant of the `Match`
+// enum, with either:
+//   - `Match#Hit value` if the pattern matched, with the return value of the block
+//   - `Match#Miss` if the pattern did not match and the block didn't run
+addInts callWith: #{ 1 2 }.     // => Match#Hit value: 3
+addInts callWith: #{ 1 "two" }. // => Match#Miss
+rectArea call: (Shape#Rectangle width: 10 height: 20). // => Match#Hit value: 200
+rectArea call: (Shape#Circle radius: 10).              // => Match#Miss
+
+// The `Match` type provides static methods to allow you build up a chain of pattern matches, for
+// example `value:toOneOf`:
+impl Shape {
+    func area {
+        Match value: self toOneOf: #{
+            ?[ | Shape#Rectangle width: (w = Integer) height: (h = Integer) | w * h     ]
+            ?[ | Shape#Circle radius: (r = Integer)                         | r * r * 3 ]
+            ?[ | Shape#Square length: (l = Integer)                         | l * l     ]
+        } $ value // Extract the value or fatally error if nothing matched
+    }
+}
+(Shape#Rectangle width: 10 height: 20) area. // => 200
+(Shape#Square length: 10) area.              // => 100
+
+// `![ ... ]` blocks behave almost the same, but will return the value not wrapped in a `Match`, and
+// fatally error if the pattern didn't match:
+addIntsOrError = ![
+    | a = Integer. b = Integer |
+    a + b
+].
+addIntsOrError callWith: #{ 1 2 }.        // => 3
+// addIntsOrError callWith: #{ 1 "two" }. // => Would cause a fatal error!
+
+// -------------------------------------------------------------------------------------------------
+// 8. Mixins
+// -------------------------------------------------------------------------------------------------
+
+// Mixins are reusable modules which can be included in structs, enums, and other mixins. After
+// creating a mixin, you can `impl` on it like any other type:
+mixin CanGreet.
+impl CanGreet {
+    func greet {
+        Console print: "Hello, my name is ".
+
+        // We are assuming that the receiver has a `name` method - it's the responsibility of the
+        // type which `use`s this mixin to make sure it's meeting our requirements!
+        Console println: self name.
+    }
+}
+
+// To include this mixin's methods, you can `use` it in another `impl` block:
+impl Person {
+    use CanGreet.
+}
+me greet. // => Prints "Hello, my name is Aaron"
+
+// -------------------------------------------------------------------------------------------------
+// 9. Advanced Control Flow
+// -------------------------------------------------------------------------------------------------
+
+// The `return` keyword will return from the current function (not block), optionally with a given
+// value:
+impl Array {
+    func firstEvenNumber {
+        self forEach: [ |i|
+            i modulo: 2 $ equals: 0 $ ifTrue: [
+                // We found the first even number, so we can exit this function and return it!
+                return i
+            ]
+        ].
+        null
+    }
+}
+#{ 1 3 4 5 10 } firstEvenNumber. // => 4
+
+// If you need even more flexibility, the "throw/catch" system allows you to jump up the call stack
+// (throw), and stop at a given point (catch).
+//
+// The best way of doing this is `Program`'s static method `catchTag:`, which creates a new unique
+// tag and allows you to exit the block early by calling `throw:` with it. Here's another
+// implementation of `firstEvenNumber`:
+impl Array {
+    func firstEvenNumberAgain {
+        result = null.
+        Program catchTag: [ |tag|
+            self forEach: [ |i|
+                i modulo: 2 $ equals: 0 $ ifTrue: [
+                    Program throw: tag              // Jumps to... -.
+                ]                                   //              |
+            ].                                      //              |
+        ]. // ...the end of the block <-----------------------------'
+        result
+    }
+}
+#{ 1 3 4 5 10 } firstEvenNumberAgain. // => 4
+
+// (In fact, `return` is just syntactic sugar for throw and catch!)
