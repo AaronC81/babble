@@ -2953,6 +2953,41 @@ and return the first hit value.</p>
                     
                         <h2>
                             
+                                <code><i>static</i> </code>
+                            
+                            <code>value:toOneOf:</code>
+                        </h2>
+
+                        
+                                <p>A shorthand for <code>oneOf</code> which immediately calls the block against the given value.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>value:</code></b></p>
+                                        <blockquote>
+                                            <p>The value to match against.</p>
+
+                                        </blockquote>
+                                    
+                                        <p><b><code>oneOf:</code></b></p>
+                                        <blockquote>
+                                            <p>The blocks to try matching this against, each taking one parameter.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The return value of the first block which returns a hit, or a miss if none do.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
                             <code>valueOr:</code>
                         </h2>
 
@@ -3979,6 +4014,39 @@ powered by interpreter magic.</p>
                     
                         <h2>
                             
+                            <code>replace:with:</code>
+                        </h2>
+
+                        
+                                <p>Replaces occurrences of one character with another.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>replace:</code></b></p>
+                                        <blockquote>
+                                            <p>The character to replace.</p>
+
+                                        </blockquote>
+                                    
+                                        <p><b><code>with:</code></b></p>
+                                        <blockquote>
+                                            <p>The character to replace it with.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A new string with the character replaced wherever it appears.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
                             <code>split:</code>
                         </h2>
 
@@ -4031,10 +4099,38 @@ powered by interpreter magic.</p>
                         </h2>
 
                         
-                                <p>Parses this string as an integer. If the string is not a valid integer, returns <code>null</code>.</p>
+                                <p>Parses this string as a base-10 integer. If the string is not a valid integer, returns <code>null</code>.</p>
 
 
                                 <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>An integer, or <code>null</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>toInteger:</code>
+                        </h2>
+
+                        
+                                <p>Parses this string as an integer of the given base. If the string is not a valid integer, returns <code>null</code>.</p>
+<p>If the base is outside of the range 2..36 inclusive, raises an error.</p>
+
+
+                                <blockquote>
+                                    
+                                        <p><b><code>s</code></b></p>
+                                        <blockquote>
+                                            <p>toInteger: The base to parse the integer in.</p>
+
+                                        </blockquote>
                                     
                                     
                                             <p><b><i>Returns:</i></b></p>
