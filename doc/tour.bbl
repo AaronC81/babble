@@ -235,9 +235,9 @@ impl Person {
     // Parameterised method definition, which in this case is also static
     // (Exists on the type rather than its instances)
     //
-    //     .---- External name (what the parameter is named when calling this method)
-    //     |        .---- Internal name (what local variable this parameter's value is bound to)
-    //     v        v
+    //            .---- External name (what the parameter is named when calling this method)
+    //            |        .---- Internal name (what local variable this parameter's value is bound to)
+    //            v        v
     static func newborn: name {
         // The receiver of a static method is the type itself, so this calls the constructor
         self name: name age: 0.
