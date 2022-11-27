@@ -7,7 +7,7 @@
     
 # Babble
 
-**[Language Tour](doc/tour.bbl)** | **[API documentation](https://aaronc81.github.io/babble)**
+**[Language tour](doc/tour.bbl)** | **[API documentation](https://aaronc81.github.io/babble)**
 
 <hr />
 
