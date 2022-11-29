@@ -76,6 +76,13 @@
             margin-top: 40px;
             margin-bottom: 40px;
         }
+
+        .magic {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #dbd40977;
+        }
     </style>
 </head>
 <body>
@@ -176,6 +183,17 @@
                         {% match method.parsed %}
                             {% when Some with (p) %}
                                 {{ p.description|safe }}
+
+                                {% if p.magic %}
+                                    <div class="magic">
+                                        This method is <b>magic</b> - its implementation is handled
+                                        by the core of the interpreter.
+                                        <br>
+                                        It can still be called like a normal method, but trying to
+                                        introspect or change this method's definition may not have
+                                        the intended effect.
+                                    </div>
+                                {% endif %}
 
                                 <blockquote>
                                     {% for (name, desc) in p.parameters %}

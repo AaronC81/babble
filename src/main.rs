@@ -65,7 +65,7 @@ fn main() {
         repl();
     };
 
-    let src = SourceFile::new(&input_name, &input_contents).rc();
+    let src = SourceFile::new(&std::fs::canonicalize(input_name).unwrap().to_str().unwrap(), &input_contents).rc();
     if args.show_asm {
         let tokens = Tokenizer::tokenize(src.clone()).expect("tokenization failed");
         let node = crate::parser::Parser::parse_and_analyse(src.clone(), &tokens[..]).expect("parsing failed");

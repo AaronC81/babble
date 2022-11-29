@@ -286,6 +286,12 @@ impl Interpreter {
                 // Pop receiver
                 let receiver = value_stack.pop().unwrap();
 
+                // Check for magic
+                if let Some(result) = self.handle_magic(instruction, receiver.clone(), method_name, args.clone()) {
+                    value_stack.push(result?);
+                    return Ok(());
+                }
+
                 // Perform method call and push result
                 value_stack.push(self.send_message(receiver, method_name, args)?);
             },
@@ -441,6 +447,21 @@ impl Interpreter {
     /// as `Boolean`.
     pub fn resolve_stdlib_type(&self, id: &str) -> TypeRef {
         self.resolve_type(id).unwrap_or_else(|| panic!("internal error: stdlib type {} missing", id))
+    }
+
+    /// Checks if the method call with the given name and receiver is a magic method. If so, calls
+    /// it, and returns `Some` with the result of the call.
+    /// 
+    /// If the method is not magic and must be handled normally, returns `None`.
+    pub fn handle_magic(&mut self, instruction: &Instruction, receiver: ValueRef, method_name: &str, args: Vec<ValueRef>) -> Option<InterpreterResult> {
+        if let Value { type_instance: TypeInstance::Type(ref t) } = *receiver.borrow() {
+            // Program filePath
+            if t.borrow().id == "Program" && method_name == "filePath" {
+                return Some(Ok(Value::new_string(&instruction.location.source_file.name).rc()))
+            }
+        }
+
+        None
     }
 
     /// Sends a message (i.e. calls a method), given a receiver, method name, and a set of values as

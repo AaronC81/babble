@@ -36,6 +36,16 @@ impl Method {
         }
     }
 
+    /// Constructs a new method which is implemented with interpreter magic and should never be
+    /// called directly.
+    pub fn new_magic(name: &str) -> Self {
+        Self {
+            name: name.into(),
+            implementation: MethodImplementation::Magic,
+            documentation: DocumentationState::Undocumented,
+        }
+    }
+
     /// Adds documentation to this method definition.
     pub fn add_documentation(&mut self, documentation: &str) {
         self.documentation = DocumentationState::Documented(documentation.into());
@@ -104,6 +114,8 @@ impl Method {
                 interpreter.stack.pop();
                 Ok(result?)
             },
+
+            MethodImplementation::Magic => unreachable!("magic methods should not be called directly"),
         }
     }
 }
@@ -118,12 +130,18 @@ pub enum MethodImplementation {
         instructions: InstructionBlock,
         internal_names: Vec<String>,
     },
+
+    /// This method uses some extreme interpreter magic - it doesn't have a body because it's
+    /// handled by the interpreter itself. This is reserved only for the most special of methods,
+    /// such as those which directly need to access instruction metadata.
+    Magic,
 }
 impl Debug for MethodImplementation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Internal(_) => f.debug_tuple("Internal").finish(),
             Self::Compiled { instructions, internal_names } => f.debug_struct("Compiled").field("instructions", instructions).field("internal_names", internal_names).finish(),
+            Self::Magic => f.debug_tuple("Magic").finish(),
         }
     }
 }

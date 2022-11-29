@@ -15,6 +15,7 @@ struct MethodParsedDocumentation {
     pub description: String,
     pub parameters: Vec<(String, String)>,
     pub return_value: Option<String>,
+    pub magic: bool,
 }
 
 struct MethodDocumentation {
@@ -45,6 +46,7 @@ impl MethodParsedDocumentation {
             description: "".into(),
             parameters: vec![],
             return_value: None,
+            magic: false,
         };
 
         for line in string.split("\n") {
@@ -59,6 +61,8 @@ impl MethodParsedDocumentation {
             } else if line.starts_with("@returns") {
                 let line = line.trim_start_matches("@returns").trim();
                 result.return_value = Some(line.into());
+            } else if line.starts_with("@magic") {
+                result.magic = true;
             } else {
                 result.description.push_str(line);
                 result.description.push_str("\n");

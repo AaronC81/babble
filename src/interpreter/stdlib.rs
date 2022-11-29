@@ -93,7 +93,7 @@ fn representable(_: &mut Interpreter) -> Type {
         Indicates that a type can be converted to a string.
 
         This mixin is implemented automatically on all types, and the definition of `repr` is
-        powered by interpreter magic.
+        provided by the interpreter.
     ")
 }
 
@@ -118,7 +118,7 @@ fn equatable(_: &mut Interpreter) -> Type {
         Indicates that values of a type can be compared for equality.
 
         This mixin is implemented automatically on all types, and the definition of `equals:` is
-        powered by interpreter magic.
+        provided by the interpreter.
     ")
 }
 
@@ -697,6 +697,13 @@ fn program(_: &mut Interpreter) -> Type {
 
                 As you might guess, this is **extremely dangerous** to use in combination with any
                 user input. Be careful!
+            ").rc(),
+
+            Method::new_magic("filePath").with_documentation("
+                The absolute path to the file currently being executed by the interpreter.
+
+                @magic
+                @returns The absolute path to the file being executed.
             ").rc(),
         ],
         ..Type::new("Program")
