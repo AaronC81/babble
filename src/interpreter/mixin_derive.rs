@@ -36,8 +36,8 @@ impl TypeCoreMixinDeriveBuilder for Type {
 
 #[test]
 fn test_derive_equatable_struct() {
-    let mut i = Interpreter::new().unwrap();
-    i.parse_and_evaluate(SourceFile::new_temp("struct A x. struct B x.").rc()).unwrap();
+    let mut i = Interpreter::new(Some(SourceFile::new_temp("struct A x. struct B x.").rc())).unwrap();
+    i.parse_and_evaluate_root().unwrap();
 
     assert_eq!(
         i.parse_and_evaluate(SourceFile::new_temp("(A x: 3) equals: (A x: 3)").rc()).unwrap(),
@@ -60,8 +60,8 @@ fn test_derive_equatable_struct() {
 
 #[test]
 fn test_derive_equatable_enum() {
-    let mut i = Interpreter::new().unwrap();
-    i.parse_and_evaluate(SourceFile::new_temp("enum A { X x. Y. } enum B { X x. Y. }").rc()).unwrap();
+    let mut i = Interpreter::new(Some(SourceFile::new_temp("enum A { X x. Y. } enum B { X x. Y. }").rc())).unwrap();
+    i.parse_and_evaluate_root().unwrap();
 
     assert_eq!(
         i.parse_and_evaluate(SourceFile::new_temp("(A#Y) equals: (A#Y)").rc()).unwrap(),

@@ -59,6 +59,7 @@ pub struct StackFrame {
     pub context: StackFrameContext,
     self_value: ValueRef,
     locals: Vec<LocalVariableRef>,
+    source_file: Option<Rc<SourceFile>>,
 }
 
 /// A description of the context which created a stack frame.
@@ -100,6 +101,7 @@ impl Display for StackFrameContext {
 pub struct Interpreter {
     pub types: Vec<TypeRef>,
     pub stack: Vec<StackFrame>,
+    pub root_source_file: Option<Rc<SourceFile>>,
 }
 
 pub type InterpreterResult = Result<ValueRef, InterpreterError>;
@@ -107,7 +109,7 @@ pub type InterpreterResult = Result<ValueRef, InterpreterError>;
 impl Interpreter {
     /// Creates a new interpreter, with a stack containing only a root frame, and an instance of
     /// the standard library in its type repository.
-    pub fn new() -> Result<Self, InterpreterError> {
+    pub fn new(root_source_file: Option<Rc<SourceFile>>) -> Result<Self, InterpreterError> {
         let mut result = Self {
             types: vec![],
             stack: vec![
@@ -115,11 +117,19 @@ impl Interpreter {
                     context: StackFrameContext::Root,
                     self_value: Value::new_null().rc(),
                     locals: vec![],
+                    source_file: root_source_file.clone(),
                 }
             ],
+            root_source_file
         };
         stdlib::instantiate(&mut result)?;
         Ok(result)
+    }
+
+    /// Tokenize, parse, and compile the root source file, and then evaluate it within this
+    /// interpreter.
+    pub fn parse_and_evaluate_root(&mut self) -> InterpreterResult {
+        self.parse_and_evaluate(self.root_source_file.clone().expect("no root source file"))
     }
 
     /// Tokenize, parse, and compile a source file, and then evaluate it within this interpreter.
@@ -343,6 +353,7 @@ impl Interpreter {
                     context: StackFrameContext::Impl(target),
                     self_value: Value::new_null().rc(),
                     locals: vec![],
+                    source_file: Some(body.body.source_file()),
                 });
                 self.evaluate(&body.body)?;
                 self.stack.pop();
@@ -455,9 +466,17 @@ impl Interpreter {
     /// If the method is not magic and must be handled normally, returns `None`.
     pub fn handle_magic(&mut self, instruction: &Instruction, receiver: ValueRef, method_name: &str, args: Vec<ValueRef>) -> Option<InterpreterResult> {
         if let Value { type_instance: TypeInstance::Type(ref t) } = *receiver.borrow() {
-            // Program filePath
-            if t.borrow().id == "Program" && method_name == "filePath" {
-                return Some(Ok(Value::new_string(&instruction.location.source_file.name).rc()))
+            // Program filePathBacktrace
+            if t.borrow().id == "Program" && method_name == "filePathBacktrace" {
+                let mut paths = vec![];
+                for frame in self.stack.iter().rev() {
+                    if let Some(source_file) = frame.source_file.clone() {
+                        paths.push(Value::new_string(&source_file.name).rc());
+                    } else {
+                        paths.push(Value::new_null().rc());
+                    }
+                }
+                return Some(Ok(Value::new_array(&paths).rc()))
             }
         }
 

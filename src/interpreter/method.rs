@@ -101,6 +101,7 @@ impl Method {
                         method: self.clone(),
                         receiver,
                     },
+                    source_file: Some(instructions.source_file()),
                 });
 
                 // Run the body, bail if it fatally errored, and then pop the stack frame

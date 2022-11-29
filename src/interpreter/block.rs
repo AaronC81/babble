@@ -129,6 +129,7 @@ impl Block {
                 .collect(),
             self_value: self.captured_self.clone(),
             context: StackFrameContext::Block,
+            source_file: Some(self.body.source_file()),
         });
 
         // Run the body, bail if it fatally errored, and then pop the stack frame

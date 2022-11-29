@@ -57,7 +57,7 @@ fn main() {
         input_name = "command-line".to_string();
         input_contents = code.clone();
     } else if args.doc_gen {
-        let interpreter = Interpreter::new().unwrap();
+        let interpreter = Interpreter::new(None).unwrap();
         let output = doc_gen::generate_html_documentation(&interpreter);
         println!("{}", output);
         return;
@@ -74,7 +74,7 @@ fn main() {
         return;
     }
 
-    if let Err(e) = Interpreter::new().map(|mut i| i.parse_and_evaluate(src)).flatten() {
+    if let Err(e) = Interpreter::new(Some(src)).map(|mut i| i.parse_and_evaluate_root()).flatten() {
         print_error(e);
     }
 }
@@ -82,7 +82,7 @@ fn main() {
 // TODO: panics on parse error
 fn repl() -> ! {
     // Construct an interpreter instance
-    let mut interpreter = Interpreter::new().unwrap();    
+    let mut interpreter = Interpreter::new(None).unwrap();    
 
     let mut command_number = 1;
     loop {

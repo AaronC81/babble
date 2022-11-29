@@ -699,11 +699,17 @@ fn program(_: &mut Interpreter) -> Type {
                 user input. Be careful!
             ").rc(),
 
-            Method::new_magic("filePath").with_documentation("
-                The absolute path to the file currently being executed by the interpreter.
+            Method::new_magic("filePathBacktrace").with_documentation("
+                An array of absolute file paths, one per stack frame, corresponding to the file from
+                which the code executing in that stack frame was loaded.
+
+                The most recent stack frame appears first.
+
+                If any stack frame does not have an associated file, that frame's element will be
+                null.
 
                 @magic
-                @returns The absolute path to the file being executed.
+                @returns An array of file paths.
             ").rc(),
         ],
         ..Type::new("Program")

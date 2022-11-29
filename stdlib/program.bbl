@@ -78,4 +78,11 @@ impl Program {
     static func loop: fn {
         [ true ] whileTrue: fn.
     }
+
+    /// Returns the absolute file path to the file which this method was called from.
+    ///
+    /// @returns The absolute file path.
+    static func filePath {
+        self filePathBacktrace $ get: 1
+    }
 }

@@ -6,9 +6,9 @@
 //! compiled with `pop`s interspersed, e.g: `<stmt 1>, pop, <stmt 2>, pop, <stmt 3>`, leaving the
 //! implicit return value of the block as the only item left on the stack.
 
-use std::{fmt::Display, slice::Iter};
+use std::{fmt::Display, slice::Iter, rc::Rc};
 
-use crate::{parser::{Node, Literal, NodeKind, SendMessageComponents, SendMessageParameter, BlockParameters}, source::Location};
+use crate::{parser::{Node, Literal, NodeKind, SendMessageComponents, SendMessageParameter, BlockParameters}, source::{Location, SourceFile}};
 
 use super::{Value, InterpreterError, TypeData, InterpreterErrorKind, MethodLocality};
 
@@ -34,6 +34,10 @@ impl InstructionBlock {
 
     pub fn as_vec(&self) -> &Vec<Instruction> {
         &self.0
+    }
+
+    pub fn source_file(&self) -> Rc<SourceFile> {
+        self.0.first().unwrap().location.source_file.clone()
     }
 }
 
