@@ -29,12 +29,21 @@ impl Program {
 
     InternalTest case: "eval" that: (Program eval: "2 add: 2") equals: 4.
 
-    /// Loads a file relaetive to the current working directory and evaluates its contents in this
-    /// interpreter.
+    /// Loads a file relative to the file which calls this method, and evaluates its contents in
+    /// this interpreter.
     ///
     /// The same safety warnings as `eval:` apply!
-    static func evalFile: path {
-        self eval: (File open: path in: &readAllText)
+    static func evalFile: relPath {
+        // TODO: cope with absolute paths too
+        callingDir = self filePathBacktrace get: 1
+            $ split: "/"
+            $ reverse
+            $ skip: 1
+            $ reverse
+            $ join: "/".
+        evalPath = callingDir concat: "/" $ concat: relPath.
+        self eval: (File open: evalPath in: &readAllText).
+        null
     }
 
     /// Runs the given body block, and exits if an object is thrown in it with `throw:` and
