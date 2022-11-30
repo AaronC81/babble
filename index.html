@@ -3562,8 +3562,8 @@ user input. Be careful!</p>
                         </h2>
 
                         
-                                <p>Loads a file relaetive to the current working directory and evaluates its contents in this
-interpreter.</p>
+                                <p>Loads a file relative to the file which calls this method, and evaluates its contents in
+this interpreter.</p>
 <p>The same safety warnings as <code>eval:</code> apply!</p>
 
 
@@ -3609,7 +3609,36 @@ interpreter.</p>
                         </h2>
 
                         
-                                <p>The absolute path to the file currently being executed by the interpreter.</p>
+                                <p>Returns the absolute file path to the file which this method was called from.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The absolute file path.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>filePathBacktrace</code>
+                        </h2>
+
+                        
+                                <p>An array of absolute file paths, one per stack frame, corresponding to the file from
+which the code executing in that stack frame was loaded.</p>
+<p>The most recent stack frame appears first.</p>
+<p>If any stack frame does not have an associated file, that frame's element will be
+null.</p>
 
 
                                 
@@ -3628,7 +3657,7 @@ interpreter.</p>
                                     
                                             <p><b><i>Returns:</i></b></p>
                                             <blockquote>
-                                                <p>The absolute path to the file being executed.</p>
+                                                <p>An array of file paths.</p>
 
                                             </blockquote>
                                         
