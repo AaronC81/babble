@@ -1784,6 +1784,35 @@ implement <code>Orderable</code>.</p>
                     
                         <h2>
                             
+                            <code>maxBy:</code>
+                        </h2>
+
+                        
+                                <p>Finds the largest key of this enumerable when applying a key function to each element.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                        <p><b><code>minBy:</code></b></p>
+                                        <blockquote>
+                                            <p>The key function, which must take one parameter and return an <code>Orderable</code>.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The largest element, according to the values' <code>Orderable</code> implementation.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
                             <code>min</code>
                         </h2>
 
@@ -1795,6 +1824,35 @@ implement <code>Orderable</code>.</p>
                                 
 
                                 <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The smallest element, according to the values' <code>Orderable</code> implementation.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>minBy:</code>
+                        </h2>
+
+                        
+                                <p>Finds the smallest key of this enumerable when applying a key function to each element.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                        <p><b><code>minBy:</code></b></p>
+                                        <blockquote>
+                                            <p>The key function, which must take one parameter and return an <code>Orderable</code>.</p>
+
+                                        </blockquote>
                                     
                                     
                                             <p><b><i>Returns:</i></b></p>
@@ -1843,8 +1901,10 @@ elements for which the predicate returned <code>false</code>.</p>
                         </h2>
 
                         
-                                <p>A single-element form of <code>reduce:acc:</code> which uses the first element of the enumerable as the
-initial accumulator value, and iterates over every element after the first.</p>
+                                <p>Reduces this enumerable into a single value, by starting with the enumerable's first element
+and repeatedly applying a block to it with each successive element of the enumerable.</p>
+<p>The block will be called for each item in the enumerable, with the block's result replacing
+the current accumulator value.</p>
 
 
                                 
@@ -1892,6 +1952,45 @@ the current accumulator value.</p>
                                         <p><b><code>acc:</code></b></p>
                                         <blockquote>
                                             <p>The initial accumulator value.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The accumulator value obtained after repeatedly applying the block.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>reduce:mapAcc:</code>
+                        </h2>
+
+                        
+                                <p>Reduces this enumerable into a single value, by starting with the enumerable's first
+element, calling a mapping function on it, and then repeatedly applying a block to it with
+each successive element of the enumerable.</p>
+<p>The block will be called for each item in the enumerable, with the block's result replacing
+the current accumulator value.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                        <p><b><code>reduce:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to apply, which should accept two parameters: the accumulator and the enumerable value.</p>
+
+                                        </blockquote>
+                                    
+                                        <p><b><code>mapAcc:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to call once to transform the initial accumulator value.</p>
 
                                         </blockquote>
                                     
