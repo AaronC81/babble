@@ -168,13 +168,30 @@ impl Enumerable {
         acc
     }
 
-    /// A single-element form of `reduce:acc:` which uses the first element of the enumerable as the
-    /// initial accumulator value, and iterates over every element after the first.
+    /// Reduces this enumerable into a single value, by starting with the enumerable's first element
+    /// and repeatedly applying a block to it with each successive element of the enumerable.
+    ///
+    /// The block will be called for each item in the enumerable, with the block's result replacing
+    /// the current accumulator value.
     ///
     /// @param reduce: The block to apply, which should accept two parameters: the accumulator and the enumerable value.
     /// @returns The accumulator value obtained after repeatedly applying the block.
     func reduce: fn {
-        self skip: 1 $ reduce: fn acc: self first.
+        self reduce: fn mapAcc: [ |x| x ]
+    }
+
+    /// Reduces this enumerable into a single value, by starting with the enumerable's first
+    /// element, calling a mapping function on it, and then repeatedly applying a block to it with
+    /// each successive element of the enumerable.
+    ///
+    /// The block will be called for each item in the enumerable, with the block's result replacing
+    /// the current accumulator value.
+    ///
+    /// @param reduce: The block to apply, which should accept two parameters: the accumulator and the enumerable value.
+    /// @param mapAcc: The block to call once to transform the initial accumulator value.
+    /// @returns The accumulator value obtained after repeatedly applying the block.
+    func reduce: fn mapAcc: mapFn {
+        self skip: 1 $ reduce: fn acc: (mapFn call: self first).
     }
 
     /// Adds together the elements in this enumerable, by starting with the integer 0 and repeatedly
@@ -290,12 +307,38 @@ impl Enumerable {
         self reduce: [ |acc x| acc lessThan: x $ ifTrue: [ acc ] else: [ x ] ]
     }
 
+    /// Finds the smallest key of this enumerable when applying a key function to each element.
+    ///
+    /// @param minBy: The key function, which must take one parameter and return an `Orderable`.
+    /// @returns The smallest element, according to the values' `Orderable` implementation.
+    func minBy: fn {
+        self reduce: [ |acc x|
+                k = fn call: x.
+                acc first lessThan: k $ ifTrue: [ acc ] else: [ #{ k. x } ]
+             ]
+             mapAcc: [ |x| #{ fn call: x. x } ] 
+             $ last
+    }
+
     /// Finds the largest element of this enumerable, assuming that all elements of the enuemrable
     /// implement `Orderable`.
     ///
     /// @returns The largest element, according to the values' `Orderable` implementation.
     func max {
         self reduce: [ |acc x| acc greaterThan: x $ ifTrue: [ acc ] else: [ x ] ]
+    }
+
+    /// Finds the largest key of this enumerable when applying a key function to each element.
+    ///
+    /// @param minBy: The key function, which must take one parameter and return an `Orderable`.
+    /// @returns The largest element, according to the values' `Orderable` implementation.
+    func maxBy: fn {
+        self reduce: [ |acc x|
+                k = fn call: x.
+                acc first greaterThan: k $ ifTrue: [ acc ] else: [ #{ k. x } ]
+             ]
+             mapAcc: [ |x| #{ fn call: x. x } ] 
+             $ last
     }
 
     /// Combines two enumerables into a single array. The elements of the array are themselves
