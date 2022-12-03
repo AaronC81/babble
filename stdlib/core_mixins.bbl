@@ -447,4 +447,33 @@ impl Enumerable {
         ].
         result
     }
+
+    /// Using the given function to compute keys, builds a new array with only the items with unique
+    /// keys, according to `equals:`.
+    ///
+    /// If multiple items have unique keys, the first one in this enumerable is used.
+    ///
+    /// @params uniqueBy: The key function, which should take one parameter.
+    /// @returns An array of the items with unique keys.
+    func uniqueBy: fn {
+        keys = #{}.
+        result = #{}.
+        self forEach: [ |i|
+            k = fn call: i.
+            keys contains: k $ ifFalse: [
+                keys append: k.
+                result append: i.
+            ].
+        ].
+        result
+    }
+
+    /// Builds a new array with only unique items, according to `equals:`.
+    ///
+    /// If multiple items are equal, the first one in this enumerable is used.
+    ///
+    /// @returns An array of unique items.
+    func unique {
+        self uniqueBy: [ |x| x ]
+    }
 }

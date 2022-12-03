@@ -154,5 +154,8 @@ impl Array {
                          #{ "b" #{ "bdf" "bcd" "bad" } }
                          #{ "c" #{ "cad" } }
                      }).
+
+        InternalTest case: "unique" that: (#{ 1 2 3 1 2 3 1 2 3 } unique) equals: #{ 1 2 3 }.
+        InternalTest case: "uniqueBy" that: (#{ "foo" "bar" "baz" "qux" "quux" "quuz" } uniqueBy: &length) equals: #{ "foo" "quux" }.
     ]
 }
