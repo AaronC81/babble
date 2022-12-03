@@ -308,6 +308,22 @@ fn string(interpreter: &mut Interpreter) -> Type {
                 @params toInteger: The base to parse the integer in.
                 @returns An integer, or `null`.
             ").rc(),
+
+            Method::new_internal("uppercase", |_, recv, a| {
+                Ok(Value::new_string(&recv.borrow().to_string()?.to_uppercase()).rc())
+            }).with_documentation("
+                Returns a copy of this string, with all letters converted to uppercase.
+
+                @returns The new uppercase string.
+            ").rc(),
+
+            Method::new_internal("lowercase", |_, recv, a| {
+                Ok(Value::new_string(&recv.borrow().to_string()?.to_lowercase()).rc())
+            }).with_documentation("
+                Returns a copy of this string, with all letters converted to lowercase.
+
+                @returns The new lowercase string.
+            ").rc(),
         ],
 
         static_methods: vec![
