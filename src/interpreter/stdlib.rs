@@ -324,6 +324,25 @@ fn string(interpreter: &mut Interpreter) -> Type {
 
                 @returns The new lowercase string.
             ").rc(),
+
+            Method::new_internal("toAsciiCode", |_, recv, a| {
+                let s = recv.borrow().to_string()?;
+                if s.len() != 1 {
+                    return Ok(Value::new_null().rc())
+                }
+
+                let char = s.chars().next().unwrap() as u32;
+                if char >= 0 && char <= 0xFF {
+                    Ok(Value::new_integer(char as i64).rc())
+                } else {
+                    Ok(Value::new_null().rc())
+                }
+            }).with_documentation("
+                Converts a string with a single character to that character's ASCII code. If the
+                string is not a single character, or the character is not ASCII, returns `null`.
+
+                @returns The character's ASCII code, or `null`.
+            ").rc(),
         ],
 
         static_methods: vec![
