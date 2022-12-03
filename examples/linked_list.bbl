@@ -5,13 +5,13 @@ enum LinkedList {
 
 impl LinkedList {
     static func fromArray: array {
-        list = LinkedList#End.
+        list = #End.
         array forEach: [ |item| list insert: item ].
         list
     }
 
     func isEmpty {
-        ?[ | LinkedList#End | ] call: self $ isHit
+        ?[ | #End | ] call: self $ isHit
     }
 
     func length {
@@ -22,7 +22,7 @@ impl LinkedList {
 
     func insert: item {
         self isEmpty
-            ifTrue: [ self = LinkedList#Item value: item next: LinkedList#End ]
+            ifTrue: [ self = #Item value: item next: #End ]
             else:   [ self next insert: item ]
     }
 
