@@ -350,8 +350,8 @@ impl Interpreter {
 
                 // Push new stack frame and evaluate body inside it
                 self.stack.push(StackFrame {
-                    context: StackFrameContext::Impl(target),
-                    self_value: Value::new_null().rc(),
+                    context: StackFrameContext::Impl(target.clone()),
+                    self_value: Value::new_type(target).rc(),
                     locals: vec![],
                     source_file: Some(body.body.source_file()),
                 });
