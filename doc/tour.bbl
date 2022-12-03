@@ -254,6 +254,15 @@ impl Integer {
     }
 }
 
+// If `self` is an enum (or an instance of an enum), you can omit the name of the enum when
+// constructing variants:
+impl Shape {
+    static func unitSquare {
+        // No need for `Shape#Square`
+        #Square length: 1.
+    }
+}
+
 // If you'd like to define some methods, but they don't make sense to be part of an instantiable
 // type (e.g. some utility methods), you can define a struct with no fields which can't be
 // instantiated, and `impl` static methods on it:
