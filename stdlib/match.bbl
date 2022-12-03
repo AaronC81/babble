@@ -19,7 +19,7 @@ impl Match {
     /// @param hit: The value to use.
     /// @returns The new `Match#Hit` instance.
     static func hit: value {
-        Match#Hit value: value
+        #Hit value: value
     }
 
     /// Composes a new block from an array of other blocks, which will call each block in the array
@@ -31,11 +31,11 @@ impl Match {
     /// @returns A new block taking one parameter, which executes each block in turn.
     static func oneOf: values {
         [ |subject| 
-            outerResult = Match#Miss.
+            outerResult = #Miss.
             Program catchTag: [ |tag|
                 values forEach: [ |item|
                     result = item call: subject.
-                    ?[ | Match#Hit value: value |
+                    ?[ | #Hit value: value |
                         outerResult = Match hit: value.
                         Program throw: tag.
                     ] call: result.
@@ -62,10 +62,10 @@ impl Match {
         }.
         composed = Match oneOf: candidates.
         InternalTest case: "match oneOf: hit"  that: (composed call: 2) equals: (Match hit: 200).
-        InternalTest case: "match oneOf: miss" that: (composed call: 5) equals: Match#Miss.
+        InternalTest case: "match oneOf: miss" that: (composed call: 5) equals: #Miss.
 
         InternalTest case: "match value:toOneOf: hit"  that: (Match value: 2 toOneOf: candidates) equals: (Match hit: 200).
-        InternalTest case: "match value:toOneOf: miss"  that: (Match value: 5 toOneOf: candidates) equals: Match#Miss.
+        InternalTest case: "match value:toOneOf: miss"  that: (Match value: 5 toOneOf: candidates) equals: #Miss.
     ] call.
 
     /// Wraps a single-argument pattern block by allowing the block to throw a tag to return an
@@ -80,7 +80,7 @@ impl Match {
     /// @returns A new block taking just the match subject, which will return the wrapped block's value, or a miss if the block throws the tag.
     static func withExplicitMiss: fn {
         [ |subject|
-            returnValue = Match#Miss.
+            returnValue = #Miss.
             Program catchTag: [ |tag|
                 returnValue = fn callWith: #{ subject. tag }.
             ].
@@ -109,11 +109,11 @@ impl Match {
     /// @param map: The block to execute on the value, taking one parameter.
     /// @returns A new hit, or a miss if it was already a miss.
     func map: fn {
-        self isHit ifTrue: [ Match#Hit value: (fn call: self value) ]
-                   else:   [ Match#Miss ]
+        self isHit ifTrue: [ #Hit value: (fn call: self value) ]
+                   else:   [ #Miss ]
     }
     InternalTest case: "match map: hit"  that: ((Match hit: 2) map: [ |x| x + 1 ]) equals: (Match hit: 3).
-    InternalTest case: "match map: miss" that: ((Match#Miss)   map: [ |x| x + 1 ]) equals: (Match#Miss).
+    InternalTest case: "match map: miss" that: ((#Miss)   map: [ |x| x + 1 ]) equals: (#Miss).
 
     /// If this match is a hit, returns its value. If it is a miss, executes the given block and
     /// returns its return value.
@@ -125,7 +125,7 @@ impl Match {
                    else:   [ fn call ]
     }
     InternalTest case: "match valueOrElse: hit"  that: ((Match hit: 2) valueOrElse: [ 3 ]) equals: 2.
-    InternalTest case: "match valueOrElse: miss" that: ((Match#Miss)   valueOrElse: [ 3 ]) equals: 3.
+    InternalTest case: "match valueOrElse: miss" that: ((#Miss)        valueOrElse: [ 3 ]) equals: 3.
 
     /// If this match is a hit, returns its value. If it is a miss, returns the given value.
     ///
@@ -135,7 +135,7 @@ impl Match {
         self valueOrElse: [ value ]
     }
     InternalTest case: "match valueOr: hit"  that: ((Match hit: 2) valueOr: 3) equals: 2.
-    InternalTest case: "match valueOr: miss" that: ((Match#Miss)   valueOr: 3) equals: 3.
+    InternalTest case: "match valueOr: miss" that: ((#Miss)        valueOr: 3) equals: 3.
 
     /// Assuming that this match contains another match (if it is a hit), flattens one level of
     /// nesting.
@@ -148,8 +148,8 @@ impl Match {
         ?[ | Match#Hit value: (Match#Hit value: x) | x ] call: self
     }
     InternalTest case: "match flatten hit,hit"  that: (Match hit: (Match hit: 2)) flatten equals: (Match hit: 2).
-    InternalTest case: "match flatten hit,miss" that: (Match hit: Match#Miss) flatten     equals: Match#Miss.
-    InternalTest case: "match flatten miss"     that: (Match#Miss) flatten                equals: Match#Miss.
+    InternalTest case: "match flatten hit,miss" that: (Match hit: #Miss) flatten          equals: #Miss.
+    InternalTest case: "match flatten miss"     that: (#Miss) flatten                     equals: #Miss.
 }
 
 impl Boolean {
