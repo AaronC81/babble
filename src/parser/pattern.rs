@@ -10,7 +10,7 @@ use crate::parser::{SendMessageComponents, SendMessageParameter, Node, NodeKind}
 
 use crate::interpreter::{ValueRef, InterpreterError, Interpreter, Value, InterpreterErrorKind, TypeInstance, TypeData};
 
-use super::Literal;
+use super::{Literal, SugarNodeKind};
 
 /// An error occurred when parsing a node tree into a pattern.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -56,7 +56,7 @@ impl Pattern {
         Self::new(PatternKind::Discard)
     }
 
-    pub fn new_fields(type_name: String, variant_name: Option<String>, fields: Vec<(String, Pattern)>) -> Self {
+    pub fn new_fields(type_name: Option<String>, variant_name: Option<String>, fields: Vec<(String, Pattern)>) -> Self {
         Self::new(PatternKind::Fields {
             type_name,
             variant_name,
@@ -99,8 +99,26 @@ impl Pattern {
 
             PatternKind::Fields { type_name, variant_name, fields } => {
                 // Resolve the type being matched against
-                let Some(type_value) = context.interpreter.resolve_type(type_name) else {
-                    return Err(InterpreterErrorKind::MissingName(type_name.into()).into())
+                let type_value = if let Some(type_name) = type_name {
+                    // If we know the type name, then this is easy!
+                    let Some(type_value) = context.interpreter.resolve_type(type_name) else {
+                        return Err(InterpreterErrorKind::MissingName(type_name.into()).into())
+                    };
+                    type_value
+                } else {
+                    // If not, then shorthand enum variant syntax was used
+                    // We need to resolve the type from the captured `self` in the context, using
+                    // the same method used by desugaring (`Reflection instanceType:`)
+                    let reflection = Value::new_type(
+                        context.interpreter.resolve_stdlib_type("Reflection")
+                    ).rc();
+                    let type_value = context.interpreter.send_message(
+                        reflection,
+                        "instanceType:",
+                        vec![context.captured_self.clone()],
+                    )?;
+                    let type_value = type_value.borrow().to_type()?;
+                    type_value
                 };
 
                 // If there's also a variant involved, resolve that too
@@ -220,10 +238,17 @@ impl Pattern {
                         }).collect::<Result<Vec<_>, _>>()?,
                 };
 
-                Ok(Pattern::new_fields(type_name, None, fields))
+                Ok(Pattern::new_fields(Some(type_name), None, fields))
             },
             NodeKind::EnumVariant { enum_type, variant_name, components } => {
-                let NodeKind::Identifier(type_name) = enum_type.kind else {
+                // Extract type name, or use `None` if we've used shorthand variant syntax
+                // (Conveniently, variants get parsed before sugar expansion, so we can just check
+                // for that!)
+                let type_name = if let NodeKind::Identifier(type_name) = enum_type.kind {
+                    Some(type_name)
+                } else if let NodeKind::Sugar(SugarNodeKind::ShorthandVariantConstructor) = enum_type.kind {
+                    None
+                } else {
                     return Err(PatternParseError::InvalidNode(*enum_type))
                 };
 
@@ -246,7 +271,7 @@ impl Pattern {
                 if i == "_" {
                     Ok(Pattern::new_discard())
                 } else if i.chars().next().unwrap().is_uppercase() {
-                    Ok(Pattern::new_fields(i, None, vec![]))
+                    Ok(Pattern::new_fields(Some(i), None, vec![]))
                 } else {
                     Ok(Pattern::new_any_binding(&i))
                 }
@@ -285,7 +310,7 @@ pub enum PatternKind {
     /// The value must be an instance of the given struct or enum type, and optionally have a set of
     /// fields which must match their corresponding patterns.
     Fields {
-        type_name: String,
+        type_name: Option<String>,
         variant_name: Option<String>,
         fields: Vec<(String, Pattern)>,
     },
@@ -303,4 +328,5 @@ pub enum PatternKind {
 pub struct PatternMatchContext<'a> {
     pub interpreter: &'a mut Interpreter,
     pub bindings: HashMap<String, ValueRef>, 
+    pub captured_self: ValueRef,
 }

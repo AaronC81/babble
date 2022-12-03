@@ -97,6 +97,7 @@ impl Block {
                 let mut match_context = PatternMatchContext {
                     interpreter,
                     bindings: HashMap::new(),
+                    captured_self: self.captured_self.clone(),
                 };
                 if !fatal {
                     wrap_result_in_match = true;
