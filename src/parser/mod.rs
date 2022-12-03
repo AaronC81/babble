@@ -296,26 +296,12 @@ impl<'a> Parser<'a> {
             };
             self.advance();
 
-            // This is an enum variant constructor!
+            // Check if this is an enum variant constructor
             if let Token { kind: TokenKind::Hash, .. } = self.here() {
                 self.advance();
                 
-                // Grab the name of the variant
-                let variant_name = if let Token { kind: TokenKind::Identifier(id), .. } = self.here() {
-                    id.clone()
-                } else {
-                    return Err(ParserError::UnexpectedToken(self.here().clone()))
-                };
-                self.advance();
-
-                let components = self.try_parse_only_send_parameters(context)?
-                    .unwrap_or_else(|| SendMessageComponents::Blank);
-                
-                node.kind = NodeKind::EnumVariant {
-                    enum_type: Box::new(node.clone()),
-                    variant_name,
-                    components,
-                }
+                // Parse the variant constructor
+                node = self.parse_variant_constructor(node, context)?;
             }
 
             Ok(node)
@@ -460,6 +446,17 @@ impl<'a> Parser<'a> {
             let location = location.clone();
             self.advance();
 
+            // First, check if this is supposed to be a shorthand enum constructor
+            if let Token { kind: TokenKind::Identifier(id), .. } = self.here() {
+                // Yep! Parse the enum constructor
+                let node = self.parse_variant_constructor(Node {
+                    kind: NodeKind::Sugar(SugarNodeKind::ShorthandVariantConstructor),
+                    location: location.clone(),
+                    context: context.clone(),
+                }, context)?;
+                return Ok(node);
+            }
+            
             // This is a collection literal
             let Token { kind: TokenKind::LeftBrace, .. } = self.here() else {
                 return Err(ParserError::UnexpectedToken(self.here().clone()))
@@ -859,6 +856,30 @@ impl<'a> Parser<'a> {
             context,
             kind: NodeKind::Use(Box::new(mixin)),
         })        
+    }
+
+    fn parse_variant_constructor(&mut self, enum_type: Node, context: LexicalContextRef) -> Result<Node, ParserError> {
+        // Grab the name of the variant
+        let variant_name = if let Token { kind: TokenKind::Identifier(id), .. } = self.here() {
+            id.clone()
+        } else {
+            return Err(ParserError::UnexpectedToken(self.here().clone()))
+        };
+        self.advance();
+
+        // Parse out its components
+        let components = self.try_parse_only_send_parameters(context.clone())?
+            .unwrap_or_else(|| SendMessageComponents::Blank);
+        
+        Ok(Node {
+            location: enum_type.location.clone(),
+            context,
+            kind: NodeKind::EnumVariant {
+                enum_type: Box::new(enum_type),
+                variant_name,
+                components,
+            }
+        })
     }
     
     fn token_error(&self) -> Result<!, ParserError> {

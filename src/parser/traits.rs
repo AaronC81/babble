@@ -65,7 +65,7 @@ impl NodeWalk for Node {
             | NodeKind::MixinDefinition { name: _, documentation: _ }
             | NodeKind::Identifier(_)
             | NodeKind::Literal(_) 
-            | NodeKind::Sugar(SugarNodeKind::ShorthandBlock(_)) => (),
+            | NodeKind::Sugar(SugarNodeKind::ShorthandBlock(_) | SugarNodeKind::ShorthandVariantConstructor) => (),
         }
     }
 }

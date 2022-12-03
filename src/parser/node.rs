@@ -188,7 +188,10 @@ pub enum SugarNodeKind {
         left: Box<Node>,
         right: Box<Node>,
         op: BinaryOperation,
-    }
+    },
+
+    /// The node is the type for a shorthand enum variant.
+    ShorthandVariantConstructor,
 }
 
 /// The binary operation used by a [SugarNodeKind::BinaryMessage].
