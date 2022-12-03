@@ -2249,6 +2249,61 @@ predicate function returns <code>false</code> for the first time.</p>
                     
                         <h2>
                             
+                            <code>unique</code>
+                        </h2>
+
+                        
+                                <p>Builds a new array with only unique items, according to <code>equals:</code>.</p>
+<p>If multiple items are equal, the first one in this enumerable is used.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>An array of unique items.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>uniqueBy:</code>
+                        </h2>
+
+                        
+                                <p>Using the given function to compute keys, builds a new array with only the items with unique
+keys, according to <code>equals:</code>.</p>
+<p>If multiple items have unique keys, the first one in this enumerable is used.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                        <p><b><code>s</code></b></p>
+                                        <blockquote>
+                                            <p>uniqueBy: The key function, which should take one parameter.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>An array of the items with unique keys.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
                             <code>window:</code>
                         </h2>
 
@@ -4455,6 +4510,29 @@ provided by the interpreter.</p>
                     
                         <h2>
                             
+                            <code>lowercase</code>
+                        </h2>
+
+                        
+                                <p>Returns a copy of this string, with all letters converted to lowercase.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The new lowercase string.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
                             <code>replace:with:</code>
                         </h2>
 
@@ -4542,6 +4620,30 @@ provided by the interpreter.</p>
                     
                         <h2>
                             
+                            <code>toAsciiCode</code>
+                        </h2>
+
+                        
+                                <p>Converts a string with a single character to that character's ASCII code. If the
+string is not a single character, or the character is not ASCII, returns <code>null</code>.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The character's ASCII code, or <code>null</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
                             <code>toInteger</code>
                         </h2>
 
@@ -4587,6 +4689,29 @@ provided by the interpreter.</p>
                                             <p><b><i>Returns:</i></b></p>
                                             <blockquote>
                                                 <p>An integer, or <code>null</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                            <code>uppercase</code>
+                        </h2>
+
+                        
+                                <p>Returns a copy of this string, with all letters converted to uppercase.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The new uppercase string.</p>
 
                                             </blockquote>
                                         
