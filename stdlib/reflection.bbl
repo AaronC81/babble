@@ -1,0 +1,10 @@
+impl Reflection {
+    /// If the given object is a value, returns its type. If the given object is already a type,
+    /// returns that type.
+    ///
+    /// @param The object.
+    /// @returns The object's type, or itself if it was already a type.
+    static func instanceType: t {
+        Reflection isType: t $ ifTrue: [ t ] else: [ self type: t ]
+    }
+}

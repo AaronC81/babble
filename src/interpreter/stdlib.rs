@@ -34,6 +34,7 @@ pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError
     load_stdlib_file!(interpreter, "block.bbl")?;
     load_stdlib_file!(interpreter, "program.bbl")?;
     load_stdlib_file!(interpreter, "boolean.bbl")?;
+    load_stdlib_file!(interpreter, "reflection.bbl")?;
     load_stdlib_file!(interpreter, "integer.bbl")?;
     load_stdlib_file!(interpreter, "array.bbl")?;
     load_stdlib_file!(interpreter, "match.bbl")?;
@@ -62,6 +63,7 @@ fn early_core_types(interpreter: &mut Interpreter) -> Vec<TypeRef> {
 
 fn core_types(interpreter: &mut Interpreter) -> Vec<TypeRef> {
     vec![
+        reflection(interpreter).rc(),
         null(interpreter).rc(),
         integer(interpreter).rc(),
         string(interpreter).rc(),
@@ -71,7 +73,6 @@ fn core_types(interpreter: &mut Interpreter) -> Vec<TypeRef> {
         boolean(interpreter).rc(),
         internal_test(interpreter).rc(),
         program(interpreter).rc(),
-        reflection(interpreter).rc(),
         file(interpreter).rc(),
     ]
 }
@@ -764,6 +765,19 @@ fn reflection(_: &mut Interpreter) -> Type {
 
                 @param type: The object whose type to fetch.
                 @returns The object's type.
+            ").rc(),
+
+            Method::new_internal("isType:", |i, _, a| {
+                if let TypeInstance::Type(_) = a[0].borrow().type_instance {
+                    Ok(Value::new_boolean(i, true).rc())
+                } else {
+                    Ok(Value::new_boolean(i, false).rc())
+                }
+            }).with_documentation("
+                Determines whether an object is itself a type.
+
+                @param isType: The object to check.
+                @returns True if it is a type, or false otherwise.
             ").rc(),
 
             Method::new_internal("variant:", |i, _, a| {
