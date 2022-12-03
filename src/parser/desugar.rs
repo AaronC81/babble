@@ -216,6 +216,20 @@ fn desugar_return_internal(node: &mut Node, state: &mut DesugarReturnState) {
 /// ```
 /// 
 /// (Babble does not use operator precedence)
+/// 
+/// # Shorthand variant constructors
+/// 
+/// This syntax:
+/// 
+/// ```
+/// #Hit
+/// ```
+/// 
+/// Is desugared into:
+/// 
+/// ```
+/// (Reflection instanceType: self)#Hit
+/// ```
 pub fn desugar_simple(root: &mut Node) {
     // Shorthand blocks
     if let NodeKind::Sugar(SugarNodeKind::ShorthandBlock(method)) = &root.kind {
@@ -246,6 +260,25 @@ pub fn desugar_simple(root: &mut Node) {
                 components: SendMessageComponents::Parameterised(vec![
                     (op.parameter_name().into(), SendMessageParameter::CallArgument(right.clone()))
                 ]),
+            },
+            ..root.clone()
+        }
+    }
+
+    // Shorthand variant constructors
+    if let NodeKind::Sugar(SugarNodeKind::ShorthandVariantConstructor) = &root.kind {
+        *root = Node {
+            kind: NodeKind::SendMessage {
+                receiver: Box::new(Node {
+                    kind: NodeKind::Identifier("Reflection".to_string()),
+                    ..root.clone()
+                }),
+                components: SendMessageComponents::Parameterised(vec![
+                    ("instanceType".into(), SendMessageParameter::CallArgument(Box::new(Node {
+                        kind: NodeKind::SelfAccess,
+                        ..root.clone()
+                    }))),
+                ])
             },
             ..root.clone()
         }
