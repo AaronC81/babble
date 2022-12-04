@@ -1,7 +1,7 @@
 use askama::Template;
 use comrak::{markdown_to_html, ComrakOptions};
 
-use crate::interpreter::{Interpreter, MethodLocality, TypeData, DocumentationState};
+use crate::interpreter::{Interpreter, MethodLocality, TypeData, DocumentationState, MethodVisibility};
 
 struct TypeDocumentation {
     pub id: String,
@@ -21,6 +21,7 @@ struct MethodParsedDocumentation {
 struct MethodDocumentation {
     pub name: String,
     pub locality: MethodLocality,
+    pub visibility: MethodVisibility,
     pub parsed: Option<MethodParsedDocumentation>,
 }
 
@@ -124,6 +125,7 @@ fn build_documentation_objects<T: DocumentationTemplate>(interpreter: &Interpret
             method_docs.push(MethodDocumentation {
                 name: m.name.clone(),
                 locality: l,
+                visibility: m.visibility,
                 parsed: doc.as_ref().map(|d| MethodParsedDocumentation::parse(d)),
             });
         }

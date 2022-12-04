@@ -174,6 +174,12 @@
 
                     {% for method in type.methods %}
                         <h2>
+                            {% match method.visibility %}
+                                {% when MethodVisibility::Public %}
+                                    
+                                {% when MethodVisibility::Private %}
+                                    <code><i>private</i> </code>
+                            {% endmatch %}
                             {% if method.locality == MethodLocality::Static %}
                                 <code><i>static</i> </code>
                             {% endif %}
