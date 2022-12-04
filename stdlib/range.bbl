@@ -24,4 +24,26 @@ impl Range {
     use Enumerable.
     InternalTest case: "range toArray" that: (Range upTo: 5) toArray equals: #{ 0 1 2 3 4 }.
     InternalTest case: "range filter" that: ((Range upTo: 5) filter: [ |x| x greaterThan: 2 ]) equals: #{ 3 4 }.
+
+    /// Determines whether this range contains an integer, or fully encapsulates another range.
+    ///
+    /// This overrides `Enumerable contains:`.
+    ///
+    /// @param contains: The integer or range to check.
+    /// @returns True if this range contains the integer or range, false otherwise.
+    func contains: value {
+        Match value: value toOneOf: #{
+            ?[ | x = Integer | (x greaterThanOrEquals: self start) and: (x lessThan: self end) ].
+            ?[ | Range start: s end: e | (s greaterThanOrEquals: self start) and: (e lessThanOrEquals: self end) ].
+            [ Program error: "expected integer or range" ]
+        } $ value
+    }
+    InternalTest case: "range contains: Integer" that: (Range upTo: 5 $ contains: 2) equals: true.
+    InternalTest case: "range contains: Integer lower" that: (Range upTo: 5 $ contains: 0) equals: true.
+    InternalTest case: "range contains: Integer higher" that: (Range upTo: 5 $ contains: 4) equals: true.
+    InternalTest case: "range contains: Integer exc" that: (Range upTo: 5 $ contains: 5) equals: false.
+    InternalTest case: "range contains: Range included" that: (Range upTo: 5 $ contains: (Range start: 1 end: 4)) equals: true.
+    InternalTest case: "range contains: Range equal" that: (Range upTo: 5 $ contains: (Range upTo: 5)) equals: true.
+    InternalTest case: "range contains: Range out lower" that: (Range start: 3 end: 6 $ contains: (Range start: 1 end: 4)) equals: false.
+    InternalTest case: "range contains: Range out higher" that: (Range start: 3 end: 6 $ contains: (Range start: 5 end: 8)) equals: false.
 }
