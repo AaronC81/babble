@@ -50,6 +50,9 @@ pub enum InterpreterErrorKind {
     /// The receiver of a call did not have a method to satisfy the call.
     MissingMethod(ValueRef, String),
 
+    /// The method cannot be called from here, because it is private.
+    PrivateMethod(ValueRef, String),
+
     /// An identifier did not exist, for example as a type or local variable.
     MissingName(String),
 
@@ -155,6 +158,8 @@ impl Display for InterpreterErrorKind {
         match self {
             InterpreterErrorKind::MissingMethod(val, m) =>
                 write!(f, "`{}` has no method `{}`", val.borrow().to_language_string(), m),
+            InterpreterErrorKind::PrivateMethod(val, m) =>
+                write!(f, "cannot call private method `{}` on `{}`", m, val.borrow().to_language_string()),
             InterpreterErrorKind::MissingName(name) => 
                 write!(f, "`{}` does not exist", name),
             InterpreterErrorKind::MissingCaptureName(name) =>

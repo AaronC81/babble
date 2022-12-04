@@ -12,6 +12,7 @@ pub struct Method {
     pub name: String,
     pub implementation: MethodImplementation,
     pub documentation: DocumentationState,
+    pub visibility: MethodVisibility,
 }
 
 pub type MethodRef = Rc<Method>;
@@ -24,6 +25,7 @@ impl Method {
             name: name.into(),
             implementation: MethodImplementation::Internal(Box::new(function)),
             documentation: DocumentationState::Undocumented,
+            visibility: MethodVisibility::default(),
         }
     }
 
@@ -33,6 +35,7 @@ impl Method {
             name: name.into(),
             implementation: MethodImplementation::Compiled { instructions, internal_names },
             documentation: DocumentationState::Undocumented,
+            visibility: MethodVisibility::default(),
         }
     }
 
@@ -43,6 +46,7 @@ impl Method {
             name: name.into(),
             implementation: MethodImplementation::Magic,
             documentation: DocumentationState::Undocumented,
+            visibility: MethodVisibility::default(),
         }
     }
 
@@ -155,4 +159,18 @@ pub enum MethodLocality {
 
     /// The method is defined on a type itself, and does not need an instance to call.
     Static,
+}
+
+/// The visibility of a [Method], dictating where it can be called from.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum MethodVisibility {
+    /// The method can be called from anywhere.
+    Public,
+
+    /// The method can only be called if `self` is the same type as the call's receiver.
+    Private,
+}
+
+impl Default for MethodVisibility {
+    fn default() -> Self { Self::Public }
 }

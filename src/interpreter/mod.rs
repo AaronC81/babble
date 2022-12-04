@@ -497,8 +497,36 @@ impl Interpreter {
             } else {
                 receiver_ref.type_instance.get_type(self).borrow().resolve_instance_method(&method_name)
             };
+
         if let Some(method) = method {
             drop(receiver_ref);
+
+            // Make sure that we're allowed to call the method from here
+            match method.visibility {
+                MethodVisibility::Public => (), // Always allowed
+                MethodVisibility::Private => {
+                    // Check that the current self value's type is the same as the receiver's type
+                    // Use `Reflection instanceType:` for this, so that we get the correct semantics
+                    // for static methods
+                    let reflection = Value::new_type(self.resolve_stdlib_type("Reflection")).rc();
+                    let self_value = self.current_stack_frame().self_value.clone();
+                    let self_type = self.send_message(
+                        reflection.clone(),
+                        "instanceType:",
+                        vec![self_value],
+                    )?;
+                    let receiver_type = self.send_message(
+                        reflection.clone(),
+                        "instanceType:",
+                        vec![receiver.clone()],
+                    )?;
+
+                    // If the types aren't the same, don't allow calling this
+                    if self_type.borrow().to_type()? != receiver_type.borrow().to_type()? {
+                        return Err(InterpreterErrorKind::PrivateMethod(receiver.clone(), method_name.into()).into())
+                    }
+                },
+            }
 
             // Call the method
             // (This creates a frame if necessary)
