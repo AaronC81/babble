@@ -26,7 +26,7 @@ pub use traits::*;
 #[cfg(test)]
 mod tests;
 
-use crate::{tokenizer::{Token, TokenKind, TokenKeyword}, source::{Location, SourceFile}, interpreter::{Variant, DocumentationState}};
+use crate::{tokenizer::{Token, TokenKind, TokenKeyword}, source::{Location, SourceFile}, interpreter::{Variant, DocumentationState, MethodVisibility}};
 
 /// An error found while parsing.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -142,7 +142,8 @@ impl<'a> Parser<'a> {
         match self.here().kind {
             TokenKind::Keyword(TokenKeyword::Impl) => self.parse_impl_block(context),
             TokenKind::Keyword(TokenKeyword::Mixin) => self.parse_mixin_definition(context),
-            TokenKind::Keyword(TokenKeyword::Func | TokenKeyword::Static) => self.parse_func_definition(context),
+            TokenKind::Keyword(TokenKeyword::Func | TokenKeyword::Static | TokenKeyword::Private)
+                => self.parse_func_definition(context),
             TokenKind::Keyword(TokenKeyword::Enum) => self.parse_enum_definition(context),
             TokenKind::Keyword(TokenKeyword::Struct) => self.parse_struct_definition(context),
             TokenKind::Keyword(TokenKeyword::Use) => self.parse_use(context),
@@ -516,7 +517,8 @@ impl<'a> Parser<'a> {
                     | TokenKeyword::Static
                     | TokenKeyword::Mixin
                     | TokenKeyword::Use
-                    | TokenKeyword::Return =>
+                    | TokenKeyword::Return
+                    | TokenKeyword::Private =>
                         return Err(ParserError::UnexpectedToken(self.here().clone())),
                 },
                 context,
@@ -578,21 +580,25 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_func_definition(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
-        // The definition can optionally begin with a `static` keyword
-        let is_static =
+        // The definition can optionally begin with `static` or `private` keywords, in any order
+        let location;
+        let mut visibility = MethodVisibility::default();
+        let mut is_static = false;
+        loop {
             if let &Token { kind: TokenKind::Keyword(TokenKeyword::Static), .. } = self.here() {
                 self.advance();
-                true
+                is_static = true;
+            } else if let &Token { kind: TokenKind::Keyword(TokenKeyword::Private), .. } = self.here() {
+                self.advance();
+                visibility = MethodVisibility::Private;
+            } else if let &Token { location: ref loc, kind: TokenKind::Keyword(TokenKeyword::Func) } = self.here() {
+                location = loc.clone();
+                self.advance();
+                break;
             } else {
-                false
-            };
-
-        // After this, definitions should always begin with `func`
-        let &Token { ref location, kind: TokenKind::Keyword(TokenKeyword::Func) } = self.here() else {
-            self.token_error()?;
-        };
-        let location = location.clone();
-        self.advance();
+                self.token_error()?;
+            }
+        }
 
         // At this point, we can be pretty confident that we've found a function definition. As a
         // result, iterate backwards through tokens to collect documentation comments.
@@ -671,6 +677,7 @@ impl<'a> Parser<'a> {
                 }),
                 is_static,
                 documentation,
+                visibility,
             },
         })
     }

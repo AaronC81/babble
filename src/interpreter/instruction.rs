@@ -10,7 +10,7 @@ use std::{fmt::Display, slice::Iter, rc::Rc};
 
 use crate::{parser::{Node, Literal, NodeKind, SendMessageComponents, SendMessageParameter, BlockParameters}, source::{Location, SourceFile}};
 
-use super::{Value, InterpreterError, TypeData, InterpreterErrorKind, MethodLocality};
+use super::{Value, InterpreterError, TypeData, InterpreterErrorKind, MethodLocality, MethodVisibility};
 
 #[derive(Debug, Clone)]
 pub struct InstructionBlock(Vec<Instruction>);
@@ -145,6 +145,7 @@ pub enum InstructionKind {
         name: String,
         locality: MethodLocality,
         documentation: Option<String>,
+        visibility: MethodVisibility,
     },
 }
 
@@ -294,7 +295,7 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
                 instructions
             },
 
-            NodeKind::FuncDefinition { parameters, body, is_static, documentation } => {
+            NodeKind::FuncDefinition { parameters, body, is_static, documentation, visibility } => {
                 let inner = compile(*body)?;
                 let name = parameters.to_method_name();
 
@@ -315,6 +316,7 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
                         name,
                         locality: if is_static { MethodLocality::Static } else { MethodLocality::Instance },
                         documentation,
+                        visibility,
                     }.with_loc(&loc),
                 ].into()
             }
@@ -395,7 +397,7 @@ impl Display for Instruction {
             InstructionKind::DefType { name, data: _, documentation: _ } =>
                 write!(f, "def type {} ...", name), // TODO: type data
             InstructionKind::Use => write!(f, "use"),
-            InstructionKind::DefFunc { name, locality, documentation: _ } =>
+            InstructionKind::DefFunc { name, locality, documentation: _, visibility: _ } =>
                 write!(f, "def func {} {} ...", name, match locality {
                     MethodLocality::Instance => "(instance)",
                     MethodLocality::Static => "(static)",

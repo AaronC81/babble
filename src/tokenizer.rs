@@ -79,6 +79,7 @@ pub enum TokenKeyword {
     Mixin,
     Use,
     Return,
+    Private,
 }
 
 /// An error encountered while tokenizing.
@@ -372,6 +373,7 @@ impl<'a> Tokenizer<'a> {
             "mixin"   => Some(TokenKeyword::Mixin),
             "use"     => Some(TokenKeyword::Use),
             "return"  => Some(TokenKeyword::Return),
+            "private" => Some(TokenKeyword::Private),
             _         => None,
         }
     }

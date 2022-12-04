@@ -417,7 +417,7 @@ impl Interpreter {
                 value_stack.push(Value::new_type(t).rc())
             },
 
-            InstructionKind::DefFunc { name, locality, documentation } => {
+            InstructionKind::DefFunc { name, locality, documentation, visibility } => {
                 // The current stack frame should represent an `impl` block, so we know where to
                 // put this method
                 let StackFrame { context: StackFrameContext::Impl(t), .. } = self.current_stack_frame() else {
@@ -436,6 +436,7 @@ impl Interpreter {
                 if let Some(documentation) = documentation {
                     method.add_documentation(documentation);
                 }
+                method.visibility = *visibility;
                 let method = method.rc();
                 match locality {
                     MethodLocality::Instance => t.borrow_mut().add_method(method),

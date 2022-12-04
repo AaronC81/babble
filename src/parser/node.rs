@@ -1,6 +1,6 @@
 //! Implements the syntax tree built by the parser.
 
-use crate::{source::Location, interpreter::{ValueRef, Interpreter, Variant, InterpreterError, Value}, tokenizer::TokenKind};
+use crate::{source::Location, interpreter::{ValueRef, Interpreter, Variant, InterpreterError, Value, MethodVisibility}, tokenizer::TokenKind};
 
 use super::{LexicalContextRef, Literal, Pattern};
 
@@ -152,6 +152,7 @@ pub enum NodeKind {
         body: Box<Node>,
         is_static: bool,
         documentation: Option<String>,
+        visibility: MethodVisibility,
     },
     EnumDefinition {
         name: String,
