@@ -403,3 +403,73 @@ fn test_array_string() {
         Value::new_string("#{ }").rc(),
     );
 }
+
+#[test]
+fn test_private_methods() {
+    assert_matches!(
+        evaluate("
+            struct Foo a.
+            impl Foo {
+                private func x {
+                    1
+                }
+            }
+
+            Foo a: 3 $ x
+        "),
+        Err(InterpreterError { kind: InterpreterErrorKind::PrivateMethod(_, _), .. }),
+    );
+
+    assert_eq!(
+        evaluate("
+            struct Foo a.
+            impl Foo {
+                private func x {
+                    1
+                }
+
+                func y {
+                    self x
+                }
+            }
+
+            Foo a: 3 $ y
+        ").unwrap(),
+        Value::new_integer(1).rc(),
+    )
+}
+
+#[test]
+fn test_static_private_methods() {
+    assert_matches!(
+        evaluate("
+            struct Foo a.
+            impl Foo {
+                private static func x {
+                    1
+                }
+            }
+
+            Foo x
+        "),
+        Err(InterpreterError { kind: InterpreterErrorKind::PrivateMethod(_, _), .. }),
+    );
+
+    assert_eq!(
+        evaluate("
+            struct Foo a.
+            impl Foo {
+                private static func x {
+                    1
+                }
+
+                static func y {
+                    self x
+                }
+            }
+
+            Foo y
+        ").unwrap(),
+        Value::new_integer(1).rc(),
+    )
+}
