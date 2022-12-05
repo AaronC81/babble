@@ -106,8 +106,11 @@ pub enum InstructionKind {
     /// Calls a method on a receiver. Pops arguments, last-first, then the receiver. Pushes the
     /// return value.
     /// 
-    /// The number of arguments is determined by the method name.
-    Call(String),
+    /// The number of arguments is calculated from the method name.
+    Call {
+        name: String,
+        arity: usize,
+    },
 
     /// Peeks the item on the top of the stack, and pushes another copy of it.
     Duplicate,
@@ -167,13 +170,19 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
             NodeKind::Array(items) => {
                 let mut instructions: InstructionBlock = vec![
                     InstructionKind::Get("Array".into()).with_loc(&loc),
-                    InstructionKind::Call("new".into()).with_loc(&loc),
+                    InstructionKind::Call {
+                        name: "new".into(),
+                        arity: 0,
+                    }.with_loc(&loc),
                 ].into();
 
                 for item in items {
                     instructions.push(InstructionKind::Duplicate.with_loc(&loc));
                     instructions.extend(compile(item)?);
-                    instructions.push(InstructionKind::Call("append:".into()).with_loc(&loc));
+                    instructions.push(InstructionKind::Call {
+                        name: "append:".into(),
+                        arity: 1,
+                    }.with_loc(&loc));
                     instructions.push(InstructionKind::Pop.with_loc(&loc));
                 }
 
@@ -278,7 +287,8 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
                     SendMessageComponents::Blank => unreachable!("method call cannot be blank"),
                 }
 
-                instructions.push(InstructionKind::Call(name).with_loc(&loc));
+                let arity = name.chars().filter(|c| *c == ':').count();
+                instructions.push(InstructionKind::Call { name, arity }.with_loc(&loc));
                 instructions
             }
 
@@ -387,7 +397,7 @@ impl Display for Instruction {
                 write!(f, "push block {}[ | {} |\n{}\n]", prefix, params.join(" "), indent(body.to_string()))
             },
             InstructionKind::Duplicate => write!(f, "dup"),
-            InstructionKind::Call(n) => write!(f, "call {}", n),
+            InstructionKind::Call { name, arity: _ } => write!(f, "call {}", name),
             InstructionKind::NewVariant { name, labels } =>
                 write!(f, "new variant {} {}",
                     name,

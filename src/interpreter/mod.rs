@@ -285,11 +285,10 @@ impl Interpreter {
                 value_stack.push(block);
             },
 
-            InstructionKind::Call(method_name) => {
+            InstructionKind::Call { name, arity } => {
                 // Pop arguments
-                let arg_count = method_name.chars().filter(|c| *c == ':').count();
                 let mut args = vec![];
-                for _ in 0..arg_count {
+                for _ in 0..*arity {
                     args.insert(0, value_stack.pop().unwrap());
                 }
 
@@ -297,13 +296,13 @@ impl Interpreter {
                 let receiver = value_stack.pop().unwrap();
 
                 // Check for magic
-                if let Some(result) = self.handle_magic(instruction, receiver.clone(), method_name, args.clone()) {
+                if let Some(result) = self.handle_magic(instruction, receiver.clone(), name, args.clone()) {
                     value_stack.push(result?);
                     return Ok(());
                 }
 
                 // Perform method call and push result
-                value_stack.push(self.send_message(receiver, method_name, args)?);
+                value_stack.push(self.send_message(receiver, &name, args)?);
             },
 
             InstructionKind::NewVariant { name, labels } => {
