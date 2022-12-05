@@ -295,14 +295,12 @@ impl Interpreter {
                 // Pop receiver
                 let receiver = value_stack.pop().unwrap();
 
-                // Check for magic
-                if let Some(result) = self.handle_magic(instruction, receiver.clone(), name, args.clone()) {
-                    value_stack.push(result?);
-                    return Ok(());
+                // Perform method call and push result - handle magic if needed
+                let mut result = self.send_message(receiver.clone(), &name, args.clone());
+                if let Err(InterpreterError { kind: InterpreterErrorKind::Magic, .. }) = result {
+                    result = self.handle_magic(instruction, receiver, &name, args);
                 }
-
-                // Perform method call and push result
-                value_stack.push(self.send_message(receiver, &name, args)?);
+                value_stack.push(result?);
             },
 
             InstructionKind::NewVariant { name, labels } => {
@@ -460,11 +458,10 @@ impl Interpreter {
         self.resolve_type(id).unwrap_or_else(|| panic!("internal error: stdlib type {} missing", id))
     }
 
-    /// Checks if the method call with the given name and receiver is a magic method. If so, calls
-    /// it, and returns `Some` with the result of the call.
+    /// Assumes that a method is a magic method, calls it, and returns the result of the call.
     /// 
-    /// If the method is not magic and must be handled normally, returns `None`.
-    pub fn handle_magic(&mut self, instruction: &Instruction, receiver: ValueRef, method_name: &str, args: Vec<ValueRef>) -> Option<InterpreterResult> {
+    /// If the method is not magic and must be handled normally, panics.
+    pub fn handle_magic(&mut self, instruction: &Instruction, receiver: ValueRef, method_name: &str, args: Vec<ValueRef>) -> InterpreterResult {
         if let Value { type_instance: TypeInstance::Type(ref t) } = *receiver.borrow() {
             // Program filePathBacktrace
             if t.borrow().id == "Program" && method_name == "filePathBacktrace" {
@@ -476,11 +473,11 @@ impl Interpreter {
                         paths.push(Value::new_null().rc());
                     }
                 }
-                return Some(Ok(Value::new_array(&paths).rc()))
+                return Ok(Value::new_array(&paths).rc())
             }
         }
 
-        None
+        unreachable!("unknown magic method")
     }
 
     /// Sends a message (i.e. calls a method), given a receiver, method name, and a set of values as

@@ -128,6 +128,9 @@ pub enum InterpreterErrorKind {
     /// Not really an error - used by `Program throw: ...` to unwind the stack
     Throw(ValueRef),
 
+    /// Not really an error - used to indicate that a method must be handled magically
+    Magic,
+
     /// This interpreter error was actually a tokenizer error.
     TokenizerError(TokenizerError),
 
@@ -207,6 +210,8 @@ impl Display for InterpreterErrorKind {
 
             InterpreterErrorKind::Throw(value) =>
                 write!(f, "uncaught throw of `{}`", value.borrow().to_language_string()),
+            InterpreterErrorKind::Magic =>
+                write!(f, "internal error: unhandled magic method"),
 
             InterpreterErrorKind::TokenizerError(e) =>
                 write!(f, "tokenizer error: {:?}", e),

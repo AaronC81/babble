@@ -124,7 +124,7 @@ impl Method {
                 Ok(result?)
             },
 
-            MethodImplementation::Magic => unreachable!("magic methods should not be called directly"),
+            MethodImplementation::Magic => Err(InterpreterErrorKind::Magic.into()),
         }
     }
 }
