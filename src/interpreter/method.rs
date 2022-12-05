@@ -4,7 +4,7 @@ use std::{rc::Rc, fmt::Debug};
 
 use crate::parser::Node;
 
-use super::{Interpreter, ValueRef, InterpreterResult, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariable, instruction::InstructionBlock, DocumentationState};
+use super::{Interpreter, ValueRef, InterpreterResult, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariable, instruction::{InstructionBlock, InstructionBlockRef}, DocumentationState};
 
 /// A named method, defined on a type for use in code.
 #[derive(Debug)]
@@ -32,7 +32,7 @@ impl Method {
     }
 
     /// Constructs a new method which executes by evaluating parsed nodes.
-    pub fn new_compiled(name: &str, instructions: InstructionBlock, internal_names: Vec<String>) -> Self {
+    pub fn new_compiled(name: &str, instructions: InstructionBlockRef, internal_names: Vec<String>) -> Self {
         Self {
             name: name.into(),
             arity: Self::arity_from_name(name),
@@ -136,7 +136,7 @@ pub enum MethodImplementation {
     
     /// The method is implemented using compiled instructions, and a set of parameter names.
     Compiled {
-        instructions: InstructionBlock,
+        instructions: InstructionBlockRef,
         internal_names: Vec<String>,
     },
 

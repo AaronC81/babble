@@ -12,7 +12,7 @@ use crate::{parser::{Node, Literal, NodeKind, SendMessageComponents, SendMessage
 
 use super::{Value, InterpreterError, TypeData, InterpreterErrorKind, MethodLocality, MethodVisibility};
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct InstructionBlock(Vec<Instruction>);
 
 impl InstructionBlock {
@@ -39,7 +39,13 @@ impl InstructionBlock {
     pub fn source_file(&self) -> Rc<SourceFile> {
         self.0.first().unwrap().location.source_file.clone()
     }
+
+    pub fn rc(self) -> InstructionBlockRef {
+        Rc::new(self)
+    }
 }
+
+pub type InstructionBlockRef = Rc<InstructionBlock>;
 
 impl IntoIterator for InstructionBlock {
     type Item = Instruction;
@@ -100,7 +106,7 @@ pub enum InstructionKind {
     PushBlock {
         parameters: BlockParameters,
         captures: Vec<String>,
-        body: InstructionBlock,
+        body: InstructionBlockRef,
     },
 
     /// Calls a method on a receiver. Pops arguments, last-first, then the receiver. Pushes the
@@ -215,7 +221,7 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
                 vec![InstructionKind::PushBlock {
                     parameters,
                     captures,
-                    body: compile(*body)?,
+                    body: compile(*body)?.rc(),
                 }.with_loc(&loc)].into(),
 
             NodeKind::EnumVariant { enum_type, variant_name, components } => {
@@ -299,7 +305,7 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
                 instructions.push(InstructionKind::PushBlock {
                     parameters: BlockParameters::Named(vec![]),
                     captures: vec![],
-                    body: inner,
+                    body: inner.rc(),
                 }.with_loc(&loc));
                 instructions.push(InstructionKind::Impl.with_loc(&loc));
                 instructions
@@ -320,7 +326,7 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
                             SendMessageComponents::Blank => unreachable!("cannot define function with blank parameters"),
                         },
                         captures: vec![],
-                        body: inner,
+                        body: inner.rc(),
                     }.with_loc(&loc),
                     InstructionKind::DefFunc {
                         name,
