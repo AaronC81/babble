@@ -296,9 +296,9 @@ impl Interpreter {
                 let receiver = value_stack.pop().unwrap();
 
                 // Perform method call and push result - handle magic if needed
-                let mut result = self.send_message(receiver.clone(), &name, args.clone());
+                let mut result = self.send_message(receiver.clone(), &name, &args[..]);
                 if let Err(InterpreterError { kind: InterpreterErrorKind::Magic, .. }) = result {
-                    result = self.handle_magic(instruction, receiver, &name, args);
+                    result = self.handle_magic(instruction, receiver, &name, &args[..]);
                 }
                 value_stack.push(result?);
             },
@@ -461,7 +461,7 @@ impl Interpreter {
     /// Assumes that a method is a magic method, calls it, and returns the result of the call.
     /// 
     /// If the method is not magic and must be handled normally, panics.
-    pub fn handle_magic(&mut self, instruction: &Instruction, receiver: ValueRef, method_name: &str, args: Vec<ValueRef>) -> InterpreterResult {
+    pub fn handle_magic(&mut self, instruction: &Instruction, receiver: ValueRef, method_name: &str, args: &[ValueRef]) -> InterpreterResult {
         if let Value { type_instance: TypeInstance::Type(ref t) } = *receiver.borrow() {
             // Program filePathBacktrace
             if t.borrow().id == "Program" && method_name == "filePathBacktrace" {
@@ -485,7 +485,7 @@ impl Interpreter {
     /// 
     /// Returns an error if the method does not exist on the receiver.
     #[inline(always)]
-    pub fn send_message(&mut self, receiver: ValueRef, method_name: &str, args: Vec<ValueRef>) -> InterpreterResult {
+    pub fn send_message(&mut self, receiver: ValueRef, method_name: &str, args: &[ValueRef]) -> InterpreterResult {
         let receiver_ref = receiver.borrow();
 
         let method =
@@ -510,12 +510,12 @@ impl Interpreter {
                     let self_type = self.send_message(
                         reflection.clone(),
                         "instanceType:",
-                        vec![self_value],
+                        &[self_value],
                     )?;
                     let receiver_type = self.send_message(
                         reflection.clone(),
                         "instanceType:",
-                        vec![receiver.clone()],
+                        &[receiver.clone()],
                     )?;
 
                     // If the types aren't the same, don't allow calling this

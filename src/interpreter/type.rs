@@ -201,7 +201,7 @@ impl Type {
                 type_instance: TypeInstance::Fields {
                     source_type: t.clone(),
                     variant: None,
-                    field_values: a,
+                    field_values: a.to_vec(),
                 }
             }.rc())
         }).with_documentation(&format!("

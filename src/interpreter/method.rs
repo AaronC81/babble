@@ -21,7 +21,7 @@ pub type MethodRef = Rc<Method>;
 impl Method {
     /// Constructs a new method with an intrinsic definition.
     pub fn new_internal<F>(name: &str, function: F) -> Self
-    where F: Fn(&mut Interpreter, ValueRef, Vec<ValueRef>) -> InterpreterResult + 'static {
+    where F: Fn(&mut Interpreter, ValueRef, &[ValueRef]) -> InterpreterResult + 'static {
         Self {
             name: name.into(),
             arity: Self::arity_from_name(name),
@@ -82,7 +82,7 @@ impl Method {
     /// 
     /// Returns an error if the number of arguments does not match the expected arity.
     #[inline(always)]
-    pub fn call(self: Rc<Self>, interpreter: &mut Interpreter, receiver: ValueRef, arguments: Vec<ValueRef>) -> InterpreterResult {        
+    pub fn call(self: Rc<Self>, interpreter: &mut Interpreter, receiver: ValueRef, arguments: &[ValueRef]) -> InterpreterResult {        
         if self.arity != arguments.len() {
             return Err(InterpreterErrorKind::IncorrectArity {
                 name: self.name.clone(),
@@ -102,7 +102,7 @@ impl Method {
                     locals: internal_names.iter()
                         .cloned()
                         .zip(arguments)
-                        .map(|(name, value)| LocalVariable { name, value }.rc())
+                        .map(|(name, value)| LocalVariable { name, value: value.clone() }.rc())
                         .collect(),
                     self_value: receiver.clone(),
                     context: StackFrameContext::Method {
@@ -132,7 +132,7 @@ impl Method {
 /// The implementation of a [Method].
 pub enum MethodImplementation {
     /// The method is implemented intrinsically.
-    Internal(Box<dyn Fn(&mut Interpreter, ValueRef, Vec<ValueRef>) -> InterpreterResult>),
+    Internal(Box<dyn Fn(&mut Interpreter, ValueRef, &[ValueRef]) -> InterpreterResult>),
     
     /// The method is implemented using compiled instructions, and a set of parameter names.
     Compiled {

@@ -73,7 +73,7 @@ impl Pattern {
             PatternKind::Literal(expected) => {
                 let expected_value = expected.instantiate(context.interpreter)?;
                 Ok(
-                    context.interpreter.send_message(value, "equals:", vec![expected_value])?
+                    context.interpreter.send_message(value, "equals:", &[expected_value])?
                         .borrow().to_boolean().unwrap()
                 )
             },
@@ -115,7 +115,7 @@ impl Pattern {
                     let type_value = context.interpreter.send_message(
                         reflection,
                         "instanceType:",
-                        vec![context.captured_self.clone()],
+                        &[context.captured_self.clone()],
                     )?;
                     let type_value = type_value.borrow().to_type()?;
                     type_value

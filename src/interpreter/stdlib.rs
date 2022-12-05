@@ -632,7 +632,7 @@ fn internal_test(_: &mut Interpreter) -> Type {
                 let left = a[1].clone();
                 let right = a[2].clone();
 
-                let equal = i.send_message(left, "equals:", vec![right])?;
+                let equal = i.send_message(left, "equals:", &[right])?;
 
                 if equal.borrow().to_boolean()? {
                     Ok(Value::new_null().rc())
