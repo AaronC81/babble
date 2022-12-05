@@ -13,6 +13,7 @@ pub struct Method {
     pub implementation: MethodImplementation,
     pub documentation: DocumentationState,
     pub visibility: MethodVisibility,
+    pub arity: usize,
 }
 
 pub type MethodRef = Rc<Method>;
@@ -23,6 +24,7 @@ impl Method {
     where F: Fn(&mut Interpreter, ValueRef, Vec<ValueRef>) -> InterpreterResult + 'static {
         Self {
             name: name.into(),
+            arity: Self::arity_from_name(name),
             implementation: MethodImplementation::Internal(Box::new(function)),
             documentation: DocumentationState::Undocumented,
             visibility: MethodVisibility::default(),
@@ -33,6 +35,7 @@ impl Method {
     pub fn new_compiled(name: &str, instructions: InstructionBlock, internal_names: Vec<String>) -> Self {
         Self {
             name: name.into(),
+            arity: Self::arity_from_name(name),
             implementation: MethodImplementation::Compiled { instructions, internal_names },
             documentation: DocumentationState::Undocumented,
             visibility: MethodVisibility::default(),
@@ -44,6 +47,7 @@ impl Method {
     pub fn new_magic(name: &str) -> Self {
         Self {
             name: name.into(),
+            arity: Self::arity_from_name(name),
             implementation: MethodImplementation::Magic,
             documentation: DocumentationState::Undocumented,
             visibility: MethodVisibility::default(),
@@ -66,9 +70,9 @@ impl Method {
         Rc::new(self)
     }
 
-    /// The number of arguments expected by this method.
-    pub fn arity(&self) -> usize {
-        self.name.matches(':').count()
+    /// Calculates the number of arguments expected by this method from its name.
+    pub fn arity_from_name(name: &str) -> usize {
+        name.matches(':').count()
     }
 
     /// Calls this method, passing a receiver and a set of arguments.
@@ -79,10 +83,10 @@ impl Method {
     /// Returns an error if the number of arguments does not match the expected arity.
     #[inline(always)]
     pub fn call(self: Rc<Self>, interpreter: &mut Interpreter, receiver: ValueRef, arguments: Vec<ValueRef>) -> InterpreterResult {        
-        if self.arity() != arguments.len() {
+        if self.arity != arguments.len() {
             return Err(InterpreterErrorKind::IncorrectArity {
                 name: self.name.clone(),
-                expected: self.arity(),
+                expected: self.arity,
                 got: arguments.len(),
             }.into())
         }
