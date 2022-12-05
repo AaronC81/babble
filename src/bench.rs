@@ -2,7 +2,7 @@ extern crate test;
 
 use test::{Bencher, black_box};
 
-use crate::interpreter::tests::evaluate;
+use crate::{interpreter::{tests::evaluate, Interpreter}, source::SourceFile};
 
 #[bench]
 fn bench_startup(b: &mut Bencher) {
@@ -13,8 +13,9 @@ fn bench_startup(b: &mut Bencher) {
 
 #[bench]
 fn bench_factorial(b: &mut Bencher) {
+    let mut interpreter = Interpreter::new(None).unwrap();
     b.iter(|| black_box({
-        evaluate("
+        interpreter.parse_and_evaluate(SourceFile::new_temp("
             impl Integer {
                 func benchFactorial {
                     self lessThanOrEquals: 1 $
@@ -24,19 +25,20 @@ fn bench_factorial(b: &mut Bencher) {
             }
             
             20 benchFactorial        
-        ").unwrap()
+        ").rc()).unwrap();
     }));
 }
 
 #[bench]
 fn bench_iteration(b: &mut Bencher) {
+    let mut interpreter = Interpreter::new(None).unwrap();
     b.iter(|| black_box({
-        evaluate("
+        interpreter.parse_and_evaluate(SourceFile::new_temp("
             sum = 0.
             10000 times: [
                 sum = sum + 1.
             ]
-        ").unwrap()
+        ").rc()).unwrap()
     }));
 }
 
