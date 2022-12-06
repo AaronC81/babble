@@ -21,15 +21,35 @@ impl Boolean {
     InternalTest case: "ifTrue:else: pos branch" that: (true  ifTrue: [1] else: [2]) equals: 1.
     InternalTest case: "ifTrue:else: neg branch" that: (false ifTrue: [1] else: [2]) equals: 2.
 
+    /// Computes boolean AND with the result of a function which returns a boolean. The function is
+    /// only-executed if logically necessary; that is, this method is short-circuting.
+    ///
+    /// @param andAlso: The function which returns the other boolean.
+    /// @returns `true` if both booleans are `true`, otherwise `false`.
+    func andAlso: otherFn {
+        self
+            ifTrue: [ otherFn call
+                ifTrue: [ true ] 
+                else: [ false ]
+            ]
+            else: [ false ]
+    }
+
+    /// Computes boolean OR with the result of a function which returns a boolean. The function is
+    /// only-executed if logically necessary; that is, this method is short-circuting.
+    ///
+    /// @param andAlso: The function which returns the other boolean.
+    /// @returns `true` if either boolean is `true`, otherwise `false`.
+    func orElse: otherFn {
+        self ifTrue: [ true ] else: [ otherFn call ]
+    }
+
     /// Computes boolean OR with another boolean.
     ///
     /// @param or: The other boolean.
     /// @returns `true` if either boolean is `true`, otherwise `false`.
     func or: other {
-        eitherTrue = false.
-        self  ifTrue: [ eitherTrue = true ].
-        other ifTrue: [ eitherTrue = true ].
-        eitherTrue
+        self orElse: [ other ]
     }
 
     InternalTest case: "or T/T" that: (true  or: true ) equals: true.
@@ -42,12 +62,7 @@ impl Boolean {
     /// @param and: The other boolean.
     /// @returns `true` if both booleans are `true`, otherwise `false`.
     func and: other {
-        self
-            ifTrue: [ other
-                ifTrue: [ true ] 
-                else: [ false ]
-            ]
-            else: [ false ]
+        self andAlso: [ other ]
     }
 
     InternalTest case: "and T/T" that: (true  and: true ) equals: true.
