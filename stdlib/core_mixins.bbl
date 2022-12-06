@@ -395,8 +395,14 @@ impl Enumerable {
         arr length lessThan: n $ ifTrue: [ return result ].
 
         // Iterate over all windows and push them onto the result
-        arr length - n $ + 1 $ times: [ |i|
-            result append: (arr skip: i $ take: n).
+        result append: (arr take: n).
+        buffer = arr take: n.
+        arr length - n $ times: [ |i|
+            buffer delete: 0.
+            buffer append: (arr get: i + n).
+            bufferClone = #{}.
+            bufferClone appendAll: buffer.
+            result append: bufferClone.
         ].
         result
     }
