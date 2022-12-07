@@ -11,6 +11,7 @@ use super::{Type, Method, Value, Interpreter};
 pub fn derive_core_mixins(interpreter: &mut Interpreter, target: &mut Type) {
     target.used_mixins.push(interpreter.resolve_stdlib_type("Equatable"));
     target.used_mixins.push(interpreter.resolve_stdlib_type("Representable"));
+    target.used_mixins.push(interpreter.resolve_stdlib_type("Matchable"));
 }
 
 /// An extension trait for `Type` which allows for easy derivation of core mixins.

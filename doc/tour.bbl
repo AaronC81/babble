@@ -317,6 +317,12 @@ impl Shape {
 (Shape#Rectangle width: 10 height: 20) area. // => 200
 (Shape#Square length: 10) area.              // => 100
 
+// As a convenience, many of the static methods on `Match` are available through a `MatchProxy`,
+// obtained by calling `match` on any value:
+(Shape#Rectangle width: 10 height: 20) match toOneOf: #{
+    // ...same as Match value:toOneOf:
+}.
+
 // `![ ... ]` blocks behave almost the same, but will return the value not wrapped in a `Match`, and
 // fatally error if the pattern didn't match:
 addIntsOrError = ![

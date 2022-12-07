@@ -1,0 +1,11 @@
+/// A proxy for pattern matching conveniently against a fixed subject.
+///
+/// This can be generated through the `match` method, available on any object through the
+/// `Matchable` mixin.
+struct MatchProxy subject.
+impl MatchProxy {
+    /// An alias for `Match value:toOneOf:`, against the subject of this proxy.
+    func toOneOf: values {
+        Match value: self subject toOneOf: values
+    }
+}

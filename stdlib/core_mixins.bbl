@@ -16,6 +16,23 @@ impl Equatable {
     }
 }
 
+/// Provides convenience methods for pattern matching against objects.
+///
+/// This mixin is implemented automatically on all types, and the definition of `match` is provided
+/// by the interpreter.
+mixin Matchable.
+impl Matchable {
+    /// Returns a `MatchProxy` with this object as its subject.
+    ///
+    /// The pattern matching methods available on `MatchProxy` can then be used to provide an
+    /// elegant "pseudo-syntax" for pattern matching
+    ///
+    /// @returns A `MatchProxy` for this object.
+    func match {
+        MatchProxy subject: self
+    }
+}
+
 /// Indicates that values of a type are orderable.
 ///
 /// Requirements:

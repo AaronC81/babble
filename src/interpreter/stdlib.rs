@@ -27,6 +27,7 @@ pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError
     let early_core_types = early_core_types(interpreter);
     interpreter.types.extend(early_core_types);
     load_stdlib_file!(interpreter, "core_mixins.bbl")?;
+    load_stdlib_file!(interpreter, "match_proxy.bbl")?;
 
     // Define the rest of the stdlib types
     let core_types = core_types(interpreter);
