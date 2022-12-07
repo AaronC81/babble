@@ -24,7 +24,7 @@ impl Dictionary {
     /// @returns The index of the key-value pair in the `mapping` list, or `null` if the key does not exist in the dictionary. 
     func mappingIndex: key {
         x = self withIndex find: ![ | #{ i. #{ k. _ } } | k equals: key ].
-        x equals: null $ ifTrue: [ return null ].
+        x isNull ifTrue: [ return null ].
         x first.
     }
 
@@ -45,7 +45,7 @@ impl Dictionary {
     func set: key value: value {
         // Is this key already in the dictionary?
         index = self mappingIndex: key.
-        index equals: null $ ifTrue: [
+        index isNull ifTrue: [
             // No - insert new
             self mapping append: #{ key. value }.
         ] else: [
@@ -61,7 +61,7 @@ impl Dictionary {
     /// @returns The value mapped to that key, or `null` if the key is not present in the dictionary.
     func get: key {
         index = self mappingIndex: key.
-        index equals: null $ ifTrue: [ return null ].
+        index isNull ifTrue: [ return null ].
         self mapping get: index $ last.
     }
 
@@ -81,7 +81,7 @@ impl Dictionary {
     /// @param delete: The key to delete.
     func delete: key {
         index = self mappingIndex: key.
-        index equals: null $ ifTrue: [ return null ].
+        index isNull ifTrue: [ return null ].
         self mapping delete: index.
         null
     }

@@ -7,6 +7,13 @@ impl Equatable {
     func notEquals: other {
         self equals: other $ not
     }
+
+    /// Whether this object is `null`.
+    ///
+    /// @returns `true` if this object is `null` according to `equals:`, or `false` otherwise.
+    func isNull {
+        self equals: null
+    }
 }
 
 /// Indicates that values of a type are orderable.
@@ -209,11 +216,11 @@ impl Enumerable {
     func join: sep {
         result = null.
         self forEach: [ |x|
-            result = result equals: null $
+            result = result isNull
                 ifTrue: [ x ]
                 else:   [ result concat: sep $ concat: x ].
         ].
-        result equals: null $ ifTrue: [ "" ] else: [ result ]
+        result isNull ifTrue: [ "" ] else: [ result ]
     }
 
     /// Joins together the strings in this enumerable by repeatedly calling `concat:`.
