@@ -42,33 +42,35 @@ impl Interpreter {
 
         // Otherwise, execute the current instruction
         ins = self currentInstruction.
-        ins equals: "+" $ ifTrue: [ self tape write: (self tape read + 1) ].
-        ins equals: "-" $ ifTrue: [ self tape write: (self tape read - 1) ].
-        ins equals: ">" $ ifTrue: [ self tape next ].
-        ins equals: "<" $ ifTrue: [ self tape prev ].
-        ins equals: "[" $ ifTrue: [
-            self tape read equals: 0 $ ifTrue: [
-                // Seek the matching ] and jump past it
-                bracketDepth = 1
-                [ bracketDepth greaterThan: 0 ] whileTrue: [
-                    self index = self index + 1.
-                    self currentInstruction equals: "[" $ ifTrue: [ bracketDepth = bracketDepth + 1 ].
-                    self currentInstruction equals: "]" $ ifTrue: [ bracketDepth = bracketDepth - 1 ].
+        Match value: ins toOneOf: #{
+            ?[ |"+"| self tape write: (self tape read + 1) ]
+            ?[ |"-"| self tape write: (self tape read - 1) ]
+            ?[ |">"| self tape next ]
+            ?[ |"<"| self tape prev ]
+            ?[ |"["|
+                self tape read equals: 0 $ ifTrue: [
+                    // Seek the matching ] and jump past it
+                    bracketDepth = 1
+                    [ bracketDepth greaterThan: 0 ] whileTrue: [
+                        self index = self index + 1.
+                        self currentInstruction equals: "[" $ ifTrue: [ bracketDepth = bracketDepth + 1 ].
+                        self currentInstruction equals: "]" $ ifTrue: [ bracketDepth = bracketDepth - 1 ].
+                    ]
                 ]
             ]
-        ].
-        ins equals: "]" $ ifTrue: [
-            self tape read notEquals: 0 $ ifTrue: [
-                // Seek the matching [ and jump to it
-                bracketDepth = 1
-                [ bracketDepth greaterThan: 0 ] whileTrue: [
-                    self index = self index - 1.
-                    self currentInstruction equals: "[" $ ifTrue: [ bracketDepth = bracketDepth - 1 ].
-                    self currentInstruction equals: "]" $ ifTrue: [ bracketDepth = bracketDepth + 1 ].
+            ?[ |"]"|
+                self tape read notEquals: 0 $ ifTrue: [
+                    // Seek the matching [ and jump to it
+                    bracketDepth = 1
+                    [ bracketDepth greaterThan: 0 ] whileTrue: [
+                        self index = self index - 1.
+                        self currentInstruction equals: "[" $ ifTrue: [ bracketDepth = bracketDepth - 1 ].
+                        self currentInstruction equals: "]" $ ifTrue: [ bracketDepth = bracketDepth + 1 ].
+                    ]
                 ]
             ]
-        ].
-        ins equals: "." $ ifTrue: [ Console print: (String charFromAsciiCode: self tape read) ].
+            ?[ |"."| Console print: (String charFromAsciiCode: self tape read) ]
+        }
         // TODO: , command
 
         // Move onto the next instruction
