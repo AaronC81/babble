@@ -86,3 +86,8 @@ cargo run -- -f <file>
     - [x] Arrays
     - [x] Dictionaries
     - [ ] Sets
+- [ ] String interpolation
+- [ ] More access control
+    - [ ] Private fields
+    - [ ] Private constructors
+- [ ] Keyword to allow function arguments to appear in any order, for constructors
