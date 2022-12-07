@@ -42,7 +42,7 @@ impl Interpreter {
 
         // Otherwise, execute the current instruction
         ins = self currentInstruction.
-        Match value: ins toOneOf: #{
+        ins match toOneOf: #{
             ?[ |"+"| self tape write: (self tape read + 1) ]
             ?[ |"-"| self tape write: (self tape read - 1) ]
             ?[ |">"| self tape next ]
