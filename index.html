@@ -179,6 +179,9 @@ changing their size dynamically.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>append:</code>
                         </h2>
 
@@ -203,6 +206,9 @@ changing their size dynamically.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>appendAll:</code>
                         </h2>
 
@@ -226,6 +232,9 @@ changing their size dynamically.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>delete:</code>
                         </h2>
@@ -257,6 +266,9 @@ compensate. If the array does not cover the index, returns <code>null</code>.</p
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>first</code>
                         </h2>
 
@@ -279,6 +291,9 @@ compensate. If the array does not cover the index, returns <code>null</code>.</p
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>forEach:</code>
                         </h2>
@@ -303,6 +318,9 @@ compensate. If the array does not cover the index, returns <code>null</code>.</p
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>get:</code>
                         </h2>
@@ -332,6 +350,9 @@ compensate. If the array does not cover the index, returns <code>null</code>.</p
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>insert:at:</code>
                         </h2>
@@ -364,6 +385,9 @@ enough, it is extended with <code>null</code>s so that the new item is at the en
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>isEmpty</code>
                         </h2>
 
@@ -386,6 +410,9 @@ enough, it is extended with <code>null</code>s so that the new item is at the en
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>last</code>
                         </h2>
@@ -410,6 +437,9 @@ enough, it is extended with <code>null</code>s so that the new item is at the en
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>length</code>
                         </h2>
 
@@ -432,6 +462,9 @@ enough, it is extended with <code>null</code>s so that the new item is at the en
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -457,6 +490,9 @@ enough, it is extended with <code>null</code>s so that the new item is at the en
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -495,6 +531,9 @@ enough, it is extended with <code>null</code>s so that the new item is at the en
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>pop</code>
                         </h2>
 
@@ -517,6 +556,9 @@ enough, it is extended with <code>null</code>s so that the new item is at the en
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>set:value:</code>
                         </h2>
@@ -583,6 +625,9 @@ those parameters, as well as capturing local variables from their scope.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>arity</code>
                         </h2>
 
@@ -606,6 +651,9 @@ those parameters, as well as capturing local variables from their scope.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>call</code>
                         </h2>
 
@@ -628,6 +676,9 @@ those parameters, as well as capturing local variables from their scope.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>call:</code>
                         </h2>
@@ -658,6 +709,9 @@ those parameters, as well as capturing local variables from their scope.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>callWith:</code>
                         </h2>
 
@@ -686,6 +740,9 @@ those parameters, as well as capturing local variables from their scope.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>whileTrue:</code>
                         </h2>
@@ -756,6 +813,9 @@ executed, the body is never executed.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>and:</code>
                         </h2>
 
@@ -785,6 +845,42 @@ executed, the body is never executed.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
+                            <code>andAlso:</code>
+                        </h2>
+
+                        
+                                <p>Computes boolean AND with the result of a function which returns a boolean. The function is
+only-executed if logically necessary; that is, this method is short-circuting.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                        <p><b><code>andAlso:</code></b></p>
+                                        <blockquote>
+                                            <p>The function which returns the other boolean.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p><code>true</code> if both booleans are <code>true</code>, otherwise <code>false</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
                             <code>ifFalse:</code>
                         </h2>
 
@@ -808,6 +904,9 @@ executed, the body is never executed.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>ifTrue:</code>
                         </h2>
@@ -837,6 +936,9 @@ executed, the body is never executed.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>ifTrue:else:</code>
                         </h2>
@@ -873,6 +975,9 @@ executed, the body is never executed.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>not</code>
                         </h2>
 
@@ -895,6 +1000,9 @@ executed, the body is never executed.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>or:</code>
                         </h2>
@@ -924,6 +1032,42 @@ executed, the body is never executed.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
+                            
+                            <code>orElse:</code>
+                        </h2>
+
+                        
+                                <p>Computes boolean OR with the result of a function which returns a boolean. The function is
+only-executed if logically necessary; that is, this method is short-circuting.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                        <p><b><code>andAlso:</code></b></p>
+                                        <blockquote>
+                                            <p>The function which returns the other boolean.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p><code>true</code> if either boolean is <code>true</code>, otherwise <code>false</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                    
+                                
                             
                             <code>toMatch</code>
                         </h2>
@@ -972,6 +1116,9 @@ a miss.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                                 <code><i>static</i> </code>
                             
                             <code>input</code>
@@ -996,6 +1143,9 @@ a miss.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -1025,6 +1175,9 @@ printed.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -1098,6 +1251,9 @@ be relied upon, in the event that this implementation changes.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>containsKey:</code>
                         </h2>
 
@@ -1127,6 +1283,9 @@ be relied upon, in the event that this implementation changes.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>delete:</code>
                         </h2>
 
@@ -1150,6 +1309,9 @@ be relied upon, in the event that this implementation changes.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>forEach:</code>
                         </h2>
@@ -1175,6 +1337,9 @@ where the first element is the key and the second is the value.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>get:</code>
                         </h2>
@@ -1204,6 +1369,9 @@ where the first element is the key and the second is the value.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>get:orInsert:</code>
                         </h2>
@@ -1235,6 +1403,9 @@ returns that.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>keys</code>
                         </h2>
 
@@ -1258,6 +1429,9 @@ returns that.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>mapping</code>
                         </h2>
 
@@ -1280,6 +1454,9 @@ returns that.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -1305,6 +1482,9 @@ returns that.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>mappingIndex:</code>
                         </h2>
@@ -1338,6 +1518,9 @@ be used externally.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                                 <code><i>static</i> </code>
                             
                             <code>new</code>
@@ -1362,6 +1545,9 @@ be used externally.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>set:value:</code>
                         </h2>
@@ -1393,6 +1579,9 @@ replaced.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>values</code>
                         </h2>
@@ -1445,6 +1634,9 @@ programming methods.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>all:</code>
                         </h2>
 
@@ -1474,6 +1666,9 @@ programming methods.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>any:</code>
                         </h2>
 
@@ -1502,6 +1697,9 @@ programming methods.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>chunk:</code>
                         </h2>
@@ -1535,6 +1733,9 @@ and contain the leftover elements. (If you would like all chunks to be the same 
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>chunkExact:</code>
                         </h2>
 
@@ -1566,6 +1767,9 @@ be omitted from the result. (If you would like the last chunk to be smaller, see
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>contains:</code>
                         </h2>
 
@@ -1594,6 +1798,9 @@ be omitted from the result. (If you would like the last chunk to be smaller, see
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>filter:</code>
                         </h2>
@@ -1625,6 +1832,9 @@ be omitted from the result. (If you would like the last chunk to be smaller, see
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>find:</code>
                         </h2>
 
@@ -1653,6 +1863,9 @@ be omitted from the result. (If you would like the last chunk to be smaller, see
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>groupBy:</code>
                         </h2>
@@ -1684,6 +1897,9 @@ of elements from this enumerable matching the given key.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>join</code>
                         </h2>
 
@@ -1706,6 +1922,9 @@ of elements from this enumerable matching the given key.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>join:</code>
                         </h2>
@@ -1730,6 +1949,9 @@ calling <code>concat:</code>.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>map:</code>
                         </h2>
@@ -1760,6 +1982,9 @@ calling <code>concat:</code>.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>max</code>
                         </h2>
 
@@ -1783,6 +2008,9 @@ implement <code>Orderable</code>.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>maxBy:</code>
                         </h2>
@@ -1813,6 +2041,9 @@ implement <code>Orderable</code>.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>min</code>
                         </h2>
 
@@ -1836,6 +2067,9 @@ implement <code>Orderable</code>.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>minBy:</code>
                         </h2>
@@ -1865,6 +2099,9 @@ implement <code>Orderable</code>.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>partition:</code>
                         </h2>
@@ -1897,6 +2134,9 @@ elements for which the predicate returned <code>false</code>.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>reduce:</code>
                         </h2>
 
@@ -1928,6 +2168,9 @@ the current accumulator value.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>reduce:acc:</code>
                         </h2>
@@ -1966,6 +2209,9 @@ the current accumulator value.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>reduce:mapAcc:</code>
                         </h2>
@@ -2006,6 +2252,9 @@ the current accumulator value.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>reverse</code>
                         </h2>
 
@@ -2029,6 +2278,9 @@ modified.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>skip:</code>
                         </h2>
@@ -2058,6 +2310,9 @@ modified.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>skipWhile:</code>
                         </h2>
@@ -2089,6 +2344,9 @@ the predicate function returns <code>false</code> for the first time.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>sort</code>
                         </h2>
 
@@ -2112,6 +2370,9 @@ the predicate function returns <code>false</code> for the first time.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>sortBy:</code>
                         </h2>
@@ -2143,6 +2404,9 @@ highest key. The returned keys must implement <code>Orderable</code>.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>sum</code>
                         </h2>
 
@@ -2166,6 +2430,9 @@ calling <code>add:</code>.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>take:</code>
                         </h2>
@@ -2195,6 +2462,9 @@ calling <code>add:</code>.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>takeWhile:</code>
                         </h2>
@@ -2226,6 +2496,9 @@ predicate function returns <code>false</code> for the first time.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>toArray</code>
                         </h2>
 
@@ -2248,6 +2521,9 @@ predicate function returns <code>false</code> for the first time.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>unique</code>
                         </h2>
@@ -2272,6 +2548,9 @@ predicate function returns <code>false</code> for the first time.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>uniqueBy:</code>
                         </h2>
@@ -2303,6 +2582,9 @@ keys, according to <code>equals:</code>.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>window:</code>
                         </h2>
@@ -2338,6 +2620,9 @@ element.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>withIndex</code>
                         </h2>
 
@@ -2361,6 +2646,9 @@ the source item (starting from 0), and the second element is the source item.</p
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>zip:</code>
                         </h2>
@@ -2420,6 +2708,9 @@ provided by the interpreter.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>equals:</code>
                         </h2>
 
@@ -2448,6 +2739,9 @@ provided by the interpreter.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>notEquals:</code>
                         </h2>
@@ -2510,6 +2804,9 @@ provided by the interpreter.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>close</code>
                         </h2>
 
@@ -2527,6 +2824,9 @@ provided by the interpreter.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -2558,6 +2858,9 @@ provided by the interpreter.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -2598,6 +2901,9 @@ the file will <strong>not</strong> be closed.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>readAllText</code>
                         </h2>
 
@@ -2621,6 +2927,9 @@ the file will <strong>not</strong> be closed.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>readByte</code>
                         </h2>
 
@@ -2643,6 +2952,9 @@ the file will <strong>not</strong> be closed.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>readBytes:</code>
                         </h2>
@@ -2709,6 +3021,9 @@ if the file ends or the bytes are not available.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>add:</code>
                         </h2>
 
@@ -2738,6 +3053,9 @@ if the file ends or the bytes are not available.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>div:</code>
                         </h2>
 
@@ -2766,6 +3084,9 @@ if the file ends or the bytes are not available.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -2799,6 +3120,9 @@ if the file ends or the bytes are not available.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                                 <code><i>static</i> </code>
                             
                             <code>fromLittleEndianBytes:</code>
@@ -2831,6 +3155,9 @@ if the file ends or the bytes are not available.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>greaterThan:</code>
                         </h2>
 
@@ -2859,6 +3186,9 @@ if the file ends or the bytes are not available.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>leftShift:</code>
                         </h2>
@@ -2889,6 +3219,9 @@ if the file ends or the bytes are not available.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>modulo:</code>
                         </h2>
 
@@ -2917,6 +3250,9 @@ if the file ends or the bytes are not available.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>mul:</code>
                         </h2>
@@ -2947,6 +3283,9 @@ if the file ends or the bytes are not available.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>negate</code>
                         </h2>
 
@@ -2969,6 +3308,9 @@ if the file ends or the bytes are not available.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>rightShift:</code>
                         </h2>
@@ -2999,6 +3341,9 @@ if the file ends or the bytes are not available.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>sub:</code>
                         </h2>
 
@@ -3028,6 +3373,9 @@ if the file ends or the bytes are not available.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>times:</code>
                         </h2>
 
@@ -3051,6 +3399,9 @@ if the file ends or the bytes are not available.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -3131,6 +3482,9 @@ pattern did not match.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>flatten</code>
                         </h2>
 
@@ -3156,6 +3510,9 @@ either match was a miss, returns a miss.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -3188,6 +3545,9 @@ either match was a miss, returns a miss.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>isHit</code>
                         </h2>
 
@@ -3211,6 +3571,9 @@ either match was a miss, returns a miss.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>isMiss</code>
                         </h2>
 
@@ -3233,6 +3596,9 @@ either match was a miss, returns a miss.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>map:</code>
                         </h2>
@@ -3263,6 +3629,9 @@ miss, returns miss.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -3297,6 +3666,9 @@ and return the first hit value.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>value</code>
                         </h2>
 
@@ -3305,6 +3677,9 @@ and return the first hit value.</p>
                         
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -3343,6 +3718,9 @@ and return the first hit value.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>valueOr:</code>
                         </h2>
 
@@ -3371,6 +3749,9 @@ and return the first hit value.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>valueOrElse:</code>
                         </h2>
@@ -3401,6 +3782,9 @@ returns its return value.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -3497,6 +3881,9 @@ necessary.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>greaterThanOrEquals:</code>
                         </h2>
 
@@ -3506,6 +3893,9 @@ necessary.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>lessThan:</code>
                         </h2>
 
@@ -3514,6 +3904,9 @@ necessary.</p>
                         
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>lessThanOrEquals:</code>
                         </h2>
@@ -3546,6 +3939,9 @@ necessary.</p>
 
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -3586,6 +3982,9 @@ rethrown.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                                 <code><i>static</i> </code>
                             
                             <code>catchIfTrue:in:</code>
@@ -3625,6 +4024,9 @@ returns <code>false</code>, the object is rethrown.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                                 <code><i>static</i> </code>
                             
                             <code>catchTag:</code>
@@ -3657,6 +4059,9 @@ is thrown with <code>throw:</code>.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                                 <code><i>static</i> </code>
                             
                             <code>error:</code>
@@ -3688,6 +4093,9 @@ is thrown with <code>throw:</code>.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                                 <code><i>static</i> </code>
                             
                             <code>eval:</code>
@@ -3710,6 +4118,9 @@ user input. Be careful!</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                                 <code><i>static</i> </code>
                             
                             <code>evalFile:</code>
@@ -3731,6 +4142,9 @@ this interpreter.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -3757,6 +4171,9 @@ this interpreter.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                                 <code><i>static</i> </code>
                             
                             <code>filePath</code>
@@ -3781,6 +4198,9 @@ this interpreter.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -3820,6 +4240,9 @@ null.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                                 <code><i>static</i> </code>
                             
                             <code>loop:</code>
@@ -3850,6 +4273,9 @@ null.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -3922,6 +4348,9 @@ the interpreter exits with a fatal error.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                                 <code><i>static</i> </code>
                             
                             <code>bytes:</code>
@@ -3953,6 +4382,9 @@ the interpreter exits with a fatal error.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                                 <code><i>static</i> </code>
                             
                             <code>sample:</code>
@@ -3983,6 +4415,9 @@ the interpreter exits with a fatal error.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -4059,6 +4494,9 @@ the interpreter exits with a fatal error.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>contains:</code>
                         </h2>
 
@@ -4089,6 +4527,9 @@ the interpreter exits with a fatal error.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>end</code>
                         </h2>
 
@@ -4111,6 +4552,9 @@ the interpreter exits with a fatal error.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>forEach:</code>
                         </h2>
@@ -4136,6 +4580,9 @@ the interpreter exits with a fatal error.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>start</code>
                         </h2>
 
@@ -4158,6 +4605,9 @@ the interpreter exits with a fatal error.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -4183,6 +4633,9 @@ the interpreter exits with a fatal error.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -4239,6 +4692,9 @@ types.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                                 <code><i>static</i> </code>
                             
                             <code>instanceType:</code>
@@ -4271,6 +4727,9 @@ returns that type.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                                 <code><i>static</i> </code>
                             
                             <code>isType:</code>
@@ -4302,6 +4761,9 @@ returns that type.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                                 <code><i>static</i> </code>
                             
                             <code>type:</code>
@@ -4332,6 +4794,9 @@ returns that type.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -4389,6 +4854,9 @@ provided by the interpreter.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>repr</code>
                         </h2>
 
@@ -4444,6 +4912,9 @@ provided by the interpreter.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>charAt:</code>
                         </h2>
 
@@ -4472,6 +4943,9 @@ provided by the interpreter.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -4504,6 +4978,9 @@ provided by the interpreter.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>chars</code>
                         </h2>
 
@@ -4526,6 +5003,9 @@ provided by the interpreter.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>concat:</code>
                         </h2>
@@ -4556,6 +5036,9 @@ provided by the interpreter.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>isWhitespace</code>
                         </h2>
 
@@ -4580,6 +5063,9 @@ provided by the interpreter.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>length</code>
                         </h2>
 
@@ -4603,6 +5089,9 @@ provided by the interpreter.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>lowercase</code>
                         </h2>
 
@@ -4625,6 +5114,9 @@ provided by the interpreter.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>replace:with:</code>
                         </h2>
@@ -4661,6 +5153,9 @@ provided by the interpreter.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>split:</code>
                         </h2>
 
@@ -4690,6 +5185,9 @@ provided by the interpreter.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>strip</code>
                         </h2>
 
@@ -4712,6 +5210,9 @@ provided by the interpreter.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>toAsciiCode</code>
                         </h2>
@@ -4737,6 +5238,9 @@ string is not a single character, or the character is not ASCII, returns <code>n
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>toInteger</code>
                         </h2>
 
@@ -4759,6 +5263,9 @@ string is not a single character, or the character is not ASCII, returns <code>n
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>toInteger:</code>
                         </h2>
@@ -4789,6 +5296,9 @@ string is not a single character, or the character is not ASCII, returns <code>n
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                             <code>uppercase</code>
                         </h2>
@@ -4857,6 +5367,9 @@ that a thrown value will always be caught by one exact known catch block.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                             <code>id</code>
                         </h2>
 
@@ -4879,6 +5392,9 @@ that a thrown value will always be caught by one exact known catch block.</p>
                             
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
@@ -4905,6 +5421,9 @@ that a thrown value will always be caught by one exact known catch block.</p>
                     
                         <h2>
                             
+                                    
+                                
+                            
                                 <code><i>static</i> </code>
                             
                             <code>new</code>
@@ -4915,6 +5434,9 @@ that a thrown value will always be caught by one exact known catch block.</p>
                         
                     
                         <h2>
+                            
+                                    
+                                
                             
                                 <code><i>static</i> </code>
                             
