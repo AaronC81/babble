@@ -129,10 +129,12 @@ impl Method {
     }
 }
 
+type InternalMethod = dyn Fn(&mut Interpreter, ValueRef, &[ValueRef]) -> InterpreterResult;
+
 /// The implementation of a [Method].
 pub enum MethodImplementation {
     /// The method is implemented intrinsically.
-    Internal(Box<dyn Fn(&mut Interpreter, ValueRef, &[ValueRef]) -> InterpreterResult>),
+    Internal(Box<InternalMethod>),
     
     /// The method is implemented using compiled instructions, and a set of parameter names.
     Compiled {

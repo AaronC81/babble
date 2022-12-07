@@ -12,9 +12,9 @@ pub enum DocumentationState {
     Hidden,
 }
 
-impl Into<Option<String>> for DocumentationState {
-    fn into(self) -> Option<String> {
-        match self {
+impl From<DocumentationState> for Option<String> {
+    fn from(state: DocumentationState) -> Self {
+        match state {
             DocumentationState::Documented(s) => Some(s),
             _ => None,
         }

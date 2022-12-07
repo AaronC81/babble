@@ -111,6 +111,7 @@ impl Type {
     /// the illusion of a separate set of methods for each variant.
     /// 
     /// For other types, generates nothing.
+    #[allow(clippy::unnecessary_to_owned)] // Erroneous lint
     pub fn generate_accessor_methods(&mut self) {
         match &self.data {
             TypeData::Fields { instance_fields, static_fields } => {
@@ -131,8 +132,8 @@ impl Type {
                     }).with_documentation(&format!("
                         **Field accessor.**
 
-                        @returns The value of `{}`.
-                    ", field)).rc());
+                        @returns The value of `{field}`.
+                    ")).rc());
                 }
 
                 for (i, field) in static_fields.iter().enumerate() {
@@ -146,8 +147,8 @@ impl Type {
                     }).with_documentation(&format!("
                         **Static field accessor.**
 
-                        @returns The value of `{}`.
-                    ", field)).rc());
+                        @returns The value of `{field}`.
+                    ")).rc());
                 }
             },
 
@@ -194,7 +195,7 @@ impl Type {
 
         let type_name = t.borrow().id.clone();
         let constructor_name = fields.iter()
-            .map(|f| format!("{}:", f))
+            .map(|f| format!("{f}:"))
             .collect::<String>();
         t.clone().borrow_mut().add_static_method(Method::new_internal(&constructor_name, move |_, _, a| {
             Ok(Value {
@@ -207,8 +208,8 @@ impl Type {
         }).with_documentation(&format!("
             **Constructor.**
 
-            @returns A new instance of `{}`.
-        ", type_name)).rc());
+            @returns A new instance of `{type_name}`.
+        ")).rc());
     }
 
     /// Transforms this into a [`TypeRef`].

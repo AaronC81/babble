@@ -50,12 +50,12 @@ impl MethodParsedDocumentation {
             magic: false,
         };
 
-        for line in string.split("\n") {
+        for line in string.split('\n') {
             let line = line.trim();
 
             if line.starts_with("@param") {
                 let line = line.trim_start_matches("@param").trim();
-                let mut parts = line.splitn(2, " ");
+                let mut parts = line.splitn(2, ' ');
                 let name = parts.next().unwrap().trim();
                 let description = parts.next().unwrap().trim();
                 result.parameters.push((name.into(), description.into()));
@@ -66,7 +66,7 @@ impl MethodParsedDocumentation {
                 result.magic = true;
             } else {
                 result.description.push_str(line);
-                result.description.push_str("\n");
+                result.description.push('\n');
             }
         }
 
@@ -134,7 +134,7 @@ fn build_documentation_objects<T: DocumentationTemplate>(interpreter: &Interpret
         let options = ComrakOptions::default();
         let mut description: Option<String> = t.documentation.clone().into();
         description = description.as_ref()
-            .map(|d| markdown_to_html(&d.split("\n").map(|l| l.trim()).collect::<Vec<_>>().join("\n"), &options));
+            .map(|d| markdown_to_html(&d.split('\n').map(|l| l.trim()).collect::<Vec<_>>().join("\n"), &options));
 
         type_docs.push(TypeDocumentation {
             id: t.id.clone(),

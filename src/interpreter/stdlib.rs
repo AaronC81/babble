@@ -46,7 +46,7 @@ pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError
 
     // Run deferred tests
     let deferred_tests = interpreter.resolve_stdlib_type("InternalTest").borrow()
-        .static_fields[0].borrow_mut().to_array()?.iter().cloned().collect::<Vec<_>>();
+        .static_fields[0].borrow_mut().to_array()?.to_vec();
     for test in deferred_tests {
         test.borrow().to_block()?.call(interpreter, vec![])?;
     }
@@ -260,7 +260,7 @@ fn string(interpreter: &mut Interpreter) -> Type {
             Method::new_internal("concat:", |_, recv, params| {
                 let a = recv.borrow().to_string()?;
                 let b = params[0].borrow().to_string()?;
-                Ok(Value::new_string(&format!("{}{}", a, b)).rc())
+                Ok(Value::new_string(&format!("{a}{b}")).rc())
             }).with_documentation("
                 Appends another string to this one, and returns the concatenated string.
 
@@ -293,7 +293,7 @@ fn string(interpreter: &mut Interpreter) -> Type {
 
             Method::new_internal("toInteger:", |_, recv, a| {
                 let base = a[0].borrow().to_integer()?;
-                if base < 2 || base > 36 {
+                if !(2..=36).contains(&base) {
                     return Err(InterpreterErrorKind::ProgramError("invalid integer base".into()).into())
                 }
                 
@@ -333,7 +333,7 @@ fn string(interpreter: &mut Interpreter) -> Type {
                 }
 
                 let char = s.chars().next().unwrap() as u32;
-                if char >= 0 && char <= 0xFF {
+                if char <= 0xFF {
                     Ok(Value::new_integer(char as i64).rc())
                 } else {
                     Ok(Value::new_null().rc())
@@ -349,7 +349,7 @@ fn string(interpreter: &mut Interpreter) -> Type {
         static_methods: vec![
             Method::new_internal("charFromAsciiCode:", |_, _, params| {
                 let code = params[0].borrow().to_integer()?;
-                if code >= 0 && code <= 0xFF {
+                if (0..=0xFF).contains(&code) {
                     Ok(Value::new_string(&(code as u8 as char).to_string()).rc())
                 } else {
                     Ok(Value::new_null().rc())
@@ -380,7 +380,7 @@ fn array(interpreter: &mut Interpreter) -> Type {
                 Ok(
                     recv.borrow_mut().to_array()?
                         .get(i as usize)
-                        .map(|x| x.clone())
+                        .cloned()
                         .unwrap_or_else(|| Value::new_null().rc())
                 )
             }).with_documentation("
@@ -447,12 +447,11 @@ fn array(interpreter: &mut Interpreter) -> Type {
 
                 let mut recv = recv.borrow_mut();
                 let array = recv.to_array()?;
-                let item;
-                if (i as usize) < array.len() {
-                    item = array.remove(i as usize);
+                let item = if (i as usize) < array.len() {
+                    array.remove(i as usize)
                 } else {
-                    item = Value::new_null().rc();
-                }
+                    Value::new_null().rc()
+                };
                 Ok(item)
             }).with_documentation("
                 Deletes an item at a specific index, and shifts the array elements down to

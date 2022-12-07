@@ -51,30 +51,30 @@ fn main() {
     let input_contents;
     let input_name;
     if let Some(file) = args.file {
-        input_name = file.clone();
+        input_name = file;
         input_contents = read_to_string(input_name.clone()).unwrap();
     } else if let Some(code) = args.code {
         input_name = "command-line".to_string();
-        input_contents = code.clone();
+        input_contents = code;
     } else if args.doc_gen {
         let interpreter = Interpreter::new(None).unwrap();
         let output = doc_gen::generate_html_documentation(&interpreter);
-        println!("{}", output);
+        println!("{output}");
         return;
     } else {
         repl();
     };
 
-    let src = SourceFile::new(&std::fs::canonicalize(input_name).unwrap().to_str().unwrap(), &input_contents).rc();
+    let src = SourceFile::new(std::fs::canonicalize(input_name).unwrap().to_str().unwrap(), &input_contents).rc();
     if args.show_asm {
         let tokens = Tokenizer::tokenize(src.clone()).expect("tokenization failed");
-        let node = crate::parser::Parser::parse_and_analyse(src.clone(), &tokens[..]).expect("parsing failed");
+        let node = crate::parser::Parser::parse_and_analyse(src, &tokens[..]).expect("parsing failed");
         let compiled = compile(node).expect("compilation failed");
-        println!("{}", compiled);
+        println!("{compiled}");
         return;
     }
 
-    if let Err(e) = Interpreter::new(Some(src)).map(|mut i| i.parse_and_evaluate_root()).flatten() {
+    if let Err(e) = Interpreter::new(Some(src)).and_then(|mut i| i.parse_and_evaluate_root()) {
         print_error(e);
     }
 }
@@ -93,12 +93,12 @@ fn repl() -> ! {
         stdin().read_line(&mut command).unwrap();
 
         // Run it
-        let source = SourceFile::new(&format!("repl-{}", command_number), &command);
+        let source = SourceFile::new(&format!("repl-{command_number}"), &command);
         match interpreter.parse_and_evaluate(source.rc()) {
             Ok(result) => println!("{}", result.borrow_mut().to_language_string()),
             Err(e) => print_error(e),
         }
-        println!("");
+        println!();
 
         command_number += 1;
     }

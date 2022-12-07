@@ -147,6 +147,6 @@ impl Block {
             result = result.map(|value| Value::new_match(interpreter, Some(value)).rc());
         }
 
-        Ok(result?)
+        result
     }
 }

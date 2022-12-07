@@ -87,9 +87,9 @@ impl Display for StackFrameContext {
             StackFrameContext::Root =>
                 f.write_str("root"),
             StackFrameContext::Impl(t) =>
-                write!(f, "impl block on `{}`", (&**t).borrow().id),
+                write!(f, "impl block on `{}`", (**t).borrow().id),
             StackFrameContext::Method { method, receiver } =>
-                write!(f, "method `{}` on `{}`", method.name, (&**receiver).borrow().to_language_string() ),
+                write!(f, "method `{}` on `{}`", method.name, (**receiver).borrow().to_language_string() ),
             StackFrameContext::Block =>
                 f.write_str("block"),
         }
@@ -136,7 +136,7 @@ impl Interpreter {
     pub fn parse_and_evaluate(&mut self, source_file: Rc<SourceFile>) -> InterpreterResult {
         let tokens = Tokenizer::tokenize(source_file.clone())
             .map_err(|e| InterpreterErrorKind::TokenizerError(e).into())?;
-        let node = Parser::parse_and_analyse(source_file.clone(), &tokens[..])
+        let node = Parser::parse_and_analyse(source_file, &tokens[..])
             .map_err(|e| InterpreterErrorKind::ParserError(e).into())?;
         let compiled = compile(node)?;
         self.evaluate(&compiled)
@@ -156,7 +156,7 @@ impl Interpreter {
             Ok(value_stack.pop().unwrap())
         } else {
             let mut error: InterpreterError = InterpreterErrorKind::StackImbalance(value_stack.len()).into();
-            if instructions.as_vec().len() > 0 {
+            if !instructions.as_vec().is_empty() {
                 error = error.add_details(&instructions.iter().next().unwrap().location, self);
             }
             Err(error)
@@ -194,10 +194,10 @@ impl Interpreter {
                 let value = value_stack.last().unwrap().clone();
                 let value = Value::soft_copy(value);
 
-                if let Some(target) = self.find_local(&id) {
-                    target.borrow_mut().value = value.clone();
+                if let Some(target) = self.find_local(id) {
+                    target.borrow_mut().value = value;
                 } else {
-                    self.create_local(&id, value.clone());
+                    self.create_local(id, value);
                 }
             },
 
@@ -240,7 +240,7 @@ impl Interpreter {
                     .find(|(_, x)| x == &field_name).map(|(i, _)| i)
                     .ok_or(InterpreterErrorKind::InvalidAssignmentTarget.into())?;
                 
-                field_values[field_index] = value.clone();
+                field_values[field_index] = value;
             },
 
             InstructionKind::SetSelf => {
@@ -296,9 +296,9 @@ impl Interpreter {
                 let receiver = value_stack.pop().unwrap();
 
                 // Perform method call and push result - handle magic if needed
-                let mut result = self.send_message(receiver.clone(), &name, &args[..]);
+                let mut result = self.send_message(receiver.clone(), name, &args[..]);
                 if let Err(InterpreterError { kind: InterpreterErrorKind::Magic, .. }) = result {
-                    result = self.handle_magic(instruction, receiver, &name, &args[..]);
+                    result = self.handle_magic(instruction, receiver, name, &args[..]);
                 }
                 value_stack.push(result?);
             },
@@ -340,7 +340,7 @@ impl Interpreter {
 
             InstructionKind::Impl => {
                 // Pop body (should be a block), and peek target (should be a type)
-                let body_v = value_stack.pop().unwrap().clone();
+                let body_v = value_stack.pop().unwrap();
                 let body_b = body_v.borrow();
                 let body = body_b.to_block()?;
                 let target = value_stack.last().unwrap().borrow().to_type()?;
@@ -429,7 +429,7 @@ impl Interpreter {
                     BlockParameters::All(_) => unreachable!(),
                 };
                 
-                let mut method = Method::new_compiled(&name, block.body, internal_names);
+                let mut method = Method::new_compiled(name, block.body, internal_names);
                 if let Some(documentation) = documentation {
                     method.add_documentation(documentation);
                 }
@@ -455,7 +455,7 @@ impl Interpreter {
     /// Should only be used for types which are guaranteed to exist under normal circumstances, such
     /// as `Boolean`.
     pub fn resolve_stdlib_type(&self, id: &str) -> TypeRef {
-        self.resolve_type(id).unwrap_or_else(|| panic!("internal error: stdlib type {} missing", id))
+        self.resolve_type(id).unwrap_or_else(|| panic!("internal error: stdlib type {id} missing"))
     }
 
     /// Assumes that a method is a magic method, calls it, and returns the result of the call.
@@ -490,9 +490,9 @@ impl Interpreter {
 
         let method =
             if let TypeInstance::Type(t) = &receiver_ref.type_instance {
-                t.borrow().resolve_static_method(&method_name)
+                t.borrow().resolve_static_method(method_name)
             } else {
-                receiver_ref.type_instance.get_type(self).borrow().resolve_instance_method(&method_name)
+                receiver_ref.type_instance.get_type(self).borrow().resolve_instance_method(method_name)
             };
 
         if let Some(method) = method {
@@ -513,7 +513,7 @@ impl Interpreter {
                         &[self_value],
                     )?;
                     let receiver_type = self.send_message(
-                        reflection.clone(),
+                        reflection,
                         "instanceType:",
                         &[receiver.clone()],
                     )?;

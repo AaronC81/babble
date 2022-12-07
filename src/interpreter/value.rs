@@ -197,7 +197,7 @@ impl Value {
         let mut r = other.borrow_mut() as RefMut<dyn Any>;
 
         // Check we can actually downcast first, and bail with an Err if we can't...
-        drop(r.downcast_mut::<T>().ok_or(InterpreterErrorKind::IncorrectType.into())?);
+        r.downcast_mut::<T>().ok_or(InterpreterErrorKind::IncorrectType.into())?;
 
         // ...then return a mapped RefMut to the downcasted value if we can
         // (Because we already checked, the unwrap won't panic)

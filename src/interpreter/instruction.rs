@@ -45,6 +45,12 @@ impl InstructionBlock {
     }
 }
 
+impl Default for InstructionBlock {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub type InstructionBlockRef = Rc<InstructionBlock>;
 
 impl IntoIterator for InstructionBlock {
@@ -65,9 +71,9 @@ impl<'a> IntoIterator for &'a InstructionBlock {
     }
 }
 
-impl Into<InstructionBlock> for Vec<Instruction> {
-    fn into(self) -> InstructionBlock {
-        InstructionBlock(self)
+impl From<Vec<Instruction>> for InstructionBlock {
+    fn from(v: Vec<Instruction>) -> Self {
+        InstructionBlock(v)
     }
 }
 
@@ -368,19 +374,19 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
 
 
 fn indent(s: String) -> String {
-    s.split("\n").map(|l| format!("  {}", l)).collect::<Vec<_>>().join("\n")
+    s.split('\n').map(|l| format!("  {l}")).collect::<Vec<_>>().join("\n")
 }
 
 impl Display for Instruction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.kind {
-            InstructionKind::Get(n) => write!(f, "get {}", n),
+            InstructionKind::Get(n) => write!(f, "get {n}"),
             InstructionKind::GetSelf => write!(f, "get (self)"),
-            InstructionKind::Set(n) => write!(f, "set {}", n),
-            InstructionKind::SetField(n) => write!(f, "set field {}", n),
+            InstructionKind::Set(n) => write!(f, "set {n}"),
+            InstructionKind::SetField(n) => write!(f, "set field {n}"),
             InstructionKind::SetSelf => write!(f, "set (self)"),
             InstructionKind::Pop => write!(f, "pop"),
-            InstructionKind::Push(l) => write!(f, "push {}", l),
+            InstructionKind::Push(l) => write!(f, "push {l}"),
             InstructionKind::PushBlock { parameters, captures: _, body } => {
                 let prefix;
                 let params;
@@ -391,7 +397,7 @@ impl Display for Instruction {
                     },
                     BlockParameters::All(name) => {
                         prefix = "";
-                        params = vec![format!("*{}", name)];
+                        params = vec![format!("*{name}")];
                     }
                     BlockParameters::Patterned { patterns, fatal } => {
                         // TODO: proper pattern formatting
@@ -403,7 +409,7 @@ impl Display for Instruction {
                 write!(f, "push block {}[ | {} |\n{}\n]", prefix, params.join(" "), indent(body.to_string()))
             },
             InstructionKind::Duplicate => write!(f, "dup"),
-            InstructionKind::Call { name, arity: _ } => write!(f, "call {}", name),
+            InstructionKind::Call { name, arity: _ } => write!(f, "call {name}"),
             InstructionKind::NewVariant { name, labels } =>
                 write!(f, "new variant {} {}",
                     name,
@@ -411,7 +417,7 @@ impl Display for Instruction {
                 ),
             InstructionKind::Impl => write!(f, "impl"),
             InstructionKind::DefType { name, data: _, documentation: _ } =>
-                write!(f, "def type {} ...", name), // TODO: type data
+                write!(f, "def type {name} ..."), // TODO: type data
             InstructionKind::Use => write!(f, "use"),
             InstructionKind::DefFunc { name, locality, documentation: _, visibility: _ } =>
                 write!(f, "def func {} {} ...", name, match locality {
@@ -426,7 +432,7 @@ impl Display for Instruction {
 impl Display for InstructionBlock {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for i in self {
-            writeln!(f, "{}", i)?;
+            writeln!(f, "{i}")?;
         }
 
         Ok(())
