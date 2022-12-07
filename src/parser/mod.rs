@@ -230,7 +230,7 @@ impl<'a> Parser<'a> {
 
     fn parse_binary_send(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
         let mut result = self.parse_unary_send(context.clone())?;
-        result = self.try_parse_append_send_binaries(result, context.clone())?;
+        result = self.try_parse_append_send_binaries(result, context)?;
         Ok(result)
     }
 
@@ -253,7 +253,7 @@ impl<'a> Parser<'a> {
 
     fn parse_unary_send(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
         let mut result = self.parse_literal(context.clone())?;
-        result = self.try_parse_append_send_unaries(result, context.clone())?;
+        result = self.try_parse_append_send_unaries(result, context)?;
         Ok(result)
     }
 
@@ -422,7 +422,7 @@ impl<'a> Parser<'a> {
                 location: location.clone(),
                 kind: NodeKind::Block {
                     body: Box::new(Node {
-                        location: location.clone(),
+                        location,
                         kind: NodeKind::StatementSequence(body),
                         context: new_context.clone(),
                     }),
@@ -452,7 +452,7 @@ impl<'a> Parser<'a> {
                 // Yep! Parse the enum constructor
                 let node = self.parse_variant_constructor(Node {
                     kind: NodeKind::Sugar(SugarNodeKind::ShorthandVariantConstructor),
-                    location: location.clone(),
+                    location,
                     context: context.clone(),
                 }, context)?;
                 return Ok(node);
@@ -497,7 +497,7 @@ impl<'a> Parser<'a> {
 
             Ok(Node {
                 kind: NodeKind::Sugar(SugarNodeKind::ShorthandBlock(method_name)),
-                location: location.clone(),
+                location,
                 context,
             })
         } else if let Token { kind: TokenKind::Keyword(kw), location } = self.here() {
@@ -540,7 +540,7 @@ impl<'a> Parser<'a> {
 
         // Parse one expression, which will evaluate to the type to implement on, and the body
         let impl_target = self.parse_expression(context.clone())?;
-        let body = self.parse_type_definition_body(context.clone())?;
+        let body = self.parse_type_definition_body(context)?;
 
         // Construct and return node
         Ok(Node {
@@ -610,7 +610,7 @@ impl<'a> Parser<'a> {
                 TokenKind::NewLine => (),
 
                 // Gather doc comments - remember we're encountering them in reverse order
-                TokenKind::DocComment(comment) => doc_comments.insert(0, comment.trim().clone()),
+                TokenKind::DocComment(comment) => doc_comments.insert(0, comment.trim()),
 
                 // Anything else represents a break in our comments
                 _ => break,
@@ -671,7 +671,7 @@ impl<'a> Parser<'a> {
             kind: NodeKind::FuncDefinition {
                 parameters,
                 body: Box::new(Node {
-                    location: location.clone(),
+                    location,
                     context: inner_context,
                     kind: NodeKind::StatementSequence(items),
                 }),
@@ -830,7 +830,7 @@ impl<'a> Parser<'a> {
             };
 
             // Gather doc comments - remember we're encountering them in reverse order
-            doc_comments.insert(0, comment.trim().clone());
+            doc_comments.insert(0, comment.trim());
         }
         
         if doc_comments.is_empty() {

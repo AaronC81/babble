@@ -140,10 +140,7 @@ pub enum InterpreterErrorKind {
 
 impl InterpreterErrorKind {
     pub fn is_fatal(&self) -> bool {
-        match self {
-            InterpreterErrorKind::Throw(_) => false,
-            _ => true,
-        }
+        !matches!(self, InterpreterErrorKind::Throw(_))
     }
 }
 
@@ -164,18 +161,18 @@ impl Display for InterpreterErrorKind {
             InterpreterErrorKind::PrivateMethod(val, m) =>
                 write!(f, "cannot call private method `{}` on `{}`", m, val.borrow().to_language_string()),
             InterpreterErrorKind::MissingName(name) => 
-                write!(f, "`{}` does not exist", name),
+                write!(f, "`{name}` does not exist"),
             InterpreterErrorKind::MissingCaptureName(name) =>
-                write!(f, "`{}` cannot be captured because it does not exist", name),
+                write!(f, "`{name}` cannot be captured because it does not exist"),
             InterpreterErrorKind::MissingVariant(type_id, var) =>
-                write!(f, "enum `{}` has no variant `{}`", type_id, var),
+                write!(f, "enum `{type_id}` has no variant `{var}`"),
             InterpreterErrorKind::IntegerOverflow =>
                 write!(f, "integer overflow"),
 
             InterpreterErrorKind::IncorrectArity { name, expected, got } =>
-                write!(f, "method `{}` expects {} arguments, but got {}", name, expected, got),
+                write!(f, "method `{name}` expects {expected} arguments, but got {got}"),
             InterpreterErrorKind::IncorrectBlockArity { expected, got } =>
-                write!(f, "block expected {} arguments, but got {}", expected, got),
+                write!(f, "block expected {expected} arguments, but got {got}"),
             InterpreterErrorKind::IncorrectType => 
                 write!(f, "incorrect argument type"),
             InterpreterErrorKind::InvalidAssignmentTarget =>
@@ -189,24 +186,24 @@ impl Display for InterpreterErrorKind {
             InterpreterErrorKind::FuncDefinitionInvalidContext =>
                 write!(f, "function definitions are not allowed here"),
             InterpreterErrorKind::DuplicateTypeDefinition(name) =>
-                write!(f, "type named `{}` is already defined", name),
+                write!(f, "type named `{name}` is already defined"),
             InterpreterErrorKind::UseInvalidContext =>
                 write!(f, "mixin use is not allowed here"),
             InterpreterErrorKind::UseNonMixin(name) =>
-                write!(f, "cannot use `{}` because it is not a mixin", name),
+                write!(f, "cannot use `{name}` because it is not a mixin"),
 
             InterpreterErrorKind::PatternMatchFailed(_, _) =>
                 write!(f, "pattern match failed"), // TODO: more details
 
             InterpreterErrorKind::InternalTestFailed(name) =>
-                write!(f, "internal test `{}` failed", name),
+                write!(f, "internal test `{name}` failed"),
 
             InterpreterErrorKind::ProgramError(message) =>
                 f.write_str(message),
             InterpreterErrorKind::IoError(err) =>
-                write!(f, "IO error: {}", err),
+                write!(f, "IO error: {err}"),
             InterpreterErrorKind::StackImbalance(n) =>
-                write!(f, "internal error: expected 1 item on the value stack, got {}", n),
+                write!(f, "internal error: expected 1 item on the value stack, got {n}"),
 
             InterpreterErrorKind::Throw(value) =>
                 write!(f, "uncaught throw of `{}`", value.borrow().to_language_string()),
@@ -214,9 +211,9 @@ impl Display for InterpreterErrorKind {
                 write!(f, "internal error: unhandled magic method"),
 
             InterpreterErrorKind::TokenizerError(e) =>
-                write!(f, "tokenizer error: {:?}", e),
+                write!(f, "tokenizer error: {e:?}"),
             InterpreterErrorKind::ParserError(e) =>
-                write!(f, "parser error: {:?}", e),
+                write!(f, "parser error: {e:?}"),
         }
     }
 }

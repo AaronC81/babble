@@ -27,7 +27,7 @@ impl Value {
 
     /// Constructs a new value from an array of other values.
     pub fn new_array(values: &[ValueRef]) -> Self {
-        Self { type_instance: TypeInstance::PrimitiveArray(values.iter().cloned().collect()) }
+        Self { type_instance: TypeInstance::PrimitiveArray(values.to_vec()) }
     }
 
     /// Constructs a new value which represents a reference to a type.
@@ -105,7 +105,7 @@ impl Value {
     }
 
     /// Extracts the integer from this value, or returns an error if it is not an integer.
-    pub fn to_integer(&self) -> Result<i64, InterpreterError> {
+    pub fn as_integer(&self) -> Result<i64, InterpreterError> {
         if let TypeInstance::PrimitiveInteger(i) = self.type_instance {
             Ok(i)
         } else {
@@ -114,7 +114,7 @@ impl Value {
     }
 
     /// Extracts the string from this value, or returns an error if it is not an string.
-    pub fn to_string(&self) -> Result<String, InterpreterError> {
+    pub fn as_string(&self) -> Result<String, InterpreterError> {
         if let TypeInstance::PrimitiveString(string) = &self.type_instance {
             Ok(string.clone())
         } else {
@@ -123,7 +123,7 @@ impl Value {
     }
 
     /// Extracts the array from this value, or returns an error if it is not an array.
-    pub fn to_array(&mut self) -> Result<&mut Vec<ValueRef>, InterpreterError> {
+    pub fn as_array(&mut self) -> Result<&mut Vec<ValueRef>, InterpreterError> {
         if let TypeInstance::PrimitiveArray(ref mut array) = &mut self.type_instance {
             Ok(array)
         } else {
@@ -175,22 +175,22 @@ impl Value {
     /// `T` which implements [PrimitiveValue].
     /// 
     /// If this value is not a "other" primitive, or if the downcast fails, returns an error.
-    pub fn to_other<T: PrimitiveValue>(&self) -> Result<impl Deref<Target = T> + '_, InterpreterError> {
+    pub fn as_other<T: PrimitiveValue>(&self) -> Result<impl Deref<Target = T> + '_, InterpreterError> {
         let TypeInstance::PrimitiveOther(other) = &self.type_instance else {
             return Err(InterpreterErrorKind::IncorrectType.into())
         };
         let r = other.borrow() as Ref<dyn Any>;
 
         // Check we can actually downcast first, and bail with an Err if we can't...
-        drop(r.downcast_ref::<T>().ok_or(InterpreterErrorKind::IncorrectType.into())?);
+        r.downcast_ref::<T>().ok_or(InterpreterErrorKind::IncorrectType.into())?;
 
         // ...then return a mapped Ref to the downcasted value if we can
         // (Because we already checked, the unwrap won't panic)
         Ok(Ref::map(r, |other| { other.downcast_ref::<T>().unwrap() }))
     }
 
-    /// Mutable version of [`Value::to_other`].
-    pub fn to_other_mut<T: PrimitiveValue>(&self) -> Result<impl DerefMut<Target = T> + '_, InterpreterError> {
+    /// Mutable version of [`Value::as_other`].
+    pub fn as_other_mut<T: PrimitiveValue>(&self) -> Result<impl DerefMut<Target = T> + '_, InterpreterError> {
         let TypeInstance::PrimitiveOther(other) = &self.type_instance else {
             return Err(InterpreterErrorKind::IncorrectType.into())
         };           

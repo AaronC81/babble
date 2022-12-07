@@ -46,7 +46,7 @@ pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError
 
     // Run deferred tests
     let deferred_tests = interpreter.resolve_stdlib_type("InternalTest").borrow()
-        .static_fields[0].borrow_mut().to_array()?.to_vec();
+        .static_fields[0].borrow_mut().as_array()?.to_vec();
     for test in deferred_tests {
         test.borrow().to_block()?.call(interpreter, vec![])?;
     }
@@ -135,8 +135,8 @@ fn integer(interpreter: &mut Interpreter) -> Type {
     Type {
         methods: vec![
             Method::new_internal("add:", |_, recv, params| {
-                let a = recv.borrow().to_integer()?;
-                let b = params[0].borrow().to_integer()?;
+                let a = recv.borrow().as_integer()?;
+                let b = params[0].borrow().as_integer()?;
                 Ok(Value::new_integer(a + b).rc())
             }).with_documentation("
                 Adds the given integer to this one.
@@ -146,8 +146,8 @@ fn integer(interpreter: &mut Interpreter) -> Type {
             ").rc(),
 
             Method::new_internal("sub:", |_, recv, params| {
-                let a = recv.borrow().to_integer()?;
-                let b = params[0].borrow().to_integer()?;
+                let a = recv.borrow().as_integer()?;
+                let b = params[0].borrow().as_integer()?;
                 Ok(Value::new_integer(a - b).rc())
             }).with_documentation("
                 Subtracts the given integer from this one.
@@ -157,8 +157,8 @@ fn integer(interpreter: &mut Interpreter) -> Type {
             ").rc(),
 
             Method::new_internal("mul:", |_, recv, params| {
-                let a = recv.borrow().to_integer()?;
-                let b = params[0].borrow().to_integer()?;
+                let a = recv.borrow().as_integer()?;
+                let b = params[0].borrow().as_integer()?;
                 Ok(Value::new_integer(a * b).rc())
             }).with_documentation("
                 Multiplies the given integer with this one.
@@ -168,8 +168,8 @@ fn integer(interpreter: &mut Interpreter) -> Type {
             ").rc(),
 
             Method::new_internal("div:", |_, recv, params| {
-                let a = recv.borrow().to_integer()?;
-                let b = params[0].borrow().to_integer()?;
+                let a = recv.borrow().as_integer()?;
+                let b = params[0].borrow().as_integer()?;
                 Ok(Value::new_integer(a / b).rc())
             }).with_documentation("
                 Performs integer division with another integer.
@@ -180,8 +180,8 @@ fn integer(interpreter: &mut Interpreter) -> Type {
 
             // TODO: What overflow semantics do we want for these?
             Method::new_internal("leftShift:", |_, recv, params| {
-                let a = recv.borrow().to_integer()?;
-                let b = params[0].borrow().to_integer()?;
+                let a = recv.borrow().as_integer()?;
+                let b = params[0].borrow().as_integer()?;
                 Ok(Value::new_integer(a << b).rc())
             }).with_documentation("
                 Shifts this integer left by the specified amount.
@@ -190,8 +190,8 @@ fn integer(interpreter: &mut Interpreter) -> Type {
                 @returns This integer shifted left by the other integer.
             ").rc(),
             Method::new_internal("rightShift:", |_, recv, params| {
-                let a = recv.borrow().to_integer()?;
-                let b = params[0].borrow().to_integer()?;
+                let a = recv.borrow().as_integer()?;
+                let b = params[0].borrow().as_integer()?;
                 Ok(Value::new_integer(a >> b).rc())
             }).with_documentation("
                 Shifts this integer right by the specified amount.
@@ -201,7 +201,7 @@ fn integer(interpreter: &mut Interpreter) -> Type {
             ").rc(),
 
             Method::new_internal("negate", |_, recv, _| {
-                let a = recv.borrow().to_integer()?;
+                let a = recv.borrow().as_integer()?;
                 Ok(Value::new_integer(-a).rc())
             }).with_documentation("
                 Flips the sign of this integer.
@@ -210,8 +210,8 @@ fn integer(interpreter: &mut Interpreter) -> Type {
             ").rc(),
 
             Method::new_internal("modulo:", |_, recv, params| {
-                let a = recv.borrow().to_integer()?;
-                let b = params[0].borrow().to_integer()?;
+                let a = recv.borrow().as_integer()?;
+                let b = params[0].borrow().as_integer()?;
                 Ok(Value::new_integer(a % b).rc())
             }).with_documentation("
                 Computes the remainder of integer division with a given divisor.
@@ -222,8 +222,8 @@ fn integer(interpreter: &mut Interpreter) -> Type {
 
             // For Orderable implementation
             Method::new_internal("greaterThan:", |i, recv, params| {
-                let a = recv.borrow().to_integer()?;
-                let b = params[0].borrow().to_integer()?;
+                let a = recv.borrow().as_integer()?;
+                let b = params[0].borrow().as_integer()?;
                 Ok(Value::new_boolean(i, a > b).rc())
             }).with_documentation("
                 Returns true if the given integer is strictly larger than this one.
@@ -258,8 +258,8 @@ fn string(interpreter: &mut Interpreter) -> Type {
     Type {
         methods: vec![
             Method::new_internal("concat:", |_, recv, params| {
-                let a = recv.borrow().to_string()?;
-                let b = params[0].borrow().to_string()?;
+                let a = recv.borrow().as_string()?;
+                let b = params[0].borrow().as_string()?;
                 Ok(Value::new_string(&format!("{a}{b}")).rc())
             }).with_documentation("
                 Appends another string to this one, and returns the concatenated string.
@@ -269,7 +269,7 @@ fn string(interpreter: &mut Interpreter) -> Type {
             ").rc(),
 
             Method::new_internal("length", |_, recv, _| {
-                Ok(Value::new_integer(recv.borrow().to_string()?.len() as i64).rc())
+                Ok(Value::new_integer(recv.borrow().as_string()?.len() as i64).rc())
             }).with_documentation("
                 The length of this string.
 
@@ -277,8 +277,8 @@ fn string(interpreter: &mut Interpreter) -> Type {
             ").rc(),
 
             Method::new_internal("charAt:", |_, recv, params| {
-                let s = recv.borrow().to_string()?;
-                let i = params[0].borrow().to_integer()?;
+                let s = recv.borrow().as_string()?;
+                let i = params[0].borrow().as_integer()?;
                 if let Some(c) = s.chars().nth(i as usize) {
                     Ok(Value::new_string(&c.to_string()).rc())
                 } else {
@@ -292,12 +292,12 @@ fn string(interpreter: &mut Interpreter) -> Type {
             ").rc(),
 
             Method::new_internal("toInteger:", |_, recv, a| {
-                let base = a[0].borrow().to_integer()?;
+                let base = a[0].borrow().as_integer()?;
                 if !(2..=36).contains(&base) {
                     return Err(InterpreterErrorKind::ProgramError("invalid integer base".into()).into())
                 }
                 
-                Ok(i64::from_str_radix(&recv.borrow().to_string()?, base as u32)
+                Ok(i64::from_str_radix(&recv.borrow().as_string()?, base as u32)
                     .map(Value::new_integer)
                     .unwrap_or_else(|_| Value::new_null())
                     .rc())
@@ -311,7 +311,7 @@ fn string(interpreter: &mut Interpreter) -> Type {
             ").rc(),
 
             Method::new_internal("uppercase", |_, recv, a| {
-                Ok(Value::new_string(&recv.borrow().to_string()?.to_uppercase()).rc())
+                Ok(Value::new_string(&recv.borrow().as_string()?.to_uppercase()).rc())
             }).with_documentation("
                 Returns a copy of this string, with all letters converted to uppercase.
 
@@ -319,7 +319,7 @@ fn string(interpreter: &mut Interpreter) -> Type {
             ").rc(),
 
             Method::new_internal("lowercase", |_, recv, a| {
-                Ok(Value::new_string(&recv.borrow().to_string()?.to_lowercase()).rc())
+                Ok(Value::new_string(&recv.borrow().as_string()?.to_lowercase()).rc())
             }).with_documentation("
                 Returns a copy of this string, with all letters converted to lowercase.
 
@@ -327,7 +327,7 @@ fn string(interpreter: &mut Interpreter) -> Type {
             ").rc(),
 
             Method::new_internal("toAsciiCode", |_, recv, a| {
-                let s = recv.borrow().to_string()?;
+                let s = recv.borrow().as_string()?;
                 if s.len() != 1 {
                     return Ok(Value::new_null().rc())
                 }
@@ -348,7 +348,7 @@ fn string(interpreter: &mut Interpreter) -> Type {
 
         static_methods: vec![
             Method::new_internal("charFromAsciiCode:", |_, _, params| {
-                let code = params[0].borrow().to_integer()?;
+                let code = params[0].borrow().as_integer()?;
                 if (0..=0xFF).contains(&code) {
                     Ok(Value::new_string(&(code as u8 as char).to_string()).rc())
                 } else {
@@ -376,9 +376,9 @@ fn array(interpreter: &mut Interpreter) -> Type {
             // TODO: deal with negative indexes
 
             Method::new_internal("get:", |_, recv, params| {
-                let i = params[0].borrow().to_integer()?;
+                let i = params[0].borrow().as_integer()?;
                 Ok(
-                    recv.borrow_mut().to_array()?
+                    recv.borrow_mut().as_array()?
                         .get(i as usize)
                         .cloned()
                         .unwrap_or_else(|| Value::new_null().rc())
@@ -391,11 +391,11 @@ fn array(interpreter: &mut Interpreter) -> Type {
             ").rc(),
 
             Method::new_internal("set:value:", |_, recv, params| {
-                let i = params[0].borrow().to_integer()?;
+                let i = params[0].borrow().as_integer()?;
 
                 // Extend the array if it's not long enough
                 let mut recv = recv.borrow_mut();
-                let array = recv.to_array()?;
+                let array = recv.as_array()?;
                 if i as usize >= array.len() {
                     array.resize((i as usize) + 1, Value::new_null().rc());
                 }
@@ -412,7 +412,7 @@ fn array(interpreter: &mut Interpreter) -> Type {
 
             Method::new_internal("append:", |_, recv, params| {
                 let item = params[0].clone();
-                recv.borrow_mut().to_array()?.push(item);
+                recv.borrow_mut().as_array()?.push(item);
                 Ok(Value::new_null().rc())
             }).with_documentation("
                 Adds a new item to the end of this array.
@@ -422,11 +422,11 @@ fn array(interpreter: &mut Interpreter) -> Type {
 
             Method::new_internal("insert:at:", |_, recv, params| {
                 let item = params[0].clone();
-                let index = params[1].borrow().to_integer()?;
+                let index = params[1].borrow().as_integer()?;
 
                 // Resize the array if it's not long enough
                 let mut recv = recv.borrow_mut();
-                let array = recv.to_array()?;
+                let array = recv.as_array()?;
                 if index as usize >= array.len() {
                     array.resize(index as usize, Value::new_null().rc());
                 }
@@ -443,10 +443,10 @@ fn array(interpreter: &mut Interpreter) -> Type {
 
 
             Method::new_internal("delete:", |_, recv, params| {
-                let i = params[0].borrow().to_integer()?;
+                let i = params[0].borrow().as_integer()?;
 
                 let mut recv = recv.borrow_mut();
-                let array = recv.to_array()?;
+                let array = recv.as_array()?;
                 let item = if (i as usize) < array.len() {
                     array.remove(i as usize)
                 } else {
@@ -462,7 +462,7 @@ fn array(interpreter: &mut Interpreter) -> Type {
             ").rc(),
 
             Method::new_internal("length", |_, recv, _| {
-                Ok(Value::new_integer(recv.borrow_mut().to_array()?.len() as i64).rc())
+                Ok(Value::new_integer(recv.borrow_mut().as_array()?.len() as i64).rc())
             }).with_documentation("
                 The length of the array.
 
@@ -538,7 +538,7 @@ fn block(interpreter: &mut Interpreter) -> Type {
             Method::new_internal("callWith:", |i, r, a| {
                 let r = r.borrow();
                 let b = r.to_block()?;
-                b.call(i, a[0].borrow_mut().to_array()?.clone())
+                b.call(i, a[0].borrow_mut().as_array()?.clone())
             }).with_documentation("
                 Calls this block with the given array of arguments.
 
@@ -636,7 +636,7 @@ fn internal_test(_: &mut Interpreter) -> Type {
                 if equal.borrow().to_boolean()? {
                     Ok(Value::new_null().rc())
                 } else {
-                    Err(InterpreterErrorKind::InternalTestFailed(a[0].borrow().to_string()?).into())
+                    Err(InterpreterErrorKind::InternalTestFailed(a[0].borrow().as_string()?).into())
                 }
 
             }).rc(),
@@ -646,7 +646,7 @@ fn internal_test(_: &mut Interpreter) -> Type {
                 i.resolve_stdlib_type("InternalTest").borrow_mut()
                     .static_fields[0]
                     .borrow_mut()
-                    .to_array()?
+                    .as_array()?
                     .push(test);
                 Ok(Value::new_null().rc())
             }).rc(),
@@ -667,7 +667,7 @@ fn program(_: &mut Interpreter) -> Type {
     Type {
         static_methods: vec![
             Method::new_internal("error:", |_, _, a| {
-                Err(InterpreterErrorKind::ProgramError(a[0].borrow().to_string()?).into())
+                Err(InterpreterErrorKind::ProgramError(a[0].borrow().as_string()?).into())
             }).with_documentation("
                 Exits the interpreter immediately, with a fatal error.
 
@@ -725,7 +725,7 @@ fn program(_: &mut Interpreter) -> Type {
             ").rc(),
 
             Method::new_internal("eval:", |i, _, a| {
-                let code = a[0].borrow().to_string()?;
+                let code = a[0].borrow().as_string()?;
                 i.parse_and_evaluate(SourceFile::new("<eval>", &code).rc())
             }).with_documentation("
                 Parses, compiles, and executes a string of Babble code.
@@ -814,7 +814,7 @@ fn file(interpreter: &mut Interpreter) -> Type {
 
         static_methods: vec![
             Method::new_internal("open:", |_, _, a| {
-                let path = a[0].borrow().to_string()?;
+                let path = a[0].borrow().as_string()?;
                 let file = File::open(path.clone())
                     .map_err(|e| InterpreterErrorKind::IoError(e.to_string()).into())?;
                 let handle = FileHandle { file: Some(file), path };
@@ -830,7 +830,7 @@ fn file(interpreter: &mut Interpreter) -> Type {
         methods: vec![
             Method::new_internal("readAllText", |_, r, _| {
                 let mut s = "".into();
-                r.borrow().to_other_mut::<FileHandle>()?.file_if_open()?.read_to_string(&mut s)
+                r.borrow().as_other_mut::<FileHandle>()?.file_if_open()?.read_to_string(&mut s)
                     .map_err(|e| InterpreterErrorKind::IoError(e.to_string()).into())?;
                 Ok(Value::new_string(&s).rc())
             }).with_documentation("
@@ -840,8 +840,8 @@ fn file(interpreter: &mut Interpreter) -> Type {
             ").rc(),
 
             Method::new_internal("readBytes:", |_, r, a| {
-                let mut buf = vec![0; a[0].borrow().to_integer()? as usize];
-                let n = r.borrow().to_other_mut::<FileHandle>()?.file_if_open()?
+                let mut buf = vec![0; a[0].borrow().as_integer()? as usize];
+                let n = r.borrow().as_other_mut::<FileHandle>()?.file_if_open()?
                     .read(&mut buf).map_err(|e| InterpreterErrorKind::IoError(e.to_string()).into())?;
                 buf.truncate(n);
                 let buf = buf.into_iter().map(|b| Value::new_integer(b as i64).rc()).collect::<Vec<_>>();
@@ -855,7 +855,7 @@ fn file(interpreter: &mut Interpreter) -> Type {
             ").rc(),
 
             Method::new_internal("close", |_, r, _| {
-                r.borrow().to_other_mut::<FileHandle>()?.close();
+                r.borrow().as_other_mut::<FileHandle>()?.close();
                 Ok(Value::new_null().rc())
             }).with_documentation("
                 Closes the file. After this, further I/O operations will error.

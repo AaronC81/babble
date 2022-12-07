@@ -284,7 +284,7 @@ pub fn desugar_simple(root: &mut Node) {
         }
     }
 
-    root.walk_children(&mut |n| desugar_simple(n));
+    root.walk_children(&mut desugar_simple);
 }
 
 const SHORTHAND_BLOCK_PARAMETER: &str = "___desugarShorthandBlockParameter";

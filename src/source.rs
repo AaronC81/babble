@@ -48,7 +48,7 @@ impl Location {
             }
         }
 
-        return buffer;
+        buffer
     }
 }
 

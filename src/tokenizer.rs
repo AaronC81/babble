@@ -382,7 +382,7 @@ impl<'a> Tokenizer<'a> {
     /// then returns the tokens.
     pub fn tokenize(source_file: Rc<SourceFile>) -> Result<Vec<Token>, TokenizerError> {
         let chars = source_file.contents.chars().collect::<Vec<_>>();
-        let mut tokenizer = Tokenizer::new(source_file.clone(), &chars[..]);
+        let mut tokenizer = Tokenizer::new(source_file, &chars[..]);
 
         while tokenizer.current_index < chars.len() {
             tokenizer.step()?;

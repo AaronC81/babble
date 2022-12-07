@@ -81,7 +81,7 @@ impl Pattern {
             PatternKind::Array(patterns) => {
                 // Extract array
                 let mut value = value.borrow_mut();
-                let array = value.to_array();
+                let array = value.as_array();
                 let Ok(array) = array else { return Ok(false) };
 
                 // Trying matching against each pattern
@@ -125,13 +125,13 @@ impl Pattern {
                 let type_value_borrow = type_value.borrow();
                 let variant_value = variant_name
                     .as_ref()
-                    .map(|v| type_value_borrow.resolve_variant(&v))
+                    .map(|v| type_value_borrow.resolve_variant(v))
                     .transpose()?;
                 let variant_index = variant_value.map(|(i, _)| i);
                 drop(type_value_borrow);
 
                 // Check pattern type against actual value's type
-                if value.borrow().type_instance.get_type(&context.interpreter) != type_value {
+                if value.borrow().type_instance.get_type(context.interpreter) != type_value {
                     return Ok(false)
                 }
                 
