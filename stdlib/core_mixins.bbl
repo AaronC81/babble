@@ -506,4 +506,23 @@ impl Enumerable {
     func unique {
         self uniqueBy: [ |x| x ]
     }
+
+    /// Converts this enumerable to an array, and concatenates it with another one to produce a
+    /// larger array.
+    func concat: other {
+        result = #{}.
+        result appendAll: self toArray.
+        result appendAll: other toArray.
+        result
+    }
+
+    /// Assuming that this enumerable's elements are all themselves enumerables, flattens one layer
+    /// of enumerable nesting.
+    ///
+    /// @returns A flattened array.
+    func flatten {
+        result = #{}.
+        self forEach: [ |x| result appendAll: x toArray ].
+        result
+    }
 }

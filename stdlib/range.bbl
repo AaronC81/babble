@@ -32,11 +32,11 @@ impl Range {
     /// @param contains: The integer or range to check.
     /// @returns True if this range contains the integer or range, false otherwise.
     func contains: value {
-        value match toOneOf: #{
+        value match mustBeOneOf: #{
             ?[ | x = Integer | (x greaterThanOrEquals: self start) and: (x lessThan: self end) ].
             ?[ | Range start: s end: e | (s greaterThanOrEquals: self start) and: (e lessThanOrEquals: self end) ].
-            [ Program error: "expected integer or range" ]
-        } $ value
+            [ |_| Program error: "expected integer or range" ]
+        }
     }
     InternalTest case: "range contains: Integer" that: (Range upTo: 5 $ contains: 2) equals: true.
     InternalTest case: "range contains: Integer lower" that: (Range upTo: 5 $ contains: 0) equals: true.

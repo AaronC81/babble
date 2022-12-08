@@ -45,13 +45,35 @@ impl Match {
         ]
     }
 
-    /// A shorthand for `oneOf` which immediately calls the block against the given value.
+    /// A variant of `oneOf:` where the returned block fatally errors if no block matches.
+    ///
+    /// @param oneOf: The blocks to compose, each taking one parameter.
+    /// @returns A new block taking one parameter, which executes each block in turn, and errors if none hit.
+    static func mustBeOneOf: values {
+        [ |subject|
+            self oneOf: #{
+                (self oneOf: values).
+                [ |_| Program error: "no values matched" ]
+            } $ call: subject $ value
+        ]
+    }
+
+    /// A shorthand for `oneOf:` which immediately calls the block against the given value.
     ///
     /// @param value: The value to match against.
     /// @param oneOf: The blocks to try matching this against, each taking one parameter.
     /// @returns The return value of the first block which returns a hit, or a miss if none do.
     static func value: value toOneOf: values {
         Match oneOf: values $ call: value
+    }
+
+    /// A shorthand for `mustBeOneOf:` which immediately calls the block against the given value.
+    ///
+    /// @param value: The value to match against.
+    /// @param oneOf: The blocks to try matching this against, each taking one parameter.
+    /// @returns The return value of the first block which returns a hit. Fatally errors if none do.
+    static func value: value mustBeOneOf: values {
+        Match mustBeOneOf: values $ call: value
     }
 
     [

@@ -8,4 +8,9 @@ impl MatchProxy {
     func toOneOf: values {
         Match value: self subject toOneOf: values
     }
+
+    /// An alias for `Match value:mustBeOneOf:`, against the subject of this proxy.
+    func mustBeOneOf: values {
+        Match value: self subject mustBeOneOf: values
+    }
 }

@@ -304,14 +304,14 @@ rectArea call: (Shape#Rectangle width: 10 height: 20). // => Match#Hit value: 20
 rectArea call: (Shape#Circle radius: 10).              // => Match#Miss
 
 // The `Match` type provides static methods to allow you build up a chain of pattern matches, for
-// example `value:toOneOf`:
+// example `value:mustBeOneOf:`:
 impl Shape {
     func area {
-        Match value: self toOneOf: #{
+        Match value: self mustBeOneOf: #{
             ?[ | Shape#Rectangle width: (w = Integer) height: (h = Integer) | w * h     ]
             ?[ | Shape#Circle radius: (r = Integer)                         | r * r * 3 ]
             ?[ | Shape#Square length: (l = Integer)                         | l * l     ]
-        } $ value // Extract the value or fatally error if nothing matched
+        }
     }
 }
 (Shape#Rectangle width: 10 height: 20) area. // => 200
@@ -319,8 +319,8 @@ impl Shape {
 
 // As a convenience, many of the static methods on `Match` are available through a `MatchProxy`,
 // obtained by calling `match` on any value:
-(Shape#Rectangle width: 10 height: 20) match toOneOf: #{
-    // ...same as Match value:toOneOf:
+(Shape#Rectangle width: 10 height: 20) match mustBeOneOf: #{
+    // ...same as Match value:mustBeOneOf:
 }.
 
 // `![ ... ]` blocks behave almost the same, but will return the value not wrapped in a `Match`, and
