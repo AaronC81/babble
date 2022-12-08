@@ -1782,6 +1782,28 @@ be omitted from the result. (If you would like the last chunk to be smaller, see
                                     
                                 
                             
+                            <code>concat:</code>
+                        </h2>
+
+                        
+                                <p>Converts this enumerable to an array, and concatenates it with another one to produce a
+larger array.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                    
+                                    
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
                             <code>contains:</code>
                         </h2>
 
@@ -1868,6 +1890,33 @@ be omitted from the result. (If you would like the last chunk to be smaller, see
                                             <p><b><i>Returns:</i></b></p>
                                             <blockquote>
                                                 <p>The first value matching the predicate, or <code>null</code> if none is found.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
+                            <code>flatten</code>
+                        </h2>
+
+                        
+                                <p>Assuming that this enumerable's elements are all themselves enumerables, flattens one layer
+of enumerable nesting.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A flattened array.</p>
 
                                             </blockquote>
                                         
@@ -3679,6 +3728,40 @@ miss, returns miss.</p>
                             
                                 <code><i>static</i> </code>
                             
+                            <code>mustBeOneOf:</code>
+                        </h2>
+
+                        
+                                <p>A variant of <code>oneOf:</code> where the returned block fatally errors if no block matches.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                        <p><b><code>oneOf:</code></b></p>
+                                        <blockquote>
+                                            <p>The blocks to compose, each taking one parameter.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A new block taking one parameter, which executes each block in turn, and errors if none hit.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
+                                <code><i>static</i> </code>
+                            
                             <code>oneOf:</code>
                         </h2>
 
@@ -3727,11 +3810,51 @@ and return the first hit value.</p>
                             
                                 <code><i>static</i> </code>
                             
+                            <code>value:mustBeOneOf:</code>
+                        </h2>
+
+                        
+                                <p>A shorthand for <code>mustBeOneOf:</code> which immediately calls the block against the given value.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                        <p><b><code>value:</code></b></p>
+                                        <blockquote>
+                                            <p>The value to match against.</p>
+
+                                        </blockquote>
+                                    
+                                        <p><b><code>oneOf:</code></b></p>
+                                        <blockquote>
+                                            <p>The blocks to try matching this against, each taking one parameter.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The return value of the first block which returns a hit. Fatally errors if none do.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
+                                <code><i>static</i> </code>
+                            
                             <code>value:toOneOf:</code>
                         </h2>
 
                         
-                                <p>A shorthand for <code>oneOf</code> which immediately calls the block against the given value.</p>
+                                <p>A shorthand for <code>oneOf:</code> which immediately calls the block against the given value.</p>
 
 
                                 
@@ -3907,6 +4030,27 @@ necessary.</p>
                         </p>
                     </blockquote>
 
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
+                            <code>mustBeOneOf:</code>
+                        </h2>
+
+                        
+                                <p>An alias for <code>Match value:mustBeOneOf:</code>, against the subject of this proxy.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                    
+                                    
+                                </blockquote>
+                            
                     
                         <h2>
                             
