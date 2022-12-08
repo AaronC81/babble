@@ -122,6 +122,10 @@
                 
                     <li><a href="#Match">Match</a></li>
                 
+                    <li><a href="#MatchProxy">MatchProxy</a></li>
+                
+                    <li><a href="#Matchable">Matchable</a></li>
+                
                     <li><a href="#Null">Null</a></li>
                 
                     <li><a href="#Orderable">Orderable</a></li>
@@ -168,6 +172,8 @@ changing their size dynamically.</p>
                                         <li><a href="#Equatable"><code>Equatable</code></a></li>
                                     
                                         <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                        <li><a href="#Matchable"><code>Matchable</code></a></li>
                                     
                                         <li><a href="#Enumerable"><code>Enumerable</code></a></li>
                                     
@@ -617,6 +623,8 @@ those parameters, as well as capturing local variables from their scope.</p>
                                     
                                         <li><a href="#Representable"><code>Representable</code></a></li>
                                     
+                                        <li><a href="#Matchable"><code>Matchable</code></a></li>
+                                    
                                 </ul>
                             
                         </p>
@@ -804,6 +812,8 @@ executed, the body is never executed.</p>
                                         <li><a href="#Equatable"><code>Equatable</code></a></li>
                                     
                                         <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                        <li><a href="#Matchable"><code>Matchable</code></a></li>
                                     
                                 </ul>
                             
@@ -1240,6 +1250,8 @@ be relied upon, in the event that this implementation changes.</p>
                                         <li><a href="#Equatable"><code>Equatable</code></a></li>
                                     
                                         <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                        <li><a href="#Matchable"><code>Matchable</code></a></li>
                                     
                                         <li><a href="#Enumerable"><code>Enumerable</code></a></li>
                                     
@@ -2743,6 +2755,32 @@ provided by the interpreter.</p>
                                     
                                 
                             
+                            <code>isNull</code>
+                        </h2>
+
+                        
+                                <p>Whether this object is <code>null</code>.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p><code>true</code> if this object is <code>null</code> according to <code>equals:</code>, or <code>false</code> otherwise.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
                             <code>notEquals:</code>
                         </h2>
 
@@ -2795,6 +2833,8 @@ provided by the interpreter.</p>
                                         <li><a href="#Equatable"><code>Equatable</code></a></li>
                                     
                                         <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                        <li><a href="#Matchable"><code>Matchable</code></a></li>
                                     
                                 </ul>
                             
@@ -3010,6 +3050,8 @@ if the file ends or the bytes are not available.</p>
                                         <li><a href="#Equatable"><code>Equatable</code></a></li>
                                     
                                         <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                        <li><a href="#Matchable"><code>Matchable</code></a></li>
                                     
                                         <li><a href="#Orderable"><code>Orderable</code></a></li>
                                     
@@ -3474,6 +3516,8 @@ pattern did not match.</p>
                                     
                                         <li><a href="#Representable"><code>Representable</code></a></li>
                                     
+                                        <li><a href="#Matchable"><code>Matchable</code></a></li>
+                                    
                                 </ul>
                             
                         </p>
@@ -3823,6 +3867,178 @@ necessary.</p>
 
                     <hr class="v-space" />
                 
+                    <a name="MatchProxy"></a>
+                    <h1>MatchProxy</h1>
+                    
+                            <p>A proxy for pattern matching conveniently against a fixed subject.</p>
+<p>This can be generated through the <code>match</code> method, available on any object through the
+<code>Matchable</code> mixin.</p>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    
+                                        Struct with fields:
+                                        <ul>
+                                            
+                                                <li><code>subject</code></li>
+                                            
+                                            
+                                        </ul>
+                                    
+                                
+                        </p>
+
+                        <p>
+                            
+                                <b>Uses mixins:</b>
+                                <ul>
+                                    
+                                        <li><a href="#Equatable"><code>Equatable</code></a></li>
+                                    
+                                        <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                        <li><a href="#Matchable"><code>Matchable</code></a></li>
+                                    
+                                </ul>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
+                            <code>subject</code>
+                        </h2>
+
+                        
+                                <p><strong>Field accessor.</strong></p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The value of <code>subject</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
+                                <code><i>static</i> </code>
+                            
+                            <code>subject:</code>
+                        </h2>
+
+                        
+                                <p><strong>Constructor.</strong></p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A new instance of <code>MatchProxy</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
+                            <code>toOneOf:</code>
+                        </h2>
+
+                        
+                                <p>An alias for <code>Match value:toOneOf:</code>, against the subject of this proxy.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                    
+                                    
+                                </blockquote>
+                            
+                    
+
+                    <hr class="v-space" />
+                
+                    <a name="Matchable"></a>
+                    <h1>Matchable</h1>
+                    
+                            <p>Provides convenience methods for pattern matching against objects.</p>
+<p>This mixin is implemented automatically on all types, and the definition of <code>match</code> is provided
+by the interpreter.</p>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    Mixin.
+                            
+                        </p>
+
+                        <p>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
+                            <code>match</code>
+                        </h2>
+
+                        
+                                <p>Returns a <code>MatchProxy</code> with this object as its subject.</p>
+<p>The pattern matching methods available on <code>MatchProxy</code> can then be used to provide an
+elegant &quot;pseudo-syntax&quot; for pattern matching</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A <code>MatchProxy</code> for this object.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+
+                    <hr class="v-space" />
+                
                     <a name="Null"></a>
                     <h1>Null</h1>
                     
@@ -3845,6 +4061,8 @@ necessary.</p>
                                         <li><a href="#Equatable"><code>Equatable</code></a></li>
                                     
                                         <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                        <li><a href="#Matchable"><code>Matchable</code></a></li>
                                     
                                 </ul>
                             
@@ -4340,6 +4558,8 @@ the interpreter exits with a fatal error.</p>
                                     
                                         <li><a href="#Representable"><code>Representable</code></a></li>
                                     
+                                        <li><a href="#Matchable"><code>Matchable</code></a></li>
+                                    
                                 </ul>
                             
                         </p>
@@ -4483,6 +4703,8 @@ the interpreter exits with a fatal error.</p>
                                         <li><a href="#Equatable"><code>Equatable</code></a></li>
                                     
                                         <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                        <li><a href="#Matchable"><code>Matchable</code></a></li>
                                     
                                         <li><a href="#Enumerable"><code>Enumerable</code></a></li>
                                     
@@ -4903,6 +5125,8 @@ provided by the interpreter.</p>
                                         <li><a href="#Equatable"><code>Equatable</code></a></li>
                                     
                                         <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                        <li><a href="#Matchable"><code>Matchable</code></a></li>
                                     
                                 </ul>
                             
@@ -5358,6 +5582,8 @@ that a thrown value will always be caught by one exact known catch block.</p>
                                         <li><a href="#Equatable"><code>Equatable</code></a></li>
                                     
                                         <li><a href="#Representable"><code>Representable</code></a></li>
+                                    
+                                        <li><a href="#Matchable"><code>Matchable</code></a></li>
                                     
                                 </ul>
                             
