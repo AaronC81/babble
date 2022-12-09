@@ -273,9 +273,9 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_literal(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
-        if let Token { kind: TokenKind::IntegerLiteral(value), location } = self.here() {
+        if let Token { kind: TokenKind::IntegerLiteral { value, negative }, location } = self.here() {
             let node = Node {
-                kind: NodeKind::Literal(Literal::Integer(*value as i64)),
+                kind: NodeKind::Literal(Literal::Integer(*value as i64 * if *negative { -1 } else { 1 })),
                 location: location.clone(),
                 context,
             };

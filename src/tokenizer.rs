@@ -51,7 +51,10 @@ pub enum TokenKind {
     Identifier(String),
     LabelIdentifier(String),
 
-    IntegerLiteral(u64),
+    IntegerLiteral {
+        value: u64,
+        negative: bool,
+    },
     StringLiteral(String),
 
     DocComment(String),
@@ -177,7 +180,19 @@ impl<'a> Tokenizer<'a> {
                     // Start of an integer literal
                     _ if here.is_numeric() => {
                         self.state = TokenizerState::CollectingWhitespaceSeparated {
-                            token: TokenKind::IntegerLiteral(here.to_string().parse().unwrap()).at(self.here_loc()),
+                            token: TokenKind::IntegerLiteral {
+                                value: here.to_string().parse().unwrap(),
+                                negative: false,
+                            }.at(self.here_loc()),
+                            next_is_escape_sequence: false,
+                        }
+                    }
+                    '-' if self.peek().is_numeric() => {
+                        self.state = TokenizerState::CollectingWhitespaceSeparated {
+                            token: TokenKind::IntegerLiteral {
+                                value: 0,
+                                negative: true,
+                            }.at(self.here_loc()),
                             next_is_escape_sequence: false,
                         }
                     }
@@ -269,7 +284,7 @@ impl<'a> Tokenizer<'a> {
                         }
                     }
 
-                    TokenKind::IntegerLiteral(ref mut value) => {
+                    TokenKind::IntegerLiteral { ref mut value, .. } => {
                         match here {
                             // Extend the token being parsed
                             _ if here.is_numeric() => {
