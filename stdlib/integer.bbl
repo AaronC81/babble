@@ -70,4 +70,13 @@ impl Integer {
                      that: (Integer fromBigEndianBytes: #{ 1 2 256 4 })
                      equals: null.
     ]
+
+    /// If this integer is negative, returns its absolute value, otherwise returns itself.
+    ///
+    /// @returns A positive integer.
+    func abs {
+        self lessThan: 0 $ ifTrue: [ self negate ] else: [ self ]
+    }
+    InternalTest case: "abs neg" that: 5 negate abs equals: 5.
+    InternalTest case: "abs pos" that: 5 abs        equals: 5.
 }
