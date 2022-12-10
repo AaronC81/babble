@@ -21,15 +21,25 @@ impl Array {
         x
     ] call equals: #{ 1 2 3 4 }.
 
+    /// Constructs a new array by repeatedly executing a block to obtain elements.
+    ///
+    /// @param newFrom: The block to execute to get elements.
+    /// @param length: The number of times to repeat the element.
+    /// @returns A new array.
+    static func newFrom: item length: length {
+        result = #{}.
+        length times: [ result append: item call. ].
+        result
+    }
+    InternalTest case: "newFrom" that: (Array newFrom: [ -1 ] length: 3) equals: #{ -1 -1 -1 }.
+
     /// Constructs a new array by repeating one element.
     ///
     /// @param newOf: The element to repeat.
     /// @param length: The number of times to repeat the element.
     /// @returns A new array.
     static func newOf: item length: length {
-        result = #{}.
-        length times: [ result append: item. ].
-        result
+        self newFrom: [ item ] length: length
     }
     InternalTest case: "newOf" that: (Array newOf: 4 length: 3) equals: #{ 4 4 4 }.
 
