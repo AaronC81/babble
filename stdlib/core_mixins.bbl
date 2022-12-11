@@ -237,6 +237,14 @@ impl Enumerable {
         self reduce: [ |acc x| acc add: x ] acc: 0
     }
 
+    /// Multiplies together the elements in this enumerable, by starting with the integer 1 and 
+    /// repeatedly calling `mul:`.
+    ///
+    /// @returns The product value. 
+    func product {
+        self reduce: [ |acc x| acc * x ] acc: 1
+    }
+
     /// Joins together the strings in this enumerable with a separator between them, by repeatedly
     /// calling `concat:`.
     ///

@@ -118,6 +118,7 @@ impl Array {
 
         InternalTest case: "withIndex" that: (#{ 1 7 3 } withIndex) equals: #{ #{ 0 1 } #{ 1 7 } #{ 2 3 } }.
         InternalTest case: "sum" that: #{ 1 7 3 } sum equals: 11.
+        InternalTest case: "product" that: #{ 5 7 3 } product equals: 105.
         InternalTest case: "join many" that: (#{ "foo" "bar" "baz" } join: ", ") equals: "foo, bar, baz".
         InternalTest case: "join one"
                      that: (#{ "foo" } join: ", ")
