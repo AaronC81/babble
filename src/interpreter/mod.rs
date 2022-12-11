@@ -148,7 +148,7 @@ impl Interpreter {
 
         for instruction in instructions {
             if let Err(e) = self.evaluate_inner(instruction, &mut value_stack) {
-                return Err(e.add_details(&instruction.location, self));
+                return Err(e.add_details(&instruction.location, Some(self)));
             }
         }
 
@@ -157,7 +157,7 @@ impl Interpreter {
         } else {
             let mut error: InterpreterError = InterpreterErrorKind::StackImbalance(value_stack.len()).into();
             if !instructions.as_vec().is_empty() {
-                error = error.add_details(&instructions.iter().next().unwrap().location, self);
+                error = error.add_details(&instructions.iter().next().unwrap().location, Some(self));
             }
             Err(error)
         }

@@ -22,14 +22,14 @@ impl InterpreterError {
     /// currently.
     /// 
     /// If it already has details, returns the error unmodified.
-    pub fn add_details(self, loc: &Location, interpreter: &Interpreter) -> Self {
+    pub fn add_details(self, loc: &Location, interpreter: Option<&Interpreter>) -> Self {
         if self.details.is_some() {
             self
         } else {
             Self {
                 details: Some(InterpreterErrorDetails {
                     location: Some(loc.clone()),
-                    backtrace: interpreter.stack.clone(),
+                    backtrace: interpreter.map(|i| i.stack.clone()),
                 }),
                 ..self
             }
@@ -41,7 +41,7 @@ impl InterpreterError {
 #[derive(Debug, Clone)]
 pub struct InterpreterErrorDetails {
     pub location: Option<Location>,
-    pub backtrace: Vec<StackFrame>,
+    pub backtrace: Option<Vec<StackFrame>>,
 }
 
 /// The core cause of an [InterpreterError].

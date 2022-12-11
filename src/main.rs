@@ -112,9 +112,11 @@ fn print_error(e: InterpreterError) {
             println!("|   {}\n", location.line_contents().trim_end());
         }
 
-        println!("Backtrace (most recent first):");
-        for frame in details.backtrace.iter().rev() {
-            println!("  - {}", frame.context);
+        if let Some(backtrace) = details.backtrace {
+            println!("Backtrace (most recent first):");
+            for frame in backtrace.iter().rev() {
+                println!("  - {}", frame.context);
+            }
         }
     }
 }

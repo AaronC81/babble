@@ -277,7 +277,11 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
                         instructions
                     },
 
-                    _ => return Err(InterpreterErrorKind::InvalidAssignmentTarget.into()),
+                    _ => {
+                        let err: InterpreterError = InterpreterErrorKind::InvalidAssignmentTarget.into();
+                        let err = err.add_details(&loc, None);
+                        return Err(err)
+                    }
                 }
             }
 
