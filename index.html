@@ -502,6 +502,46 @@ enough, it is extended with <code>null</code>s so that the new item is at the en
                             
                                 <code><i>static</i> </code>
                             
+                            <code>newFrom:length:</code>
+                        </h2>
+
+                        
+                                <p>Constructs a new array by repeatedly executing a block to obtain elements.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                        <p><b><code>newFrom:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to execute to get elements.</p>
+
+                                        </blockquote>
+                                    
+                                        <p><b><code>length:</code></b></p>
+                                        <blockquote>
+                                            <p>The number of times to repeat the element.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A new array.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
+                                <code><i>static</i> </code>
+                            
                             <code>newOf:length:</code>
                         </h2>
 
@@ -2198,6 +2238,33 @@ elements for which the predicate returned <code>false</code>.</p>
                                     
                                 
                             
+                            <code>product</code>
+                        </h2>
+
+                        
+                                <p>Multiplies together the elements in this enumerable, by starting with the integer 1 and
+repeatedly calling <code>mul:</code>.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The product value.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
                             <code>reduce:</code>
                         </h2>
 
@@ -2305,6 +2372,39 @@ the current accumulator value.</p>
                                             <p><b><i>Returns:</i></b></p>
                                             <blockquote>
                                                 <p>The accumulator value obtained after repeatedly applying the block.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
+                            <code>reject:</code>
+                        </h2>
+
+                        
+                                <p>Constructs a new array by retaining elements from this enumerable where a block returns
+<code>false</code>.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                        <p><b><code>map:</code></b></p>
+                                        <blockquote>
+                                            <p>The block to use as a condition, which should accept one parameter.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The new array.</p>
 
                                             </blockquote>
                                         
