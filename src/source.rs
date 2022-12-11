@@ -22,11 +22,18 @@ impl Location {
     }
 
     /// Computes the line which this location can be found on.
-    pub fn line_number(&self) -> usize {
+    pub fn line_number_and_position(&self) -> (usize, usize) {
+        let mut position_on_line = 0;
         let mut current_line_number = 1;
         for (i, c) in self.source_file.contents.chars().enumerate() {
-            if i == self.start_index { return current_line_number; }
-            if c == '\n' { current_line_number += 1; }
+            position_on_line += 1;
+            if i == self.start_index {
+                return (current_line_number, position_on_line);
+            }
+            if c == '\n' {
+                current_line_number += 1;
+                position_on_line = 0;
+            }
         }
 
         unreachable!("file does not contain start index")
@@ -34,7 +41,7 @@ impl Location {
 
     /// Returns the contents of the line which this location can be found on.
     pub fn line_contents(&self) -> String {
-        let target_line_number = self.line_number();
+        let (target_line_number, _) = self.line_number_and_position();
         let mut current_line_number = 1;
         let mut buffer = "".to_string();
         for c in self.source_file.contents.chars() {

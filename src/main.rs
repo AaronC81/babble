@@ -11,7 +11,8 @@ use std::{fs::read_to_string, io::{stdin, stdout, Write}};
 
 use clap::Parser;
 use interpreter::{Interpreter, InterpreterError, instruction::InstructionKind};
-use source::SourceFile;
+use parser::ParserError;
+use source::{SourceFile, Location};
 use tokenizer::Tokenizer;
 
 use crate::interpreter::instruction::compile;
@@ -75,7 +76,7 @@ fn main() {
     }
 
     if let Err(e) = Interpreter::new(Some(src)).and_then(|mut i| i.parse_and_evaluate_root()) {
-        print_error(e);
+        print_interpreter_error(e);
     }
 }
 
@@ -96,7 +97,7 @@ fn repl() -> ! {
         let source = SourceFile::new(&format!("repl-{command_number}"), &command);
         match interpreter.parse_and_evaluate(source.rc()) {
             Ok(result) => println!("{}", result.borrow_mut().to_language_string()),
-            Err(e) => print_error(e),
+            Err(e) => print_interpreter_error(e),
         }
         println!();
 
@@ -104,12 +105,11 @@ fn repl() -> ! {
     }
 }
 
-fn print_error(e: InterpreterError) {
-    println!("Fatal error:\n  {}\n", e.kind);
+fn print_interpreter_error(e: InterpreterError) {
+    println!("Program error:\n  {}\n", e.kind);
     if let Some(details) = e.details {
         if let Some(location) = details.location {
-            println!("At: {}:{}", location.source_file.name, location.line_number());
-            println!("|   {}\n", location.line_contents().trim_end());
+            print_location(&location);
         }
 
         if let Some(backtrace) = details.backtrace {
@@ -119,4 +119,11 @@ fn print_error(e: InterpreterError) {
             }
         }
     }
+}
+
+fn print_location(location: &Location) {
+    let (line_number, position) = location.line_number_and_position();
+    println!("At: {}:{}", location.source_file.name, line_number);
+    println!("|   {}", location.line_contents().trim_end());
+    println!("|   {}^\n", " ".repeat(position - 1));
 }
