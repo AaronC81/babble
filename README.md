@@ -79,7 +79,7 @@ cargo run -- -f <file>
 - [x] Mixins - a way of implementing shared functionality, like Rust's traits
 - [x] Pattern matching - implemented with match-blocks, which take patterns as parameters and return
       `Match#Hit returnValue` or `Match#Miss` depending on whether the pattern was actually matched
-- [ ] Better parser errors
+- [x] Better parser errors
 - [x] Better runtime errors
 - [x] Complex assignment targets (e.g struct fields)
 - [ ] Collection types and literals

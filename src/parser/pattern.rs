@@ -5,6 +5,7 @@
 //! nodes, and then converted into a pattern as a second step.
 
 use std::collections::HashMap;
+use std::fmt::Display;
 
 use crate::parser::{SendMessageComponents, SendMessageParameter, Node, NodeKind};
 
@@ -17,11 +18,14 @@ use super::{Literal, SugarNodeKind};
 pub enum PatternParseError {
     /// The given node is not allowed to appear at this location in a pattern.
     InvalidNode(Node),
+}
 
-    /// The pattern being matched against is a [`Literal`] which is impure (i.e. constructing it
-    /// could have side effects). This should be treated as an internal error, as generally the
-    /// parsing step should disallow this.
-    ImpureLiteral,
+impl Display for PatternParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PatternParseError::InvalidNode(_) => write!(f, "invalid node in pattern"),
+        }
+    }
 }
 
 /// A pattern, describing a data layout that a value can be matched against, optionally extracting

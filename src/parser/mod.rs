@@ -4,7 +4,7 @@
 //! documented since they are currently changing regularly due to the recursive-descent nature.
 
 mod node;
-use std::rc::Rc;
+use std::{rc::Rc, fmt::Display};
 
 pub use node::*;
 
@@ -37,14 +37,36 @@ pub enum ParserError {
     /// A parameter name in a function definition was not an identifier.
     /// 
     /// This can occur because call parsing logic is re-used for definitions.
-    InvalidFuncDefinitionParameter,
+    InvalidFuncDefinitionParameter(Location),
 
     /// Fields used inside an enum variant are not permitted to be static - only fields within 
     /// structs are.
-    StaticEnumVariantField,
+    StaticEnumVariantField(Location),
 
     /// An error occurred while parsing a pattern.
     PatternError(PatternParseError),
+}
+
+impl ParserError {
+    pub fn location(&self) -> &Location {
+        match self {
+            ParserError::UnexpectedToken(token) => &token.location,
+            ParserError::InvalidFuncDefinitionParameter(l) => l,
+            ParserError::StaticEnumVariantField(l) => l,
+            ParserError::PatternError(PatternParseError::InvalidNode(n)) => &n.location,
+        }
+    }
+}
+
+impl Display for ParserError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ParserError::UnexpectedToken(_) => write!(f, "unexpected token"),
+            ParserError::InvalidFuncDefinitionParameter(_) => write!(f, "function definition contains an invalid parameter"),
+            ParserError::StaticEnumVariantField(_) => write!(f, "enum fields cannot be static"),
+            ParserError::PatternError(e) => e.fmt(f),
+        }
+    }
 }
 
 /// The parser state.
@@ -641,7 +663,7 @@ impl<'a> Parser<'a> {
             for (_, internal_name) in components {
                 // The "value" for this parameter should always be a plain identifier
                 let SendMessageParameter::CallArgument(box Node { kind: NodeKind::Identifier(id), .. }) = internal_name else {
-                    return Err(ParserError::InvalidFuncDefinitionParameter);
+                    return Err(ParserError::InvalidFuncDefinitionParameter(location.clone()));
                 };
 
                 *internal_name = SendMessageParameter::DefinitionParameter(id.clone());
@@ -710,10 +732,11 @@ impl<'a> Parser<'a> {
                 self.advance();
                 break
             }
+            let location = self.here().location.clone();
             let (name, instance_fields, static_fields) = self.parse_data_layout()?;
 
             if !static_fields.is_empty() {
-                return Err(ParserError::StaticEnumVariantField);
+                return Err(ParserError::StaticEnumVariantField(location));
             }
 
             variants.push(Variant { name, fields: instance_fields });

@@ -3,7 +3,7 @@
 //! The tokenizer removes all whitespace except newlines, which are preserved as special tokens,
 //! although the parser currently skips over them.
 
-use std::rc::Rc;
+use std::{rc::Rc, fmt::Display};
 
 use crate::source::{Location, SourceFile};
 
@@ -96,6 +96,26 @@ pub enum TokenizerError {
 
     /// A string literal used an invalid escape sequence.
     InvalidEscapeSequence(Location),
+}
+
+impl TokenizerError {
+    pub fn location(&self) -> &Location {
+        match self {
+            TokenizerError::UnexpectedCharacter(_, loc) => loc,
+            TokenizerError::IntegerLiteralOverflow(loc) => loc,
+            TokenizerError::InvalidEscapeSequence(loc) => loc,
+        }
+    }
+}
+
+impl Display for TokenizerError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TokenizerError::UnexpectedCharacter(c, _) => write!(f, "unexpected character '{}'", c),
+            TokenizerError::IntegerLiteralOverflow(_) => write!(f, "integer literal overflow"),
+            TokenizerError::InvalidEscapeSequence(_) => write!(f, "invalid escape sequence in string"),
+        }
+    }
 }
 
 /// The current state of the tokenizer.

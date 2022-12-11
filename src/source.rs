@@ -23,20 +23,20 @@ impl Location {
 
     /// Computes the line which this location can be found on.
     pub fn line_number_and_position(&self) -> (usize, usize) {
-        let mut position_on_line = 0;
+        let mut position_on_line = 1;
         let mut current_line_number = 1;
         for (i, c) in self.source_file.contents.chars().enumerate() {
-            position_on_line += 1;
             if i == self.start_index {
                 return (current_line_number, position_on_line);
             }
+            position_on_line += 1;
             if c == '\n' {
                 current_line_number += 1;
-                position_on_line = 0;
+                position_on_line = 1;
             }
         }
 
-        unreachable!("file does not contain start index")
+        (current_line_number, position_on_line)
     }
 
     /// Returns the contents of the line which this location can be found on.

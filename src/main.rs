@@ -7,13 +7,13 @@
 #![feature(trait_upcasting)]
 #![feature(test)]
 
-use std::{fs::read_to_string, io::{stdin, stdout, Write}};
+use std::{fs::read_to_string, io::{stdin, stdout, Write}, rc::Rc};
 
 use clap::Parser;
-use interpreter::{Interpreter, InterpreterError, instruction::InstructionKind};
+use interpreter::{Interpreter, InterpreterError, instruction::InstructionKind, InterpreterErrorKind};
 use parser::ParserError;
 use source::{SourceFile, Location};
-use tokenizer::Tokenizer;
+use tokenizer::{Tokenizer, TokenizerError};
 
 use crate::interpreter::instruction::compile;
 
@@ -51,12 +51,15 @@ fn main() {
 
     let input_contents;
     let input_name;
+    let src;
     if let Some(file) = args.file {
         input_name = file;
         input_contents = read_to_string(input_name.clone()).unwrap();
+        src = SourceFile::new(std::fs::canonicalize(input_name).unwrap().to_str().unwrap(), &input_contents).rc();
     } else if let Some(code) = args.code {
         input_name = "command-line".to_string();
         input_contents = code;
+        src = SourceFile::new(&input_name, &input_contents).rc();
     } else if args.doc_gen {
         let interpreter = Interpreter::new(None).unwrap();
         let output = doc_gen::generate_html_documentation(&interpreter);
@@ -66,7 +69,6 @@ fn main() {
         repl();
     };
 
-    let src = SourceFile::new(std::fs::canonicalize(input_name).unwrap().to_str().unwrap(), &input_contents).rc();
     if args.show_asm {
         let tokens = Tokenizer::tokenize(src.clone()).expect("tokenization failed");
         let node = crate::parser::Parser::parse_and_analyse(src, &tokens[..]).expect("parsing failed");
@@ -80,7 +82,6 @@ fn main() {
     }
 }
 
-// TODO: panics on parse error
 fn repl() -> ! {
     // Construct an interpreter instance
     let mut interpreter = Interpreter::new(None).unwrap();    
@@ -92,6 +93,12 @@ fn repl() -> ! {
         stdout().flush().unwrap();
         let mut command = "".to_string();
         stdin().read_line(&mut command).unwrap();
+        if command.ends_with('\n') {
+            command.pop();
+            if command.ends_with('\r') {
+                command.pop();
+            }
+        }
 
         // Run it
         let source = SourceFile::new(&format!("repl-{command_number}"), &command);
@@ -106,6 +113,15 @@ fn repl() -> ! {
 }
 
 fn print_interpreter_error(e: InterpreterError) {
+    if let InterpreterError { kind: InterpreterErrorKind::ParserError(e), .. } = e {
+        print_parser_error(e);
+        return;
+    }
+    if let InterpreterError { kind: InterpreterErrorKind::TokenizerError(e), .. } = e {
+        print_tokenizer_error(e);
+        return;
+    }
+
     println!("Program error:\n  {}\n", e.kind);
     if let Some(details) = e.details {
         if let Some(location) = details.location {
@@ -119,6 +135,16 @@ fn print_interpreter_error(e: InterpreterError) {
             }
         }
     }
+}
+
+fn print_parser_error(e: ParserError) {
+    println!("Parse error:\n  {}\n", e);
+    print_location(e.location());
+}
+
+fn print_tokenizer_error(e: TokenizerError) {
+    println!("Parse error:\n  {}\n", e); // Not *really* a parse error, but close enough for a user!
+    print_location(e.location());
 }
 
 fn print_location(location: &Location) {
