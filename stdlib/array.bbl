@@ -105,6 +105,42 @@ impl Array {
         self
     }
 
+    /// Indexes into a multidimensional array. Calls `get:` on this array and the successive arrays
+    /// returned by that call, using each index in the given array.
+    ///
+    /// @param getN: The array of indexes to use.
+    /// @returns The item retrieved.
+    func getN: indeces {
+        item = self.
+        indeces forEach: [ |i|
+            item = item get: i.
+        ].
+        item
+    }
+
+    /// Sets an index in a multidimensional array. Calls `get:` on this array and the successive arrays
+    /// returned by that call, using each index in the given array up until the last one, where
+    /// `set:` is called instead.
+    ///
+    /// @param setN: The array of indexes to use.
+    /// @param value: The value to set the last index to.
+    func setN: indeces value: value {
+        (self getN: (indeces take: indeces length - 1)) set: indeces last value: value.
+    }
+
+    InternalTest defer: [
+        x = #{
+            #{ 1  2  3  4  }
+            #{ 5  6  7  8  }
+            #{ 9  10 11 12 }
+            #{ 13 14 15 16 }
+        }.
+        InternalTest case: "getN" that: (x getN: #{ 1 2 }) equals: 7.
+
+        x setN: #{ 2 3 } value: 42.
+        InternalTest case: "setN" that: (x getN: #{ 2 3 }) equals: 42.
+    ].
+
     use Enumerable.
     InternalTest defer: [
         InternalTest case: "toArray" that: #{ 1 2 3 } toArray equals: #{ 1 2 3 }.
