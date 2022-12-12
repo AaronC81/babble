@@ -360,6 +360,39 @@ compensate. If the array does not cover the index, returns <code>null</code>.</p
                                     
                                 
                             
+                            <code>getN:</code>
+                        </h2>
+
+                        
+                                <p>Indexes into a multidimensional array. Calls <code>get:</code> on this array and the successive arrays
+returned by that call, using each index in the given array.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                        <p><b><code>getN:</code></b></p>
+                                        <blockquote>
+                                            <p>The array of indexes to use.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The item retrieved.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
                             <code>insert:at:</code>
                         </h2>
 
@@ -627,6 +660,41 @@ it is extended with <code>null</code>s to match the required length.</p>
                                         <p><b><code>value:</code></b></p>
                                         <blockquote>
                                             <p>The value to write into the array.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                    
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
+                            <code>setN:value:</code>
+                        </h2>
+
+                        
+                                <p>Sets an index in a multidimensional array. Calls <code>get:</code> on this array and the successive arrays
+returned by that call, using each index in the given array up until the last one, where
+<code>set:</code> is called instead.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                        <p><b><code>setN:</code></b></p>
+                                        <blockquote>
+                                            <p>The array of indexes to use.</p>
+
+                                        </blockquote>
+                                    
+                                        <p><b><code>value:</code></b></p>
+                                        <blockquote>
+                                            <p>The value to set the last index to.</p>
 
                                         </blockquote>
                                     
