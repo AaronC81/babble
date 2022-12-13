@@ -147,6 +147,15 @@ impl Enumerable {
         ]
     }
 
+    /// Finds the index of the first value in the enumerable matching a predicate.
+    /// @param index: The predicate to use, which should accept one parameter.
+    /// @returns The index of the first value matching the predicate, or `null` if none is found.
+    func index: fn {
+        result = self withIndex find: ![ | #{ _. v } | fn call: v ].
+        result isNull ifTrue: [ return null ].
+        result first
+    }
+
     /// Partitions this enumerable into an array of chunks of a given size.
     ///
     /// If the enumerable is not evenly divisible by the chunk size, the last chunk will be smaller
