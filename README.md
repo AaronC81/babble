@@ -91,3 +91,4 @@ cargo run -- -f <file>
     - [ ] Private fields
     - [ ] Private constructors
 - [ ] Keyword to allow function arguments to appear in any order, for constructors
+- [ ] Core mixins on types (e.g. `Equatable` but static) for more consistency between types and values
