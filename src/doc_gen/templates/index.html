@@ -83,6 +83,10 @@
             padding: 15px;
             background-color: #dbd40977;
         }
+
+        .fade-text {
+            color: rgb(128, 128, 128);
+        }
     </style>
 </head>
 <body>
@@ -167,6 +171,13 @@
                                     {% for mixin in type.used_mixins %}
                                         <li><a href="#{{ mixin }}"><code>{{ mixin }}</code></a></li>
                                     {% endfor %}
+                                    {% if !type.used_core_mixins.is_empty() %}
+                                        <li><i class="fade-text">
+                                            {% for mixin in type.used_core_mixins %}
+                                                <a href="#{{ mixin }}" class="fade-text"><code>{{ mixin }}</code></a>{% if !loop.last %}, {% endif %}
+                                            {% endfor %}    
+                                        </i></li>
+                                    {% endif %}
                                 </ul>
                             {% endif %}
                         </p>

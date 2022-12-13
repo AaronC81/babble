@@ -3,9 +3,12 @@ use comrak::{markdown_to_html, ComrakOptions};
 
 use crate::interpreter::{Interpreter, MethodLocality, TypeData, DocumentationState, MethodVisibility};
 
+const CORE_MIXINS: &[&str] = &["Equatable", "Representable", "Matchable"];
+
 struct TypeDocumentation {
     pub id: String,
     pub data: TypeData,
+    pub used_core_mixins: Vec<String>,
     pub used_mixins: Vec<String>,
     pub methods: Vec<MethodDocumentation>,
     pub description: Option<String>,
@@ -100,7 +103,9 @@ fn build_documentation_objects<T: DocumentationTemplate>(interpreter: &Interpret
 
         // Build type documentation
         let data = t.data.clone();
-        let used_mixins = t.used_mixins.iter().map(|m| m.borrow().id.clone()).collect();
+        let (used_core_mixins, used_mixins) = t.used_mixins.iter()
+            .map(|m| m.borrow().id.clone())
+            .partition(|m| CORE_MIXINS.contains(&&m[..]));
 
         // Gather all instance and static methods
         let mut all_methods = t.methods.iter().cloned()
@@ -139,6 +144,7 @@ fn build_documentation_objects<T: DocumentationTemplate>(interpreter: &Interpret
         type_docs.push(TypeDocumentation {
             id: t.id.clone(),
             data,
+            used_core_mixins,
             used_mixins,
             methods: method_docs,
             description,
