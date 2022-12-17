@@ -230,6 +230,24 @@ fn desugar_return_internal(node: &mut Node, state: &mut DesugarReturnState) {
 /// ```
 /// (Reflection instanceType: self)#Hit
 /// ```
+/// 
+/// # String interpolation
+/// 
+/// This syntax:
+/// 
+/// ```
+/// "2 + 2 is {2 + 2}!"
+/// ```
+/// 
+/// Is desugared into:
+/// 
+/// ```
+/// String interpolate: #{
+///     "2 + 2 is ".
+///     (2 + 2).
+///     "!".
+/// }
+/// ```
 pub fn desugar_simple(root: &mut Node) {
     // Shorthand blocks
     if let NodeKind::Sugar(SugarNodeKind::ShorthandBlock(method)) = &root.kind {
@@ -276,6 +294,25 @@ pub fn desugar_simple(root: &mut Node) {
                 components: SendMessageComponents::Parameterised(vec![
                     ("instanceType".into(), SendMessageParameter::CallArgument(Box::new(Node {
                         kind: NodeKind::SelfAccess,
+                        ..root.clone()
+                    }))),
+                ])
+            },
+            ..root.clone()
+        }
+    }
+
+    // String interpolation
+    if let NodeKind::Sugar(SugarNodeKind::StringInterpolation(parts)) = &root.kind {
+        *root = Node {
+            kind: NodeKind::SendMessage {
+                receiver: Box::new(Node {
+                    kind: NodeKind::Identifier("String".to_string()),
+                    ..root.clone()
+                }),
+                components: SendMessageComponents::Parameterised(vec![
+                    ("interpolate".into(), SendMessageParameter::CallArgument(Box::new(Node {
+                        kind: NodeKind::Array(parts.clone()),
                         ..root.clone()
                     }))),
                 ])
