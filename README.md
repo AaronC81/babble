@@ -86,7 +86,7 @@ cargo run -- -f <file>
     - [x] Arrays
     - [x] Dictionaries
     - [ ] Sets
-- [ ] String interpolation
+- [x] String interpolation
 - [ ] More access control
     - [ ] Private fields
     - [ ] Private constructors
