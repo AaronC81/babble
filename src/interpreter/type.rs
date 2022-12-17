@@ -62,6 +62,15 @@ impl Type {
             }
         }
 
+        // If we're looking for a static method, then check instance methods on static `use`d mixins
+        if locality == MethodLocality::Static {
+            for mixin in self.used_static_mixins.iter().rev() {
+                if let Some(method) = mixin.borrow().resolve_method(name, MethodLocality::Instance) {
+                    return Some(method)
+                }
+            }
+        }
+
         // Nowhere to be found!
         None
     }
