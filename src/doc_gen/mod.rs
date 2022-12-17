@@ -8,8 +8,8 @@ const CORE_MIXINS: &[&str] = &["Equatable", "Representable", "Matchable"];
 struct TypeDocumentation {
     pub id: String,
     pub data: TypeData,
-    pub used_core_mixins: Vec<String>,
-    pub used_mixins: Vec<String>,
+    pub used_core_mixins: Vec<(String, bool)>,
+    pub used_mixins: Vec<(String, bool)>,
     pub methods: Vec<MethodDocumentation>,
     pub description: Option<String>,
 }
@@ -104,8 +104,9 @@ fn build_documentation_objects<T: DocumentationTemplate>(interpreter: &Interpret
         // Build type documentation
         let data = t.data.clone();
         let (used_core_mixins, used_mixins) = t.used_mixins.iter()
-            .map(|m| m.borrow().id.clone())
-            .partition(|m| CORE_MIXINS.contains(&&m[..]));
+            .map(|m| (m.borrow().id.clone(), false))
+            .chain(t.used_static_mixins.iter().map(|m| (m.borrow().id.clone(), true)))
+            .partition(|(m, _)| CORE_MIXINS.contains(&&m[..]));
 
         // Gather all instance and static methods
         let mut all_methods = t.methods.iter().cloned()

@@ -168,13 +168,22 @@
                             {% if !type.used_mixins.is_empty() %}
                                 <b>Uses mixins:</b>
                                 <ul>
-                                    {% for mixin in type.used_mixins %}
-                                        <li><a href="#{{ mixin }}"><code>{{ mixin }}</code></a></li>
+                                    {% for (mixin, is_static) in type.used_mixins %}
+                                        <li><a href="#{{ mixin }}">
+                                            {% if is_static %}
+                                                <code><i>static</i> </code>
+                                            {% endif %}
+                                            <code>{{ mixin }}</code>
+                                        </a></li>
                                     {% endfor %}
                                     {% if !type.used_core_mixins.is_empty() %}
                                         <li><i class="fade-text">
-                                            {% for mixin in type.used_core_mixins %}
-                                                <a href="#{{ mixin }}" class="fade-text"><code>{{ mixin }}</code></a>{% if !loop.last %}, {% endif %}
+                                            {% for (mixin, is_static) in type.used_core_mixins %}
+                                                <a href="#{{ mixin }}" class="fade-text">
+                                                    {% if is_static %}
+                                                        <code><i>static</i> </code>
+                                                    {% endif %}
+                                                    <code>{{ mixin }}</code></a>{% if !loop.last %}, {% endif %}
                                             {% endfor %}    
                                         </i></li>
                                     {% endif %}
