@@ -2,6 +2,17 @@ impl String {
     // Slightly wonky test for escape sequences
     InternalTest case: "escapes" that: "\r\n\t\0\"" length equals: 5.
 
+    /// Given an array of values implementing `Representable`, converts each to a string and then
+    /// joins the values together.
+    ///
+    /// Used to implement string interpolation syntax.
+    ///
+    /// @param parts: The parts to interpolate.
+    /// @returns The interpolated string.
+    static func interpolate: parts {
+        parts map: &repr $ join
+    }
+
     /// Gets the characters within this string.
     ///
     /// @returns An array of this string's characters.
