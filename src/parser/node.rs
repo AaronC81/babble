@@ -196,6 +196,10 @@ pub enum SugarNodeKind {
 
     /// The node is the type for a shorthand enum variant.
     ShorthandVariantConstructor,
+
+    /// The node is an interpolated string, which will be desugared into a sequence of `concat:`
+    /// and `repr` calls.
+    StringInterpolation(Vec<Node>),
 }
 
 /// The binary operation used by a [SugarNodeKind::BinaryMessage].

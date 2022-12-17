@@ -331,14 +331,8 @@ impl<'a> Parser<'a> {
             };
             self.advance();
             Ok(node)
-        } else if let Token { kind: TokenKind::StringLiteral(value), location } = self.here() {
-            let node = Node {
-                kind: NodeKind::Literal(Literal::String(value.clone())),
-                location: location.clone(),
-                context,
-            };
-            self.advance();
-            Ok(node)
+        } else if let Token { kind: TokenKind::StringLiteral(_), .. } = self.here() {
+            self.parse_string_literal(context)
         } else if let Token { kind: TokenKind::Identifier(id), location } = self.here() {
             let mut node = Node {
                 kind: NodeKind::Identifier(id.clone()),
@@ -577,6 +571,63 @@ impl<'a> Parser<'a> {
             Ok(node)
         } else {
             Err(ParserError::UnexpectedToken(self.here().clone()))
+        }
+    }
+
+    fn parse_string_literal(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
+        // A string literal must start with... y'know, a string literal
+        let Token { kind: TokenKind::StringLiteral(value), location } = self.here() else {
+            self.token_error()?
+        };
+
+        // Construct string literal node
+        let node = Node {
+            kind: NodeKind::Literal(Literal::String(value.clone())),
+            location: location.clone(),
+            context: context.clone(),
+        };
+        self.advance();
+
+        // Are there interpolations following this string?
+        if let Token { kind: TokenKind::StringInterpolationStart, .. } = self.here() {
+            // Yep! Parse interpolations
+            let location = node.location.clone();
+            let context = node.context.clone();
+            let mut parts = vec![node];
+
+            while let Token { kind: TokenKind::StringInterpolationStart, .. } = self.here() {
+                // Parse and insert interpolated expression
+                self.advance();
+                let expr = self.parse_expression(context.clone())?;
+                
+                let Token { kind: TokenKind::StringInterpolationEnd, .. } = self.here() else {
+                    println!("missing interp end, got {:?}", self.here().kind);
+                    self.token_error()?
+                };
+                self.advance();
+                parts.push(expr);
+
+                // After an interpolation, we expect to find another string literal
+                let Token { kind: TokenKind::StringLiteral(string), .. } = self.here() else {
+                    println!("missing chain string");
+                    self.token_error()?
+                };
+                parts.push(Node {
+                    kind: NodeKind::Literal(Literal::String(string.clone())),
+                    location: location.clone(),
+                    context: context.clone(),
+                });
+                self.advance();
+            }
+
+            Ok(Node {
+                kind: NodeKind::Sugar(SugarNodeKind::StringInterpolation(parts)),
+                location,
+                context,
+            })
+        } else {
+            // Nope! Just return the string literal
+            Ok(node)
         }
     }
 

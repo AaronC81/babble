@@ -58,6 +58,11 @@ impl NodeWalk for Node {
                 func(left);
                 func(right);
             }
+            NodeKind::Sugar(SugarNodeKind::StringInterpolation(parts)) => {
+                for part in parts {
+                    func(part);
+                }
+            }
 
             | NodeKind::SelfAccess
             | NodeKind::EnumDefinition { name: _, variants: _, documentation: _ }
