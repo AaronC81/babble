@@ -393,7 +393,9 @@ impl<'a> Tokenizer<'a> {
                                     }
                                 }
 
-                                // Emit interpolation end marker
+                                // The last thing was a right brace, but we want to replace that
+                                // with our own specialised marker
+                                self.tokens.pop();
                                 self.tokens.push(TokenKind::StringInterpolationEnd.at(self.here_loc()));
 
                                 // Start parsing a string again
