@@ -153,7 +153,9 @@ pub enum InstructionKind {
 
     /// Peeks the stack to get a mixin, which is imported into the current type. Must be inside an
     /// `impl` context.
-    Use,
+    Use {
+        is_static: bool,
+    },
 
     /// Peeks the stack to get a block, and defines a function with that block as its body.
     DefFunc {
@@ -365,9 +367,9 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
                     data: TypeData::Mixin,
                     documentation
                 }.with_loc(&loc)].into(),
-            NodeKind::Use { mixin, .. } => {
+            NodeKind::Use { mixin, is_static } => {
                 let mut instructions = compile(*mixin)?;
-                instructions.push(InstructionKind::Use.with_loc(&loc));
+                instructions.push(InstructionKind::Use { is_static }.with_loc(&loc));
                 instructions
             },
 
@@ -422,7 +424,7 @@ impl Display for Instruction {
             InstructionKind::Impl => write!(f, "impl"),
             InstructionKind::DefType { name, data: _, documentation: _ } =>
                 write!(f, "def type {name} ..."), // TODO: type data
-            InstructionKind::Use => write!(f, "use"),
+            InstructionKind::Use { is_static } => write!(f, "{}", if *is_static { "static use" } else { "use" }),
             InstructionKind::DefFunc { name, locality, documentation: _, visibility: _ } =>
                 write!(f, "def func {} {} ...", name, match locality {
                     MethodLocality::Instance => "(instance)",

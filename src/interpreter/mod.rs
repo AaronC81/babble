@@ -356,7 +356,7 @@ impl Interpreter {
                 self.stack.pop();
             },
 
-            InstructionKind::Use => {
+            InstructionKind::Use { is_static } => {
                 // The current stack frame should represent an `impl` block, so we know where to
                 // use this mixin
                 let StackFrame { context: StackFrameContext::Impl(t), .. } = self.current_stack_frame() else {
@@ -371,7 +371,11 @@ impl Interpreter {
                 };
 
                 // Insert used mixin
-                t.borrow_mut().used_mixins.push(mixin);
+                if *is_static {
+                    t.borrow_mut().used_static_mixins.push(mixin);
+                } else {
+                    t.borrow_mut().used_mixins.push(mixin);
+                }
             },
 
             InstructionKind::DefType { name, data, documentation } => {
