@@ -9,3 +9,4 @@ edition = "2021"
 askama = "0.11.1"
 clap = { version = "4.0.18", features = ["derive"] }
 comrak = "0.15.0"
+itertools = "0.10.5"

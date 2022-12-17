@@ -4,9 +4,11 @@
 
 use std::{rc::Rc, fmt::Debug, cell::RefCell};
 
+use itertools::Itertools;
+
 use crate::{interpreter::TypeInstance};
 
-use super::{InterpreterErrorKind, Value, Method, MethodRef, MethodLocality, InterpreterError, ValueRef, DocumentationState};
+use super::{InterpreterErrorKind, Value, Method, MethodRef, MethodLocality, InterpreterError, ValueRef, DocumentationState, MethodImplementation};
 
 /// A type which can be instantiated to create a [`Value`].
 #[derive(Debug)]
@@ -102,13 +104,55 @@ impl Type {
     /// Adds an instance method to this type, deleting any instance method with the same name first.
     pub fn add_method(&mut self, method: MethodRef) {
         self.methods.retain(|m| m.name != method.name);
-        self.methods.push(method);
+        self.methods.push(method.clone());
+
+        if method.unordered {
+            self.methods.extend(Self::generate_unordered_proxies(method));
+        }
     }
 
     /// Adds a static method to this type, deleting any static method with the same name first.
     pub fn add_static_method(&mut self, method: MethodRef) {
         self.static_methods.retain(|m| m.name != method.name);
-        self.static_methods.push(method);
+        self.static_methods.push(method.clone());
+
+        if method.unordered {
+            self.static_methods.extend(Self::generate_unordered_proxies(method));
+        }
+    }
+
+    /// Creates a list of proxy methods which can be used to call a method with its arguments in all
+    /// possible orders.
+    fn generate_unordered_proxies(method: MethodRef) -> Vec<MethodRef> {
+        let mut result = vec![];
+
+        let mut name_parts = method.name.split(':').collect::<Vec<_>>();
+        name_parts.pop(); // Remove empty item from end
+
+        // For each possible reordering of the arguments...
+        for permutation in name_parts.iter().enumerate().permutations(name_parts.len()) {
+            // Construct a new name
+            let mut proxy_name = permutation.iter().map(|(_, n)| n).join(":");
+            proxy_name.push(':');
+
+            // Create a proxy method for it, assuming it's not the same as the main method
+            if proxy_name != method.name {
+                let proxy_method = Method {
+                    name: proxy_name,
+                    implementation: MethodImplementation::UnorderedProxy {
+                        target: method.clone(),
+                        argument_order: permutation.iter().map(|(i, _)| *i).collect(),
+                    },
+                    documentation: DocumentationState::Hidden,
+                    visibility: method.visibility,
+                    arity: method.arity,
+                    unordered: false,
+                };
+                result.push(proxy_method.rc());
+            }
+        }
+
+        result
     }
 
     /// Generates methods which allow fields of this type to be accessed.
@@ -220,7 +264,9 @@ impl Type {
             **Constructor.**
 
             @returns A new instance of `{type_name}`.
-        ")).rc());
+        "))
+        .unordered()
+        .rc());
     }
 
     /// Transforms this into a [`TypeRef`].

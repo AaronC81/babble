@@ -14,6 +14,7 @@ pub struct Method {
     pub documentation: DocumentationState,
     pub visibility: MethodVisibility,
     pub arity: usize,
+    pub unordered: bool,
 }
 
 pub type MethodRef = Rc<Method>;
@@ -28,6 +29,7 @@ impl Method {
             implementation: MethodImplementation::Internal(Box::new(function)),
             documentation: DocumentationState::Undocumented,
             visibility: MethodVisibility::default(),
+            unordered: false,
         }
     }
 
@@ -39,6 +41,7 @@ impl Method {
             implementation: MethodImplementation::Compiled { instructions, internal_names },
             documentation: DocumentationState::Undocumented,
             visibility: MethodVisibility::default(),
+            unordered: false,
         }
     }
 
@@ -51,6 +54,7 @@ impl Method {
             implementation: MethodImplementation::Magic,
             documentation: DocumentationState::Undocumented,
             visibility: MethodVisibility::default(),
+            unordered: false,
         }
     }
 
@@ -63,6 +67,14 @@ impl Method {
     pub fn with_documentation(mut self, documentation: &str) -> Self {
         self.add_documentation(documentation);
         self
+    }
+
+    /// Consumes this method definition and returns one which is unordered.
+    pub fn unordered(self) -> Self {
+        Self {
+            unordered: true,
+            ..self
+        }
     }
     
     /// Transforms this [Method] in a [MethodRef].
@@ -125,6 +137,16 @@ impl Method {
             },
 
             MethodImplementation::Magic => Err(InterpreterErrorKind::Magic.into()),
+
+            MethodImplementation::UnorderedProxy { target, argument_order } => {
+                // Reorder the arguments which we were passed to match the order of the target
+                let mut reordered_arguments = vec![];
+                for i in argument_order {
+                    reordered_arguments.push(arguments[*i].clone());
+                }
+
+                target.clone().call(interpreter, receiver, &reordered_arguments)
+            }
         }
     }
 }
@@ -146,6 +168,13 @@ pub enum MethodImplementation {
     /// handled by the interpreter itself. This is reserved only for the most special of methods,
     /// such as those which directly need to access instruction metadata.
     Magic,
+
+    /// This method isn't actually a unique method - instead, it is a proxy for calling an unordered
+    /// method.
+    UnorderedProxy {
+        target: MethodRef,
+        argument_order: Vec<usize>,
+    },
 }
 impl Debug for MethodImplementation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -153,6 +182,7 @@ impl Debug for MethodImplementation {
             Self::Internal(_) => f.debug_tuple("Internal").finish(),
             Self::Compiled { instructions, internal_names } => f.debug_struct("Compiled").field("instructions", instructions).field("internal_names", internal_names).finish(),
             Self::Magic => f.debug_tuple("Magic").finish(),
+            Self::UnorderedProxy { argument_order, .. } => f.debug_struct("UnorderedProxy").field("argument_order", argument_order).finish(),
         }
     }
 }
