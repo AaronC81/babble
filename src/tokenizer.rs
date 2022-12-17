@@ -55,7 +55,10 @@ pub enum TokenKind {
         value: u64,
         negative: bool,
     },
+
     StringLiteral(String),
+    StringInterpolationStart,
+    StringInterpolationEnd,
 
     DocComment(String),
 
@@ -91,6 +94,9 @@ pub enum TokenizerError {
     /// A character did not correspond to any valid token.
     UnexpectedCharacter(char, Location),
 
+    /// The end of the file was not expected here.
+    UnexpectedEndOfFile(Location),
+
     /// While tokenizing, an integer literal would have overflown.
     IntegerLiteralOverflow(Location),
 
@@ -102,6 +108,7 @@ impl TokenizerError {
     pub fn location(&self) -> &Location {
         match self {
             TokenizerError::UnexpectedCharacter(_, loc) => loc,
+            TokenizerError::UnexpectedEndOfFile(loc) => loc,
             TokenizerError::IntegerLiteralOverflow(loc) => loc,
             TokenizerError::InvalidEscapeSequence(loc) => loc,
         }
@@ -112,6 +119,7 @@ impl Display for TokenizerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             TokenizerError::UnexpectedCharacter(c, _) => write!(f, "unexpected character '{}'", c),
+            TokenizerError::UnexpectedEndOfFile(_) => write!(f, "unexpected end of file"),
             TokenizerError::IntegerLiteralOverflow(_) => write!(f, "integer literal overflow"),
             TokenizerError::InvalidEscapeSequence(_) => write!(f, "invalid escape sequence in string"),
         }
@@ -340,6 +348,7 @@ impl<'a> Tokenizer<'a> {
                                     't' => '\t',
                                     '\\' => '\\',
                                     '0' => '\0',
+                                    '{' => '{',
                                     '"' => '"',
                                     _ => Err(TokenizerError::InvalidEscapeSequence(here_loc))?,
                                 };
@@ -357,6 +366,43 @@ impl<'a> Tokenizer<'a> {
                                 self.tokens.push(token.clone());
                                 self.state = TokenizerState::Idle;
                             },
+
+                            // Interpolation
+                            '{' => {
+                                // Finish the current string
+                                self.tokens.push(token.clone());
+                                self.state = TokenizerState::Idle;
+
+                                // Emit interpolation start marker
+                                self.tokens.push(TokenKind::StringInterpolationStart.at(self.here_loc()));
+
+                                // Parse tokens, until we find a } which balances with this one
+                                let mut curly_brace_depth = 1;
+                                self.advance();
+                                while curly_brace_depth > 0 {
+                                    // EOF check
+                                    if self.current_index >= self.chars.len() {
+                                        return Err(TokenizerError::UnexpectedEndOfFile(self.here_loc()));
+                                    }
+
+                                    self.step()?;
+                                    match self.tokens.last().unwrap().kind {
+                                        TokenKind::LeftBrace => curly_brace_depth += 1,
+                                        TokenKind::RightBrace => curly_brace_depth -= 1,
+                                        _ => (),
+                                    }
+                                }
+
+                                // Emit interpolation end marker
+                                self.tokens.push(TokenKind::StringInterpolationEnd.at(self.here_loc()));
+
+                                // Start parsing a string again
+                                self.state = TokenizerState::CollectingWhitespaceSeparated {
+                                    token: TokenKind::StringLiteral("".into()).at(self.here_loc()),
+                                    next_is_escape_sequence: false,
+                                };
+                                return Ok(()) // Skip advance
+                            }
 
                             _ => {
                                 value.push(here)
@@ -413,6 +459,20 @@ impl<'a> Tokenizer<'a> {
         }
     }
 
+    fn finalize(&mut self) {
+        // If the tokenizer was parsing an arbitrary-length token, shift it now
+        if let TokenizerState::CollectingWhitespaceSeparated { ref mut token, .. } = self.state {
+            // Keyword check
+            if let TokenKind::Identifier(id) = &token.kind {
+                if let Some(keyword) = Self::to_keyword(id) {
+                    token.kind = TokenKind::Keyword(keyword);
+                }
+            }
+            
+            self.tokens.push(token.clone());
+        }
+    }
+
     /// Steps the tokenizer until the entire source file has been tokenized (or an error occurs),
     /// then returns the tokens.
     pub fn tokenize(source_file: Rc<SourceFile>) -> Result<Vec<Token>, TokenizerError> {
@@ -422,18 +482,7 @@ impl<'a> Tokenizer<'a> {
         while tokenizer.current_index < chars.len() {
             tokenizer.step()?;
         }
-
-        // If the tokenizer was parsing an arbitrary-length token, shift it now
-        if let TokenizerState::CollectingWhitespaceSeparated { ref mut token, .. } = tokenizer.state {
-            // Keyword check
-            if let TokenKind::Identifier(id) = &token.kind {
-                if let Some(keyword) = Self::to_keyword(id) {
-                    token.kind = TokenKind::Keyword(keyword);
-                }
-            }
-            
-            tokenizer.tokens.push(token.clone());
-        }
+        tokenizer.finalize();
 
         tokenizer.tokens.push(TokenKind::EndOfFile.at(tokenizer.here_loc()));
 
