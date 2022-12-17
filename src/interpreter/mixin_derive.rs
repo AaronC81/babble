@@ -9,9 +9,16 @@ use super::{Type, Method, Value, Interpreter};
 
 /// Provides core mixins for a given type.
 pub fn derive_core_mixins(interpreter: &mut Interpreter, target: &mut Type) {
-    target.used_mixins.push(interpreter.resolve_stdlib_type("Equatable"));
-    target.used_mixins.push(interpreter.resolve_stdlib_type("Representable"));
-    target.used_mixins.push(interpreter.resolve_stdlib_type("Matchable"));
+    let core_mixins = [
+        interpreter.resolve_stdlib_type("Equatable"),
+        interpreter.resolve_stdlib_type("Representable"),
+        interpreter.resolve_stdlib_type("Matchable"),
+    ];
+
+    for mixin in core_mixins {
+        target.used_mixins.push(mixin.clone());
+        target.used_static_mixins.push(mixin);
+    }
 }
 
 /// An extension trait for `Type` which allows for easy derivation of core mixins.
@@ -88,5 +95,26 @@ fn test_derive_equatable_enum() {
     assert_eq!(
         i.parse_and_evaluate(SourceFile::new_temp("(A#X x: 3) equals: (B#X x: 3)").rc()).unwrap(),
         Value::new_boolean(&i, false).rc(),
+    );
+}
+
+#[test]
+fn test_static_derive() {
+    let mut i = Interpreter::new(None).unwrap();
+
+    // static use Equatable
+    assert_eq!(
+        i.parse_and_evaluate(SourceFile::new_temp("String equals: String").rc()).unwrap(),
+        Value::new_boolean(&i, true).rc(),
+    );
+    assert_eq!(
+        i.parse_and_evaluate(SourceFile::new_temp("String equals: Integer").rc()).unwrap(),
+        Value::new_boolean(&i, false).rc(),
+    );
+
+    // static use Representable
+    assert_eq!(
+        i.parse_and_evaluate(SourceFile::new_temp("String repr").rc()).unwrap(),
+        Value::new_string("String").rc(),
     );
 }
