@@ -321,6 +321,7 @@ impl Shape {
 // obtained by calling `match` on any value:
 (Shape#Rectangle width: 10 height: 20) match mustBeOneOf: #{
     // ...same as Match value:mustBeOneOf:
+    ?[ |Shape#Rectangle width: (w = Integer) height: (h = Integer) | ]
 }.
 
 // `![ ... ]` blocks behave almost the same, but will return the value not wrapped in a `Match`, and
@@ -354,6 +355,15 @@ impl Person {
     use CanGreet.
 }
 me greet. // => Prints "Hello, my name is Aaron"
+
+// Mixins can also be added to a type itself with `static use`, which treats the mixin's instance
+// methods as static methods on the type (and discards the mixin's static methods):
+struct StaticPerson static name.
+StaticPerson name = "Joe Bloggs".
+impl StaticPerson {
+    static use CanGreet.
+}
+StaticPerson greet. // => Prints "Hello, my name is Joe Bloggs"
 
 // -------------------------------------------------------------------------------------------------
 // 9. Advanced Control Flow
