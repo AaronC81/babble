@@ -13,6 +13,10 @@ impl String {
         parts map: &repr $ join
     }
 
+    InternalTest case: "string interpolation" that: "2 + 2 is {2 + 2}" equals: "2 + 2 is 4".
+    InternalTest case: "nested string interpolation" that: "2 + 2 is {"really {2 + 2}" uppercase}" equals: "2 + 2 is REALLY 4".
+    InternalTest case: "escaped string interpolation" that: "\{" length equals: 1.
+
     /// Gets the characters within this string.
     ///
     /// @returns An array of this string's characters.
