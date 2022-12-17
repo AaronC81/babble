@@ -365,8 +365,8 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
                     data: TypeData::Mixin,
                     documentation
                 }.with_loc(&loc)].into(),
-            NodeKind::Use(target) => {
-                let mut instructions = compile(*target)?;
+            NodeKind::Use { mixin, .. } => {
+                let mut instructions = compile(*mixin)?;
                 instructions.push(InstructionKind::Use.with_loc(&loc));
                 instructions
             },

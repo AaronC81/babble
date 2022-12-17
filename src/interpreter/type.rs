@@ -17,6 +17,7 @@ pub struct Type {
     pub static_methods: Vec<MethodRef>,
     pub static_fields: Vec<ValueRef>,
     pub used_mixins: Vec<TypeRef>,
+    pub used_static_mixins: Vec<TypeRef>,
     pub documentation: DocumentationState,
 }
 impl PartialEq for Type { fn eq(&self, other: &Self) -> bool { self.id == other.id } }
@@ -32,6 +33,7 @@ impl Type {
             static_methods: vec![],
             static_fields: vec![],
             used_mixins: vec![],
+            used_static_mixins: vec![],
             documentation: DocumentationState::Undocumented,
         }
     }

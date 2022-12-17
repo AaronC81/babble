@@ -296,7 +296,7 @@ impl Pattern {
             | NodeKind::StructDefinition { .. }
             | NodeKind::MixinDefinition { .. }
             | NodeKind::Sugar(_)
-            | NodeKind::Use(_)
+            | NodeKind::Use { .. }
                 => Err(PatternParseError::InvalidNode(node)),
         }
     }

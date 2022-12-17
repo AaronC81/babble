@@ -169,7 +169,10 @@ pub enum NodeKind {
         name: String,
         documentation: Option<String>,
     },
-    Use(Box<Node>),
+    Use {
+        mixin: Box<Node>,
+        is_static: bool,
+    },
 
     Sugar(SugarNodeKind),
 }

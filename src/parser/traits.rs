@@ -42,7 +42,7 @@ impl NodeWalk for Node {
                 }
                 func(body);
             },
-            NodeKind::Use(mixin) => {
+            NodeKind::Use { mixin, is_static: _ } => {
                 func(mixin);
             }
             NodeKind::Array(items) => {

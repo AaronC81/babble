@@ -100,6 +100,13 @@ impl<'a> Parser<'a> {
         self.skip_unused()
     }
 
+    fn with_temporary_index<T>(&mut self, f: impl Fn(&mut Self) -> T) -> T {
+        let old = self.current_index;
+        let result = f(self);
+        self.current_index = old;
+        result
+    }
+    
     /// Skips over any:
     ///   - Newline tokens, as these are currently unused.
     ///   - Documentation comments, as these will be collected by backtracking if necessary.
@@ -164,11 +171,32 @@ impl<'a> Parser<'a> {
         match self.here().kind {
             TokenKind::Keyword(TokenKeyword::Impl) => self.parse_impl_block(context),
             TokenKind::Keyword(TokenKeyword::Mixin) => self.parse_mixin_definition(context),
-            TokenKind::Keyword(TokenKeyword::Func | TokenKeyword::Static | TokenKeyword::Private)
-                => self.parse_func_definition(context),
+            TokenKind::Keyword(TokenKeyword::Use) => self.parse_use(context),
+            TokenKind::Keyword(TokenKeyword::Func | TokenKeyword::Private) => self.parse_func_definition(context),
             TokenKind::Keyword(TokenKeyword::Enum) => self.parse_enum_definition(context),
             TokenKind::Keyword(TokenKeyword::Struct) => self.parse_struct_definition(context),
-            TokenKind::Keyword(TokenKeyword::Use) => self.parse_use(context),
+
+            // Static is a bit more complicated, since it could be followed by multiple different
+            // things
+            TokenKind::Keyword(TokenKeyword::Static) => {
+                let to_parse = self.with_temporary_index(|this| {
+                    this.advance();
+                    match this.here().kind {
+                        TokenKind::Keyword(TokenKeyword::Func | TokenKeyword::Private) => Some(TokenKeyword::Func),
+                        TokenKind::Keyword(TokenKeyword::Use) => Some(TokenKeyword::Use),
+                        _ => None
+                    }
+                });
+                match to_parse {
+                    Some(TokenKeyword::Func) => self.parse_func_definition(context),
+                    Some(TokenKeyword::Use) => self.parse_use(context),
+                    Some(_) => unreachable!(),
+                    None => {
+                        self.advance();
+                        self.token_error()?
+                    },
+                }
+            }
 
             // Just a normal node!
             _ => {
@@ -864,7 +892,15 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_use(&mut self, context: LexicalContextRef) -> Result<Node, ParserError> {
-        // Definitions should always begin with `use`
+        // Definitions are permitted to begin with `static`
+        let is_static = if let TokenKind::Keyword(TokenKeyword::Static) = self.here().kind {
+            self.advance();
+            true
+        } else {
+            false
+        };
+
+        // After this, `use` must be next
         let &Token { kind: TokenKind::Keyword(TokenKeyword::Use), ref location } = self.here() else {
             self.token_error()?;
         };
@@ -884,7 +920,10 @@ impl<'a> Parser<'a> {
         Ok(Node {
             location,
             context,
-            kind: NodeKind::Use(Box::new(mixin)),
+            kind: NodeKind::Use {
+                mixin: Box::new(mixin),
+                is_static,
+            },
         })        
     }
 
