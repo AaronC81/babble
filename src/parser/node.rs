@@ -151,6 +151,7 @@ pub enum NodeKind {
         parameters: SendMessageComponents,
         body: Box<Node>,
         is_static: bool,
+        is_unordered: bool,
         documentation: Option<String>,
         visibility: MethodVisibility,
     },

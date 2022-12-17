@@ -36,7 +36,7 @@ impl NodeWalk for Node {
                 func(target);
                 func(body);
             },
-            NodeKind::FuncDefinition { parameters, body, is_static: _, documentation: _, visibility: _ } => {
+            NodeKind::FuncDefinition { parameters, body, is_static: _, is_unordered: _, documentation: _, visibility: _ } => {
                 for node in parameters.child_nodes_mut() {
                     func(node);
                 }

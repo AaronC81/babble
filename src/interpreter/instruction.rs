@@ -163,6 +163,7 @@ pub enum InstructionKind {
         locality: MethodLocality,
         documentation: Option<String>,
         visibility: MethodVisibility,
+        unordered: bool,
     },
 }
 
@@ -323,7 +324,7 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
                 instructions
             },
 
-            NodeKind::FuncDefinition { parameters, body, is_static, documentation, visibility } => {
+            NodeKind::FuncDefinition { parameters, body, is_static, is_unordered, documentation, visibility } => {
                 let inner = compile(*body)?;
                 let name = parameters.to_method_name();
 
@@ -345,6 +346,7 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
                         locality: if is_static { MethodLocality::Static } else { MethodLocality::Instance },
                         documentation,
                         visibility,
+                        unordered: is_unordered,
                     }.with_loc(&loc),
                 ].into()
             }
@@ -425,11 +427,15 @@ impl Display for Instruction {
             InstructionKind::DefType { name, data: _, documentation: _ } =>
                 write!(f, "def type {name} ..."), // TODO: type data
             InstructionKind::Use { is_static } => write!(f, "{}", if *is_static { "static use" } else { "use" }),
-            InstructionKind::DefFunc { name, locality, documentation: _, visibility: _ } =>
-                write!(f, "def func {} {} ...", name, match locality {
-                    MethodLocality::Instance => "(instance)",
-                    MethodLocality::Static => "(static)",
-                }), // TODO: documentation
+            InstructionKind::DefFunc { name, locality, unordered, documentation: _, visibility: _ } =>
+                write!(f, "def {}func {} {} ...",
+                    if *unordered { "unordered " } else { "" },
+                    name,
+                    match locality {
+                        MethodLocality::Instance => "(instance)",
+                        MethodLocality::Static => "(static)",
+                    }
+                ), // TODO: documentation
         }
     }
 }

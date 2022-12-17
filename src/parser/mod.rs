@@ -172,7 +172,7 @@ impl<'a> Parser<'a> {
             TokenKind::Keyword(TokenKeyword::Impl) => self.parse_impl_block(context),
             TokenKind::Keyword(TokenKeyword::Mixin) => self.parse_mixin_definition(context),
             TokenKind::Keyword(TokenKeyword::Use) => self.parse_use(context),
-            TokenKind::Keyword(TokenKeyword::Func | TokenKeyword::Private) => self.parse_func_definition(context),
+            TokenKind::Keyword(TokenKeyword::Func | TokenKeyword::Private | TokenKeyword::Unordered) => self.parse_func_definition(context),
             TokenKind::Keyword(TokenKeyword::Enum) => self.parse_enum_definition(context),
             TokenKind::Keyword(TokenKeyword::Struct) => self.parse_struct_definition(context),
 
@@ -182,7 +182,7 @@ impl<'a> Parser<'a> {
                 let to_parse = self.with_temporary_index(|this| {
                     this.advance();
                     match this.here().kind {
-                        TokenKind::Keyword(TokenKeyword::Func | TokenKeyword::Private) => Some(TokenKeyword::Func),
+                        TokenKind::Keyword(TokenKeyword::Func | TokenKeyword::Private | TokenKeyword::Unordered) => Some(TokenKeyword::Func),
                         TokenKind::Keyword(TokenKeyword::Use) => Some(TokenKeyword::Use),
                         _ => None
                     }
@@ -562,6 +562,7 @@ impl<'a> Parser<'a> {
                     | TokenKeyword::Mixin
                     | TokenKeyword::Use
                     | TokenKeyword::Return
+                    | TokenKeyword::Unordered
                     | TokenKeyword::Private =>
                         return Err(ParserError::UnexpectedToken(self.here().clone())),
                 },
@@ -685,6 +686,7 @@ impl<'a> Parser<'a> {
         let location;
         let mut visibility = MethodVisibility::default();
         let mut is_static = false;
+        let mut is_unordered = false;
         loop {
             if let &Token { kind: TokenKind::Keyword(TokenKeyword::Static), .. } = self.here() {
                 self.advance();
@@ -692,6 +694,9 @@ impl<'a> Parser<'a> {
             } else if let &Token { kind: TokenKind::Keyword(TokenKeyword::Private), .. } = self.here() {
                 self.advance();
                 visibility = MethodVisibility::Private;
+            } else if let &Token { kind: TokenKind::Keyword(TokenKeyword::Unordered), .. } = self.here() {
+                self.advance();
+                is_unordered = true;
             } else if let &Token { location: ref loc, kind: TokenKind::Keyword(TokenKeyword::Func) } = self.here() {
                 location = loc.clone();
                 self.advance();
@@ -777,6 +782,7 @@ impl<'a> Parser<'a> {
                     kind: NodeKind::StatementSequence(items),
                 }),
                 is_static,
+                is_unordered,
                 documentation,
                 visibility,
             },

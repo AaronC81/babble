@@ -86,6 +86,7 @@ pub enum TokenKeyword {
     Use,
     Return,
     Private,
+    Unordered,
 }
 
 /// An error encountered while tokenizing.
@@ -444,20 +445,21 @@ impl<'a> Tokenizer<'a> {
     /// Converts the given string to a corresponding [`TokenKeyword`], or `None` if none exists.
     pub fn to_keyword(keyword: &str) -> Option<TokenKeyword> {
         match keyword {
-            "true"    => Some(TokenKeyword::True),
-            "false"   => Some(TokenKeyword::False),
-            "null"    => Some(TokenKeyword::Null),
-            "impl"    => Some(TokenKeyword::Impl),
-            "func"    => Some(TokenKeyword::Func),
-            "self"    => Some(TokenKeyword::Zelf),
-            "enum"    => Some(TokenKeyword::Enum),
-            "struct"  => Some(TokenKeyword::Struct),
-            "static"  => Some(TokenKeyword::Static),
-            "mixin"   => Some(TokenKeyword::Mixin),
-            "use"     => Some(TokenKeyword::Use),
-            "return"  => Some(TokenKeyword::Return),
-            "private" => Some(TokenKeyword::Private),
-            _         => None,
+            "true"      => Some(TokenKeyword::True),
+            "false"     => Some(TokenKeyword::False),
+            "null"      => Some(TokenKeyword::Null),
+            "impl"      => Some(TokenKeyword::Impl),
+            "func"      => Some(TokenKeyword::Func),
+            "self"      => Some(TokenKeyword::Zelf),
+            "enum"      => Some(TokenKeyword::Enum),
+            "struct"    => Some(TokenKeyword::Struct),
+            "static"    => Some(TokenKeyword::Static),
+            "mixin"     => Some(TokenKeyword::Mixin),
+            "use"       => Some(TokenKeyword::Use),
+            "return"    => Some(TokenKeyword::Return),
+            "private"   => Some(TokenKeyword::Private),
+            "unordered" => Some(TokenKeyword::Unordered),
+            _           => None,
         }
     }
 

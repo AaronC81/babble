@@ -473,3 +473,46 @@ fn test_static_private_methods() {
         Value::new_integer(1).rc(),
     )
 }
+
+#[test]
+fn test_unordered_methods() {
+    // By default, methods are ordered
+    assert_matches!(
+        evaluate("
+            struct Maths.
+            impl Maths {
+                static func add: x to: y {
+                    x + y
+                }
+            }
+
+            Maths to: 4 add: 5
+        "),
+        Err(_),
+    );
+
+    // Unordered methods can be called in any order
+    assert_eq!(
+        evaluate("
+            struct Maths.
+            impl Maths {
+                static unordered func add: x to: y {
+                    x + y
+                }
+            }
+
+            (Maths add: 2 to: 3) * (Maths to: 4 add: 5)
+        ").unwrap(),
+        Value::new_integer((2 + 3) * (4 + 5)).rc(),
+    );
+
+    // Constructors are generated as unordered
+    assert_eq!(
+        evaluate("
+            struct Foo x y z.
+            f = Foo y: 2 x: 1 z: 3.
+            f x
+        ").unwrap(),
+        Value::new_integer(1).rc(),
+    );
+}
