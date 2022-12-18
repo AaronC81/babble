@@ -1,31 +1,63 @@
 /// A data structure which maps unique keys to values.
 ///
-/// Keys are compared to each other using the `equals:` method of `Equatable`.
+/// Objects used as keys must implement `Hashable` and `Equatable`.
 ///
-/// The current implementation of this dictionary is pretty bad - it simply uses an underlying list
-/// with linear search. The preservation of ordering of items inserted into a dictionary should not
-/// be relied upon, in the event that this implementation changes.
-struct Dictionary mapping.
+/// Items in the dictionary are categorised by the `Hashable hash` value of their keys, but also
+/// compared for equality with `Equatable equals:`. This means that keys `a` and `b` where
+/// `a hash equals: b hash` but `a notEquals: b` will be treated as distinct keys.
+struct Dictionary buckets length.
 impl Dictionary {
+    // TODO: repr
+    // TODO: equatable implementation needs to not care about bucket sizes - since deleting items
+    // won't make the dictionary smaller (the memory's already allocated, what's the point?)
+
     /// Creates an empty dictionary.
     ///
     /// @returns An empty dictionary.
     static func new {
-        self mapping: #{}
+        defaultBuckets = 10.
+        self buckets: (Array newFrom: [ #{} ] length: defaultBuckets) length: 0
+    }
+
+    /// Creates a dictionary from an array of key-value pairs.
+    ///
+    /// @param fromPairs: An array of two-element arrays, where the first element is the key and the second is the value.
+    /// @returns A new dictionary from these values.
+    static func fromPairs: pairs {
+        d = self new.
+        pairs forEach: ![ | #{ k. v } | d set: k value: v ].
+        d
+    }
+
+    /// Gets the bucket array for the given key. Because buckets are chosen using modular
+    /// arithmetic on the hash, this will always return a bucket.
+    ///
+    /// @param bucketFor: The key to get the bucket for.
+    /// @returns The bucket array.
+    private func bucketFor: key {
+        self buckets get: (key hash modulo: self buckets length)
     }
     
-    /// Given a key, returns the index of the key-value pair in the `mapping` list, or `null` if the
-    /// key does not exist in the dictionary.
+    /// Gets the index of the given key in the given bucket. If the key is not present in the
+    /// bucket, returns `null`.
     ///
-    /// This exists as an implementation detail of the dictionary's current structure, so shouldn't
-    /// be used externally.
-    ///
-    /// @param key: The key to find.
-    /// @returns The index of the key-value pair in the `mapping` list, or `null` if the key does not exist in the dictionary. 
-    func mappingIndex: key {
-        x = self withIndex find: ![ | #{ i. #{ k. _ } } | k equals: key ].
+    /// @param indexFor: The key to get the index for.
+    /// @param inBucket: The bucket to search. This **must** be the correct bucket returned by `bucketFor:`.
+    /// @returns The index of the key, or `null` if it doesn't exist.
+    private unordered func indexFor: key inBucket: bucket {
+        x = bucket withIndex find: ![ | #{ i. #{ k. _ } } | k equals: key ].
         x isNull ifTrue: [ return null ].
         x first.
+    }
+
+    /// Re-creates the internal data structure of this dictionary, with a number of buckets equal to
+    /// double the dictionary's current length.
+    static func resizeBuckets {
+        oldItems = self toArray.
+        self buckets = Array newFrom: [ #{} ] length: (self length * 2).
+        self length = 0.
+        oldItems forEach: ![ | #{ k. v } | self set: k value: v ].
+        null
     }
 
     /// Iterates over the key-value pairs of this dictionary. Each element is a two-element array,
@@ -33,7 +65,7 @@ impl Dictionary {
     ///
     /// @param fn: The block to execute for each key-value pair, which should take one parameter.
     func forEach: fn {
-        self mapping forEach: fn
+        self buckets forEach: [ |bucket| bucket forEach: fn ]
     }
     use Enumerable.
 
@@ -44,13 +76,18 @@ impl Dictionary {
     /// @param value: The value to map to that key.
     func set: key value: value {
         // Is this key already in the dictionary?
-        index = self mappingIndex: key.
+        bucket = self bucketFor: key.
+        index = self indexFor: key inBucket: bucket.
         index isNull ifTrue: [
             // No - insert new
-            self mapping append: #{ key. value }.
+            bucket append: #{ key. value }.
+            self length = self length + 1.
+
+            // If we've hit a usage threshold (length = #buckets), rescale
+            self length greaterThanOrEquals: self buckets length $ ifTrue: [ self resizeBuckets ].
         ] else: [
             // Yes - replace existing
-            self mapping set: index value: #{ key. value }.
+            bucket set: index value: #{ key. value }.
         ].
         null
     }
@@ -60,9 +97,11 @@ impl Dictionary {
     /// @param get: The key to retrieve.
     /// @returns The value mapped to that key, or `null` if the key is not present in the dictionary.
     func get: key {
-        index = self mappingIndex: key.
+        bucket = self bucketFor: key.
+        index = self indexFor: key inBucket: bucket.
+
         index isNull ifTrue: [ return null ].
-        self mapping get: index $ last.
+        bucket get: index $ last.
     }
 
     [
@@ -80,9 +119,13 @@ impl Dictionary {
     ///
     /// @param delete: The key to delete.
     func delete: key {
-        index = self mappingIndex: key.
+        bucket = self bucketFor: key.
+        index = self indexFor: key inBucket: bucket.
+
         index isNull ifTrue: [ return null ].
-        self mapping delete: index.
+        bucket delete: index.
+        self length = self length - 1.
+
         null
     }
     [
@@ -99,14 +142,14 @@ impl Dictionary {
     ///
     /// @returns This dictionary's keys.
     func keys {
-        self mapping map: &first
+        self map: &first
     }
 
     /// Returns an array of the values in this dictionary.
     ///
     /// @returns This dictionary's keys.
     func values {
-        self mapping map: &last
+        self map: &last
     }
 
     /// Determines whether this dictionary contains the given key.
@@ -114,7 +157,10 @@ impl Dictionary {
     /// @param containsKey: The key to check for.
     /// @returns `true` if the key is present in this dictionary, `false` otherwise.
     func containsKey: key {
-        self keys contains: key
+        bucket = self bucketFor: key.
+        index = self indexFor: key inBucket: bucket.
+
+        index isNull not
     }
 
     [
@@ -123,8 +169,8 @@ impl Dictionary {
         d set: 2 value: 200.
         d set: 3 value: 300.
         d set: 2 value: 400.
-        InternalTest case: "Dictionary keys" that: d keys equals: #{ 1 2 3 }.
-        InternalTest case: "Dictionary values" that: d values equals: #{ 100 400 300 }.
+        InternalTest case: "Dictionary keys" that: d keys sort equals: #{ 1 2 3 }.
+        InternalTest case: "Dictionary values" that: d values sort equals: #{ 100 300 400 }.
         InternalTest case: "Dictionary containsKey pos" that: (d containsKey: 2) equals: true.
         InternalTest case: "Dictionary containsKey neg" that: (d containsKey: 5) equals: false.
     ] call.

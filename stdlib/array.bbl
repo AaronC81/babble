@@ -198,7 +198,7 @@ impl Array {
 
         InternalTest case: "groupBy"
                      that: (#{ "abc" "bdf" "azy" "bcd" "cad" "bad" } groupBy: [ |x| x charAt: 0 ])
-                     equals: (Dictionary mapping: #{
+                     equals: (Dictionary fromPairs: #{
                          #{ "a" #{ "abc" "azy" } }
                          #{ "b" #{ "bdf" "bcd" "bad" } }
                          #{ "c" #{ "cad" } }
