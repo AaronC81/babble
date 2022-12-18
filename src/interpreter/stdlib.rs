@@ -4,7 +4,7 @@
 //! reason or another. Where possible, Babble's standard library is defined _in Babble_, with these
 //! files imported and executed by [`instantiate`].
 
-use std::{process::exit, sync::RwLock, fs::File, io::{Read, Write}, any::Any};
+use std::{process::exit, sync::RwLock, fs::File, io::{Read, Write}, any::Any, hash::{Hash, Hasher}};
 
 use crate::{interpreter::{Type, Method, Value}, parser::{SendMessageComponents, SendMessageParameter}, source::SourceFile};
 

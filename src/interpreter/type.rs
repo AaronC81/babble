@@ -2,7 +2,7 @@
 //! 
 //! See [`Type`] for more information.
 
-use std::{rc::Rc, fmt::Debug, cell::RefCell};
+use std::{rc::Rc, fmt::Debug, cell::RefCell, hash::{Hash, Hasher}};
 
 use itertools::Itertools;
 
@@ -24,6 +24,11 @@ pub struct Type {
 }
 impl PartialEq for Type { fn eq(&self, other: &Self) -> bool { self.id == other.id } }
 impl Eq for Type {}
+impl Hash for Type {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+    }
+}
 
 impl Type {
     /// Creates a new empty type with the given ID.

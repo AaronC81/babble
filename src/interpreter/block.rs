@@ -3,7 +3,7 @@
 //! 
 //! See [`Block`] for more details.
 
-use std::{sync::atomic::AtomicUsize, collections::HashMap};
+use std::{sync::atomic::AtomicUsize, collections::HashMap, hash::{Hasher, Hash}};
 
 use crate::parser::{Node, BlockParameters, PatternMatchContext};
 
@@ -31,6 +31,12 @@ impl PartialEq for Block {
     }
 }
 impl Eq for Block {}
+
+impl Hash for Block {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+    }
+}
 
 impl Block {
     pub fn new(body: InstructionBlockRef, parameters: BlockParameters, captured_locals: Vec<LocalVariableRef>, captured_self: ValueRef) -> Self {

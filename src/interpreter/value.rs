@@ -1,13 +1,13 @@
 //! Implements values, the core pieces of data which the interpreter works with.
 
-use std::{rc::Rc, cell::{RefCell, Ref, RefMut}, any::Any, fmt::Debug, ops::{Deref, DerefMut}};
+use std::{rc::Rc, cell::{RefCell, Ref, RefMut}, any::Any, fmt::Debug, ops::{Deref, DerefMut}, hash::{Hash, Hasher}};
 
 use crate::parser::BlockParameters;
 
 use super::{Interpreter, InterpreterErrorKind, Block, TypeData, Variant, TypeRef, InterpreterError};
 
 /// A value within the interpreter, which is an instance of some type.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Value {
     pub type_instance: TypeInstance,
 }
@@ -370,6 +370,35 @@ impl TypeInstance {
             TypeInstance::PrimitiveArray(_) => interpreter.resolve_stdlib_type("Array"),
             TypeInstance::PrimitiveOther(v) => v.borrow().get_type(interpreter),
             TypeInstance::PrimitiveNull => interpreter.resolve_stdlib_type("Null"),
+        }
+    }
+}
+
+impl Hash for TypeInstance {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            TypeInstance::Fields { source_type, variant, field_values } => {
+                source_type.borrow().hash(state);
+                variant.hash(state);
+                for value in field_values {
+                    value.borrow().hash(state);
+                }
+            }
+            TypeInstance::Type(t) => t.borrow().hash(state),
+            TypeInstance::Block(b) => b.hash(state),
+            TypeInstance::PrimitiveInteger(i) => i.hash(state),
+            TypeInstance::PrimitiveString(s) => s.hash(state),
+            TypeInstance::PrimitiveArray(a) => {
+                for item in a {
+                    item.borrow().hash(state);
+                }
+            }
+            TypeInstance::PrimitiveNull => 0.hash(state),
+            
+            // This is a pretty rubbish hash function, but hashing isn't object-safe because it
+            // requires a `Hasher` as a type parameter, so it's hard to allow the `PrimitiveValue`
+            // to declare how its hash should be calculated.
+            TypeInstance::PrimitiveOther(v) => v.as_ptr().hash(state),
         }
     }
 }
