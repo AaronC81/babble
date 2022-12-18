@@ -525,8 +525,8 @@ fn array(interpreter: &mut Interpreter) -> Type {
 fn console(_: &mut Interpreter) -> Type {
     Type {
         static_methods: vec![
-            Method::new_internal("println:", |_, _, p| {
-                println!("{}", p[0].borrow().to_language_string());
+            Method::new_internal("println:", |i, _, p| {
+                println!("{}", i.send_message(p[0].clone(), "repr", &[])?.borrow().as_string()?);
                 Ok(Value::new_null().rc())
             }).with_documentation("
                 Prints an object to the console, followed by a newline.
@@ -534,8 +534,8 @@ fn console(_: &mut Interpreter) -> Type {
                 @param println: The object to print.
             ").rc(),
 
-            Method::new_internal("print:", |_, _, p| {
-                print!("{}", p[0].borrow().to_language_string());
+            Method::new_internal("print:", |i, _, p| {
+                print!("{}", i.send_message(p[0].clone(), "repr", &[])?.borrow().as_string()?);
                 drop(std::io::stdout().flush());
                 Ok(Value::new_null().rc())
             }).with_documentation("

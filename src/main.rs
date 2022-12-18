@@ -15,7 +15,7 @@ use parser::ParserError;
 use source::{SourceFile, Location};
 use tokenizer::{Tokenizer, TokenizerError};
 
-use crate::interpreter::instruction::compile;
+use crate::interpreter::{instruction::compile, Value};
 
 mod source;
 mod tokenizer;
@@ -103,7 +103,13 @@ fn repl() -> ! {
         // Run it
         let source = SourceFile::new(&format!("repl-{command_number}"), &command);
         match interpreter.parse_and_evaluate(source.rc()) {
-            Ok(result) => println!("{}", result.borrow_mut().to_language_string()),
+            Ok(result) => {
+                interpreter.send_message(
+                    Value::new_type(interpreter.resolve_stdlib_type("Console")).rc(),
+                    "println:",
+                    &[result],
+                ).unwrap();
+            },
             Err(e) => print_interpreter_error(e),
         }
         println!();
