@@ -554,3 +554,15 @@ impl Enumerable {
         result
     }
 }
+
+// Test `Hashable`
+InternalTest defer: [
+    InternalTest case: "integer hash pos" that:    3 hash equals:    3 hash.
+    InternalTest case: "integer hash neg" assert: (3 hash notEquals: 4 hash).
+
+    InternalTest case: "string hash pos" that:    "foo" hash equals:    "foo" hash.
+    InternalTest case: "string hash neg" assert: ("foo" hash notEquals: "bar" hash).
+
+    InternalTest case: "array hash pos" that:    #{ 1 2 3 } hash equals:    #{ 1 2 3 } hash.
+    InternalTest case: "array hash neg" assert: (#{ 1 2 3 } hash notEquals: #{ 1 2 4 } hash).
+]

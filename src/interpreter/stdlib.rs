@@ -60,6 +60,7 @@ fn early_core_types(interpreter: &mut Interpreter) -> Vec<TypeRef> {
         representable(interpreter).rc(),
         equatable(interpreter).rc(),
         hashable(interpreter).rc(),
+        internal_test(interpreter).rc(),
     ]
 }
 
@@ -73,7 +74,6 @@ fn core_types(interpreter: &mut Interpreter) -> Vec<TypeRef> {
         console(interpreter).rc(),
         block(interpreter).rc(),
         boolean(interpreter).rc(),
-        internal_test(interpreter).rc(),
         program(interpreter).rc(),
         file(interpreter).rc(),
     ]
@@ -671,7 +671,15 @@ fn internal_test(_: &mut Interpreter) -> Type {
                 } else {
                     Err(InterpreterErrorKind::InternalTestFailed(a[0].borrow().as_string()?).into())
                 }
+            }).rc(),
 
+            Method::new_internal("case:assert:", |i, _, a| {
+                let result = a[1].clone();
+                if result.borrow().to_boolean()? {
+                    Ok(Value::new_null().rc())
+                } else {
+                    Err(InterpreterErrorKind::InternalTestFailed(a[0].borrow().as_string()?).into())
+                }
             }).rc(),
 
             Method::new_internal("defer:", |i, r, a| {
