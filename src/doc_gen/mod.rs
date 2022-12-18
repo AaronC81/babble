@@ -3,7 +3,7 @@ use comrak::{markdown_to_html, ComrakOptions};
 
 use crate::interpreter::{Interpreter, MethodLocality, TypeData, DocumentationState, MethodVisibility};
 
-const CORE_MIXINS: &[&str] = &["Equatable", "Representable", "Matchable"];
+const CORE_MIXINS: &[&str] = &["Equatable", "Representable", "Matchable", "Hashable"];
 
 struct TypeDocumentation {
     pub id: String,

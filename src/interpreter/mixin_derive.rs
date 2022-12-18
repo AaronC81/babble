@@ -13,6 +13,7 @@ pub fn derive_core_mixins(interpreter: &mut Interpreter, target: &mut Type) {
         interpreter.resolve_stdlib_type("Equatable"),
         interpreter.resolve_stdlib_type("Representable"),
         interpreter.resolve_stdlib_type("Matchable"),
+        interpreter.resolve_stdlib_type("Hashable"),
     ];
 
     for mixin in core_mixins {

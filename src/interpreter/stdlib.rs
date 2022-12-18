@@ -4,7 +4,7 @@
 //! reason or another. Where possible, Babble's standard library is defined _in Babble_, with these
 //! files imported and executed by [`instantiate`].
 
-use std::{process::exit, sync::RwLock, fs::File, io::{Read, Write}, any::Any, hash::{Hash, Hasher}};
+use std::{process::exit, sync::RwLock, fs::File, io::{Read, Write}, any::Any, hash::{Hash, Hasher}, collections::hash_map::DefaultHasher};
 
 use crate::{interpreter::{Type, Method, Value}, parser::{SendMessageComponents, SendMessageParameter}, source::SourceFile};
 
@@ -59,6 +59,7 @@ fn early_core_types(interpreter: &mut Interpreter) -> Vec<TypeRef> {
     vec![
         representable(interpreter).rc(),
         equatable(interpreter).rc(),
+        hashable(interpreter).rc(),
     ]
 }
 
@@ -120,6 +121,37 @@ fn equatable(_: &mut Interpreter) -> Type {
         Indicates that values of a type can be compared for equality.
 
         This mixin is implemented automatically on all types, and the definition of `equals:` is
+        provided by the interpreter.
+    ")
+}
+
+fn hashable(_: &mut Interpreter) -> Type {
+    Type {
+        methods: vec![
+            Method::new_internal("hash", |_, recv, _| {
+                let mut hasher = DefaultHasher::new();
+                recv.borrow().hash(&mut hasher);
+
+                // Chop off MSB so the hash can definitely fit in an i64 without panicking
+                Ok(Value::new_integer((hasher.finish() & 0x7FFFFFFFFFFFFFFFu64) as i64).rc())
+            }).with_documentation("
+                A hash value for this object.
+
+                @returns The hash value, as an integer.
+            ").rc(),
+        ],
+        data: TypeData::Mixin,
+        ..Type::new("Hashable")
+    }.with_documentation("\
+        Indicates that values of a type can be hashed.
+
+        If two values are equal according to `Equatable`, then their hash values must also be equal.
+        (The reverse does not necessarily apply - two values with the same hash may not be equal.)
+
+        Note that this is not a *cryptographic* hash, merely a hash suitable for implementing
+        hash-based data structures such as dictionaries or sets.
+
+        This mixin is implemented automatically on all types, and the definition of `hash` is
         provided by the interpreter.
     ")
 }
