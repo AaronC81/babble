@@ -7,7 +7,6 @@
 /// `a hash equals: b hash` but `a notEquals: b` will be treated as distinct keys.
 struct Dictionary buckets length.
 impl Dictionary {
-    // TODO: repr
     // TODO: equatable implementation needs to not care about bucket sizes - since deleting items
     // won't make the dictionary smaller (the memory's already allocated, what's the point?)
 
@@ -152,6 +151,13 @@ impl Dictionary {
         self map: &last
     }
 
+    /// Checks if this dictionary is empty.
+    ///
+    /// @returns `true` if this dictionary is empty, or `false` otherwise.
+    func isEmpty {
+        self length equals: 0
+    }
+
     /// Determines whether this dictionary contains the given key.
     ///
     /// @param containsKey: The key to check for.
@@ -199,4 +205,12 @@ impl Dictionary {
                      that: ((d get: 4 orInsert: 600 $ equals: 600) and: (d get: 4 $ equals: 600))
                      equals: true.
     ] call.
+
+    // Override `Representable repr`
+    func repr {
+        items = self isEmpty
+            ifTrue: [ "(empty)" ]
+            else:   [ self map: ![ | #{ k. v } | "({k} => {v})" ] $ join: " " ]
+        "Dictionary {items}"
+    }
 }
