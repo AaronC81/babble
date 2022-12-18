@@ -26,6 +26,7 @@ struct MethodDocumentation {
     pub locality: MethodLocality,
     pub visibility: MethodVisibility,
     pub parsed: Option<MethodParsedDocumentation>,
+    pub unordered: bool,
 }
 
 #[derive(Template)]
@@ -133,6 +134,7 @@ fn build_documentation_objects<T: DocumentationTemplate>(interpreter: &Interpret
                 locality: l,
                 visibility: m.visibility,
                 parsed: doc.as_ref().map(|d| MethodParsedDocumentation::parse(d)),
+                unordered: m.unordered,
             });
         }
 

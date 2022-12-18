@@ -203,6 +203,9 @@
                             {% if method.locality == MethodLocality::Static %}
                                 <code><i>static</i> </code>
                             {% endif %}
+                            {% if method.unordered %}
+                                <code><i>unordered</i> </code>
+                            {% endif %}
                             <code>{{ method.name }}</code>
                         </h2>
 
