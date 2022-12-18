@@ -17,33 +17,22 @@ Smalltalk and Ruby's syntax, and Rust's algebraic data type model.
 Babble aims to have as few language constructs as possible, instead implementing control-flow like
 conditionals and loops using methods and _blocks_ (closures).
 
-Here's what it looks like to print the numbers 1 to 50:
+```
+impl Integer {
+    func factorial {
+        self lessThanOrEquals: 1 $
+            ifTrue: [ 1 ]
+            else:   [ self * (self - 1) factorial ]
+    }
+}
 
-```smalltalk
-50 times: [ |i|
-    Console println: i + 1.
-].
+Console println: 7 factorial.
 ```
 
-This calls a method on the type `Integer` named `times:`, and passes it one argument, a block
-(denoted by square braces). This block accepts one parameter called `i`; each time the block is
-called by the `times:` implementation, `i` is 1 greater, from 0 to 49.
+If you'd like some more examples:
 
-We could also try implementing this using a plain-old conditional loop, too:
-
-```smalltalk
-i = 0.
-[ i lessThan: 50 ] whileTrue: [
-    i = i + 1.
-    Console println: i.
-].
-```
-
-Rather than a `while` construct built-in, the type `Block` has a method named `whileTrue:`, where 
-the block repeatedly evaluates itself and calls another block while it remains true.
-
-> If you'd like a longer example, there is a [Brainfuck interpreter](examples/brainfuck.bbl) in the
-> _examples_ directory!
+- I used Babble to solve over half of [Advent of Code 2022](https://github.com/AaronC81/advent-of-code-2022)
+- There is a [Brainfuck interpreter](examples/brainfuck.bbl) in the _examples_ directory, alongside some other examples
 
 ## Data Types
 
@@ -67,12 +56,16 @@ you = Person name: "The Reader" age: 99 occupation: (Occupation#Other title: "Un
 
 # Usage
 
-Babble is _very_ early and not too useful right now. That said, you can run a file of Babble code
-with:
+Babble is complete enough to use for simple scripts, but there are plenty of rough edges and gaps in
+functionality.
+
+To run a file of Babble code:
 
 ```
-cargo run -- -f <file>
+cargo run --release -- -f <file>
 ```
+
+(Running in release mode is strongly recommended! It's very easy to overflow the stack without...)
 
 # To-do list
 
