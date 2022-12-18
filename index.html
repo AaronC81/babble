@@ -122,6 +122,8 @@
                 
                     <li><a href="#File">File</a></li>
                 
+                    <li><a href="#Hashable">Hashable</a></li>
+                
                     <li><a href="#Integer">Integer</a></li>
                 
                     <li><a href="#Match">Match</a></li>
@@ -193,6 +195,10 @@ changing their size dynamically.</p>
                                                     
                                                     <code>Matchable</code></a>, 
                                             
+                                                <a href="#Hashable" class="fade-text">
+                                                    
+                                                    <code>Hashable</code></a>, 
+                                            
                                                 <a href="#Equatable" class="fade-text">
                                                     
                                                         <code><i>static</i> </code>
@@ -209,7 +215,13 @@ changing their size dynamically.</p>
                                                     
                                                         <code><i>static</i> </code>
                                                     
-                                                    <code>Matchable</code></a>
+                                                    <code>Matchable</code></a>, 
+                                            
+                                                <a href="#Hashable" class="fade-text">
+                                                    
+                                                        <code><i>static</i> </code>
+                                                    
+                                                    <code>Hashable</code></a>
                                                 
                                         </i></li>
                                     
@@ -1376,10 +1388,10 @@ printed.</p>
                     <h1>Dictionary</h1>
                     
                             <p>A data structure which maps unique keys to values.</p>
-<p>Keys are compared to each other using the <code>equals:</code> method of <code>Equatable</code>.</p>
-<p>The current implementation of this dictionary is pretty bad - it simply uses an underlying list
-with linear search. The preservation of ordering of items inserted into a dictionary should not
-be relied upon, in the event that this implementation changes.</p>
+<p>Objects used as keys must implement <code>Hashable</code> and <code>Equatable</code>.</p>
+<p>Items in the dictionary are categorised by the <code>Hashable hash</code> value of their keys, but also
+compared for equality with <code>Equatable equals:</code>. This means that keys <code>a</code> and <code>b</code> where
+<code>a hash equals: b hash</code> but <code>a notEquals: b</code> will be treated as distinct keys.</p>
 
                         
                     <blockquote>
@@ -1390,7 +1402,9 @@ be relied upon, in the event that this implementation changes.</p>
                                         Struct with fields:
                                         <ul>
                                             
-                                                <li><code>mapping</code></li>
+                                                <li><code>buckets</code></li>
+                                            
+                                                <li><code>length</code></li>
                                             
                                             
                                         </ul>
@@ -1423,6 +1437,10 @@ be relied upon, in the event that this implementation changes.</p>
                                                     
                                                     <code>Matchable</code></a>, 
                                             
+                                                <a href="#Hashable" class="fade-text">
+                                                    
+                                                    <code>Hashable</code></a>, 
+                                            
                                                 <a href="#Equatable" class="fade-text">
                                                     
                                                         <code><i>static</i> </code>
@@ -1439,7 +1457,13 @@ be relied upon, in the event that this implementation changes.</p>
                                                     
                                                         <code><i>static</i> </code>
                                                     
-                                                    <code>Matchable</code></a>
+                                                    <code>Matchable</code></a>, 
+                                            
+                                                <a href="#Hashable" class="fade-text">
+                                                    
+                                                        <code><i>static</i> </code>
+                                                    
+                                                    <code>Hashable</code></a>
                                                 
                                         </i></li>
                                     
@@ -1448,6 +1472,77 @@ be relied upon, in the event that this implementation changes.</p>
                         </p>
                     </blockquote>
 
+                    
+                        <h2>
+                            
+                                    <code><i>private</i> </code>
+                            
+                            
+                            
+                            <code>bucketFor:</code>
+                        </h2>
+
+                        
+                                <p>Undocumented.</p>
+                        
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
+                            
+                            <code>buckets</code>
+                        </h2>
+
+                        
+                                <p><strong>Field accessor.</strong></p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The value of <code>buckets</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
+                                <code><i>static</i> </code>
+                            
+                            
+                                <code><i>unordered</i> </code>
+                            
+                            <code>buckets:length:</code>
+                        </h2>
+
+                        
+                                <p><strong>Constructor.</strong></p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A new instance of <code>Dictionary</code>.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
                     
                         <h2>
                             
@@ -1516,6 +1611,19 @@ be relied upon, in the event that this implementation changes.</p>
                                 
                             
                             
+                            <code>equals:</code>
+                        </h2>
+
+                        
+                                <p>Undocumented.</p>
+                        
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
+                            
                             <code>forEach:</code>
                         </h2>
 
@@ -1536,6 +1644,41 @@ where the first element is the key and the second is the value.</p>
                                     
                                     
                                     
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
+                                <code><i>static</i> </code>
+                            
+                            
+                            <code>fromPairs:</code>
+                        </h2>
+
+                        
+                                <p>Creates a dictionary from an array of key-value pairs.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                        <p><b><code>fromPairs:</code></b></p>
+                                        <blockquote>
+                                            <p>An array of two-element arrays, where the first element is the key and the second is the value.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A new dictionary from these values.</p>
+
+                                            </blockquote>
+                                        
                                 </blockquote>
                             
                     
@@ -1608,6 +1751,48 @@ returns that.</p>
                     
                         <h2>
                             
+                                    <code><i>private</i> </code>
+                            
+                            
+                            
+                                <code><i>unordered</i> </code>
+                            
+                            <code>indexFor:inBucket:</code>
+                        </h2>
+
+                        
+                                <p>Undocumented.</p>
+                        
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
+                            
+                            <code>isEmpty</code>
+                        </h2>
+
+                        
+                                <p>Checks if this dictionary is empty.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p><code>true</code> if this dictionary is empty, or <code>false</code> otherwise.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
                                     
                                 
                             
@@ -1639,7 +1824,7 @@ returns that.</p>
                                 
                             
                             
-                            <code>mapping</code>
+                            <code>length</code>
                         </h2>
 
                         
@@ -1653,74 +1838,7 @@ returns that.</p>
                                     
                                             <p><b><i>Returns:</i></b></p>
                                             <blockquote>
-                                                <p>The value of <code>mapping</code>.</p>
-
-                                            </blockquote>
-                                        
-                                </blockquote>
-                            
-                    
-                        <h2>
-                            
-                                    
-                                
-                            
-                                <code><i>static</i> </code>
-                            
-                            
-                                <code><i>unordered</i> </code>
-                            
-                            <code>mapping:</code>
-                        </h2>
-
-                        
-                                <p><strong>Constructor.</strong></p>
-
-
-                                
-
-                                <blockquote>
-                                    
-                                    
-                                            <p><b><i>Returns:</i></b></p>
-                                            <blockquote>
-                                                <p>A new instance of <code>Dictionary</code>.</p>
-
-                                            </blockquote>
-                                        
-                                </blockquote>
-                            
-                    
-                        <h2>
-                            
-                                    
-                                
-                            
-                            
-                            <code>mappingIndex:</code>
-                        </h2>
-
-                        
-                                <p>Given a key, returns the index of the key-value pair in the <code>mapping</code> list, or <code>null</code> if the
-key does not exist in the dictionary.</p>
-<p>This exists as an implementation detail of the dictionary's current structure, so shouldn't
-be used externally.</p>
-
-
-                                
-
-                                <blockquote>
-                                    
-                                        <p><b><code>key:</code></b></p>
-                                        <blockquote>
-                                            <p>The key to find.</p>
-
-                                        </blockquote>
-                                    
-                                    
-                                            <p><b><i>Returns:</i></b></p>
-                                            <blockquote>
-                                                <p>The index of the key-value pair in the <code>mapping</code> list, or <code>null</code> if the key does not exist in the dictionary.</p>
+                                                <p>The value of <code>length</code>.</p>
 
                                             </blockquote>
                                         
@@ -1753,6 +1871,42 @@ be used externally.</p>
 
                                             </blockquote>
                                         
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
+                            
+                            <code>repr</code>
+                        </h2>
+
+                        
+                                <p>Undocumented.</p>
+                        
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
+                            
+                            <code>resizeBuckets</code>
+                        </h2>
+
+                        
+                                <p>Re-creates the internal data structure of this dictionary, with a number of buckets equal to
+double the dictionary's current length.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                    
+                                    
                                 </blockquote>
                             
                     
@@ -3406,6 +3560,62 @@ if the file ends or the bytes are not available.</p>
 
                     <hr class="v-space" />
                 
+                    <a name="Hashable"></a>
+                    <h1>Hashable</h1>
+                    
+                            <p>Indicates that values of a type can be hashed.</p>
+<p>If two values are equal according to <code>Equatable</code>, then their hash values must also be equal.
+(The reverse does not necessarily apply - two values with the same hash may not be equal.)</p>
+<p>Note that this is not a <em>cryptographic</em> hash, merely a hash suitable for implementing
+hash-based data structures such as dictionaries or sets.</p>
+<p>This mixin is implemented automatically on all types, and the definition of <code>hash</code> is
+provided by the interpreter.</p>
+
+                        
+                    <blockquote>
+                        <p>
+                            <b>Definition: </b>
+                            
+                                    Mixin.
+                            
+                        </p>
+
+                        <p>
+                            
+                        </p>
+                    </blockquote>
+
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
+                            
+                            <code>hash</code>
+                        </h2>
+
+                        
+                                <p>A hash value for this object.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>The hash value, as an integer.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+
+                    <hr class="v-space" />
+                
                     <a name="Integer"></a>
                     <h1>Integer</h1>
                     
@@ -3446,6 +3656,10 @@ if the file ends or the bytes are not available.</p>
                                                     
                                                     <code>Matchable</code></a>, 
                                             
+                                                <a href="#Hashable" class="fade-text">
+                                                    
+                                                    <code>Hashable</code></a>, 
+                                            
                                                 <a href="#Equatable" class="fade-text">
                                                     
                                                         <code><i>static</i> </code>
@@ -3462,7 +3676,13 @@ if the file ends or the bytes are not available.</p>
                                                     
                                                         <code><i>static</i> </code>
                                                     
-                                                    <code>Matchable</code></a>
+                                                    <code>Matchable</code></a>, 
+                                            
+                                                <a href="#Hashable" class="fade-text">
+                                                    
+                                                        <code><i>static</i> </code>
+                                                    
+                                                    <code>Hashable</code></a>
                                                 
                                         </i></li>
                                     
@@ -5259,6 +5479,10 @@ the interpreter exits with a fatal error.</p>
                                                     
                                                     <code>Matchable</code></a>, 
                                             
+                                                <a href="#Hashable" class="fade-text">
+                                                    
+                                                    <code>Hashable</code></a>, 
+                                            
                                                 <a href="#Equatable" class="fade-text">
                                                     
                                                         <code><i>static</i> </code>
@@ -5275,7 +5499,13 @@ the interpreter exits with a fatal error.</p>
                                                     
                                                         <code><i>static</i> </code>
                                                     
-                                                    <code>Matchable</code></a>
+                                                    <code>Matchable</code></a>, 
+                                            
+                                                <a href="#Hashable" class="fade-text">
+                                                    
+                                                        <code><i>static</i> </code>
+                                                    
+                                                    <code>Hashable</code></a>
                                                 
                                         </i></li>
                                     
