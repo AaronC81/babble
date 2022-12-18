@@ -210,6 +210,8 @@ i = 0.
 // are mutable:
 struct Person name age.
 me = Person name: "Aaron" age: 22. // Constructor is `name:age:`.
+me = Person age: 22 name: "Aaron". // Constructors are `unordered func`s, so you can call them with
+                                   // parameters in any order!
 me name. // => "Aaron"
 me age = me age + 1. // (Happy birthday!)
 
