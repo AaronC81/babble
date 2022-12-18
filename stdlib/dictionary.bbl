@@ -7,9 +7,6 @@
 /// `a hash equals: b hash` but `a notEquals: b` will be treated as distinct keys.
 struct Dictionary buckets length.
 impl Dictionary {
-    // TODO: equatable implementation needs to not care about bucket sizes - since deleting items
-    // won't make the dictionary smaller (the memory's already allocated, what's the point?)
-
     /// Creates an empty dictionary.
     ///
     /// @returns An empty dictionary.
@@ -51,7 +48,7 @@ impl Dictionary {
 
     /// Re-creates the internal data structure of this dictionary, with a number of buckets equal to
     /// double the dictionary's current length.
-    static func resizeBuckets {
+    func resizeBuckets {
         oldItems = self toArray.
         self buckets = Array newFrom: [ #{} ] length: (self length * 2).
         self length = 0.
@@ -213,4 +210,41 @@ impl Dictionary {
             else:   [ self map: ![ | #{ k. v } | "({k} => {v})" ] $ join: " " ]
         "Dictionary {items}"
     }
+
+    // Override `Equatable equals:`
+    func equals: other {
+        // Basic checks
+        Reflection type: other $ equals: Dictionary $ ifFalse: [ return false ].
+        self length equals: other length $ ifFalse: [ return false ].
+
+        // The bucket sizes could be different, so we need to look at each item and see if it's
+        // present in the other dictionary too
+        self forEach: ![ | #{ k. v } |
+            other containsKey: k $ ifFalse: [ return false ].
+            other get: k $ equals: v $ ifFalse: [ return false ].
+        ].
+
+        true
+    }
+
+    [
+        InternalTest case: "Dictionary equals: empty" assert: (Dictionary new equals: Dictionary new).
+
+        d1 = Dictionary new.
+        d1 set: 1 value: 100.
+        d1 set: 2 value: 200.
+        d1 set: 3 value: 300.
+        d2 = Dictionary fromPairs: #{ #{ 1 100 } #{ 2 200 } #{ 3 300 } }.
+
+        InternalTest case: "Dictionary equals: normal pos" assert: (d1 equals: d2).
+        d2 set: 4 value: 400.
+        InternalTest case: "Dictionary equals: normal neg" assert: (d1 equals: d2 $ not).
+        d2 delete: 4.
+
+        // Forcefully expand d2's number of buckets
+        100 times: [ |i| d2 set: (100 + i) value: i ].
+        100 times: [ |i| d2 delete: (100 + i) ].
+        InternalTest case: "Dictionary bucket expansion" assert: (d2 buckets length greaterThan: d1 buckets length).
+        InternalTest case: "Dictionary equals: different buckets" assert: (d1 equals: d2).
+    ] call.
 }
