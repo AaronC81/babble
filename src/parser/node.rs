@@ -1,6 +1,6 @@
 //! Implements the syntax tree built by the parser.
 
-use crate::{source::Location, interpreter::{ValueRef, Interpreter, Variant, InterpreterError, Value, MethodVisibility}, tokenizer::TokenKind};
+use crate::{source::Location, interpreter::MethodVisibility, tokenizer::TokenKind};
 
 use super::{LexicalContextRef, Literal, Pattern};
 
@@ -235,4 +235,11 @@ impl BinaryOperation {
             Self::Divide => "div",
         }
     }
+}
+
+/// A variant definition in an [NodeKind::EnumDefinition].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Variant {
+    pub name: String,
+    pub fields: Vec<String>,
 }

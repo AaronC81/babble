@@ -8,7 +8,7 @@ use std::{process::exit, sync::RwLock, fs::File, io::{Read, Write}, any::Any, ha
 
 use crate::{interpreter::{Type, Method, Value}, parser::{SendMessageComponents, SendMessageParameter}, source::SourceFile};
 
-use super::{InterpreterErrorKind, TypeData, Variant, TypeRef, Interpreter, TypeInstance, mixin_derive::TypeCoreMixinDeriveBuilder, InterpreterError, DocumentationState, ValueRef, PrimitiveValue};
+use super::{InterpreterErrorKind, TypeData, TypeRef, Interpreter, TypeInstance, mixin_derive::TypeCoreMixinDeriveBuilder, InterpreterError, DocumentationState, ValueRef, PrimitiveValue, Variant};
 
 macro_rules! load_stdlib_file {
     ($interpreter:expr, $filename:literal) => {
@@ -620,8 +620,8 @@ fn block(interpreter: &mut Interpreter) -> Type {
 fn boolean(interpreter: &mut Interpreter) -> Type {
     Type {
         data: TypeData::Variants(vec![
-            Variant::new("False", vec![]),
-            Variant::new("True", vec![]),
+            Variant::new("False", &[]),
+            Variant::new("True", &[]),
         ]),
 
         methods: vec![

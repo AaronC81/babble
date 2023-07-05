@@ -354,7 +354,7 @@ pub fn compile(node: Node) -> Result<InstructionBlock, InterpreterError> {
             NodeKind::EnumDefinition { name, variants, documentation } => 
                 vec![InstructionKind::DefType {
                     name,
-                    data: TypeData::Variants(variants),
+                    data: TypeData::Variants(variants.into_iter().map(|v| v.into()).collect()),
                     documentation,
                 }.with_loc(&loc)].into(),
             NodeKind::StructDefinition { name, instance_fields, static_fields, documentation } =>

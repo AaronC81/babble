@@ -6,7 +6,7 @@ use std::{rc::Rc, fmt::Debug, cell::RefCell, hash::{Hash, Hasher}};
 
 use itertools::Itertools;
 
-use crate::{interpreter::TypeInstance};
+use crate::{interpreter::TypeInstance, parser};
 
 use super::{InterpreterErrorKind, Value, Method, MethodRef, MethodLocality, InterpreterError, ValueRef, DocumentationState, MethodImplementation};
 
@@ -321,15 +321,21 @@ pub struct Variant {
 
 impl Variant {
     /// Constructs a new variant definition with a named set of fields.
-    pub fn new(name: &str, fields: Vec<&str>) -> Self {
+    pub fn new(name: &str, fields: &[String]) -> Self {
         Self {
             name: name.into(),
-            fields: fields.into_iter().map(|x| x.into()).collect()
+            fields: fields.into_iter().map(|x| x.to_string()).collect()
         }
     }
 
     /// Returns the index of a field within this variant, or `None` if it doesn't exist.
     pub fn field_index(&self, name: &str) -> Option<usize> {
         self.fields.iter().enumerate().find(|(_, f)| f == &name).map(|(i, _)| i)
+    }
+}
+
+impl From<parser::Variant> for Variant {
+    fn from(value: parser::Variant) -> Self {
+        Variant::new(&value.name, &value.fields)
     }
 }
