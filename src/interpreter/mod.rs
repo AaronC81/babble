@@ -5,7 +5,7 @@
 
 use std::{fmt::Display, rc::Rc, cell::RefCell};
 
-use crate::{parser::{NodeKind, Node, SendMessageComponents, Parser, BlockParameters}, tokenizer::Tokenizer, source::SourceFile};
+use crate::{parser::{NodeKind, Node, SendMessageComponents, Parser, BlockParameters, MethodVisibility}, tokenizer::Tokenizer, source::SourceFile};
 
 mod error;
 

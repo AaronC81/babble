@@ -1,6 +1,6 @@
 //! Implements the syntax tree built by the parser.
 
-use crate::{source::Location, interpreter::MethodVisibility, tokenizer::TokenKind};
+use crate::{source::Location, tokenizer::TokenKind};
 
 use super::{LexicalContextRef, Literal, Pattern};
 
@@ -242,4 +242,18 @@ impl BinaryOperation {
 pub struct Variant {
     pub name: String,
     pub fields: Vec<String>,
+}
+
+/// The visibility of a method, dictating where it can be called from.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum MethodVisibility {
+    /// The method can be called from anywhere.
+    Public,
+
+    /// The method can only be called if `self` is the same type as the call's receiver.
+    Private,
+}
+
+impl Default for MethodVisibility {
+    fn default() -> Self { Self::Public }
 }

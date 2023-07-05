@@ -1,7 +1,7 @@
 use askama::Template;
 use comrak::{markdown_to_html, ComrakOptions};
 
-use crate::interpreter::{Interpreter, MethodLocality, TypeData, DocumentationState, MethodVisibility};
+use crate::{interpreter::{Interpreter, MethodLocality, TypeData, DocumentationState}, parser::MethodVisibility};
 
 const CORE_MIXINS: &[&str] = &["Equatable", "Representable", "Matchable", "Hashable"];
 

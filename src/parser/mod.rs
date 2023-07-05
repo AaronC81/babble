@@ -26,7 +26,7 @@ pub use traits::*;
 #[cfg(test)]
 mod tests;
 
-use crate::{tokenizer::{Token, TokenKind, TokenKeyword}, source::{Location, SourceFile}, interpreter::MethodVisibility};
+use crate::{tokenizer::{Token, TokenKind, TokenKeyword}, source::{Location, SourceFile}};
 
 /// An error found while parsing.
 #[derive(Debug, Clone, PartialEq, Eq)]

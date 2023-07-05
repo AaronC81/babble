@@ -2,7 +2,7 @@
 
 use std::{rc::Rc, fmt::Debug};
 
-use crate::parser::Node;
+use crate::parser::{Node, MethodVisibility};
 
 use super::{Interpreter, ValueRef, InterpreterResult, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariable, instruction::{InstructionBlock, InstructionBlockRef}, DocumentationState};
 
@@ -195,18 +195,4 @@ pub enum MethodLocality {
 
     /// The method is defined on a type itself, and does not need an instance to call.
     Static,
-}
-
-/// The visibility of a [Method], dictating where it can be called from.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum MethodVisibility {
-    /// The method can be called from anywhere.
-    Public,
-
-    /// The method can only be called if `self` is the same type as the call's receiver.
-    Private,
-}
-
-impl Default for MethodVisibility {
-    fn default() -> Self { Self::Public }
 }
