@@ -9,8 +9,6 @@ use std::fmt::Display;
 
 use crate::parser::{SendMessageComponents, SendMessageParameter, Node, NodeKind};
 
-//use crate::interpreter::{ValueRef, InterpreterError, Interpreter, Value, InterpreterErrorKind, TypeInstance, TypeData};
-
 use super::{Literal, SugarNodeKind};
 
 /// An error occurred when parsing a node tree into a pattern.
