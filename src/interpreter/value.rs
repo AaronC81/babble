@@ -2,9 +2,9 @@
 
 use std::{rc::Rc, cell::{RefCell, Ref, RefMut}, any::Any, fmt::Debug, ops::{Deref, DerefMut}, hash::{Hash, Hasher}};
 
-use crate::parser::BlockParameters;
+use crate::parser::{BlockParameters, Literal};
 
-use super::{Interpreter, InterpreterErrorKind, Block, TypeData, Variant, TypeRef, InterpreterError};
+use super::{Interpreter, InterpreterErrorKind, Block, TypeData, Variant, TypeRef, InterpreterError, InterpreterResult};
 
 /// A value within the interpreter, which is an instance of some type.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -97,6 +97,17 @@ impl Value {
     /// [`Value::to_other_mut`].
     pub fn new_other<T: PrimitiveValue>(value: T) -> Self {
         Self { type_instance: TypeInstance::PrimitiveOther(Rc::new(RefCell::new(value))) }
+    }
+
+    /// Instantiates a value from the given [Literal].
+    pub fn from_literal(literal: &Literal, interpreter: &mut Interpreter) -> InterpreterResult {
+        Ok(match literal {
+            Literal::Integer(i) => Value::new_integer(*i),
+            Literal::String(s) => Value::new_string(s),
+            Literal::True => Value::new_boolean(interpreter, true),
+            Literal::False => Value::new_boolean(interpreter, false),
+            Literal::Null => Value::new_null(),
+        }.rc())
     }
 
     /// Transforms this into a [ValueRef].

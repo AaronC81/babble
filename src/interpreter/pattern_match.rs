@@ -11,7 +11,7 @@ use super::{ValueRef, InterpreterError, InterpreterErrorKind, Value, TypeInstanc
 pub fn match_against(pattern: &Pattern, value: ValueRef, context: &mut PatternMatchContext) -> Result<bool, InterpreterError> {
     match &pattern.kind {
         PatternKind::Literal(expected) => {
-            let expected_value = expected.instantiate(context.interpreter)?;
+            let expected_value = Value::from_literal(expected, context.interpreter)?;
             Ok(
                 context.interpreter.send_message(value, "equals:", &[expected_value])?
                     .borrow().to_boolean().unwrap()

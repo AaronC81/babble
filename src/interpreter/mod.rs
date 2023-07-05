@@ -264,7 +264,7 @@ impl Interpreter {
 
             InstructionKind::Push(l) => {
                 // Instantiate literal and push it
-                value_stack.push(l.instantiate(self)?);
+                value_stack.push(Value::from_literal(l, self)?);
             },
 
             InstructionKind::PushBlock { parameters, captures, body } => {
