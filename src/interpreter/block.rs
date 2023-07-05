@@ -5,9 +5,9 @@
 
 use std::{sync::atomic::AtomicUsize, collections::HashMap, hash::{Hasher, Hash}};
 
-use crate::parser::{Node, BlockParameters, PatternMatchContext};
+use crate::parser::BlockParameters;
 
-use super::{ValueRef, InterpreterResult, Interpreter, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariableRef, LocalVariable, Value, instruction::{InstructionBlock, InstructionBlockRef}};
+use super::{ValueRef, InterpreterResult, Interpreter, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariableRef, LocalVariable, Value, instruction::{InstructionBlock, InstructionBlockRef}, pattern_match::{self, PatternMatchContext}};
 
 static UNIQUE_BLOCK_ID: AtomicUsize = AtomicUsize::new(1);
 
@@ -113,7 +113,7 @@ impl Block {
                     .cloned()
                     .zip(arguments)
                 {
-                    if !pattern.match_against(value.clone(), &mut match_context)? {
+                    if !pattern_match::match_against(&pattern, value.clone(), &mut match_context)? {
                         if *fatal {
                             return Err(InterpreterErrorKind::PatternMatchFailed(value, pattern).into())
                         } else {
