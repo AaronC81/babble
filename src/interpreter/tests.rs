@@ -1,6 +1,6 @@
 use std::assert_matches::assert_matches;
 
-use crate::{parser::Parser, tokenizer::Tokenizer, interpreter::{Interpreter, InterpreterErrorKind, Value}, source::SourceFile};
+use crate::{interpreter::{Interpreter, InterpreterErrorKind, Value}, source::SourceFile};
 
 use super::{ValueRef, InterpreterError};
 

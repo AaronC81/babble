@@ -2,9 +2,9 @@
 
 use std::{rc::Rc, fmt::Debug};
 
-use crate::parser::{Node, MethodVisibility};
+use crate::parser::MethodVisibility;
 
-use super::{Interpreter, ValueRef, InterpreterResult, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariable, instruction::{InstructionBlock, InstructionBlockRef}, DocumentationState};
+use super::{Interpreter, ValueRef, InterpreterResult, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariable, instruction::InstructionBlockRef, DocumentationState};
 
 /// A named method, defined on a type for use in code.
 #[derive(Debug)]

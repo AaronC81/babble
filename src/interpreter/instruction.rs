@@ -10,7 +10,7 @@ use std::{fmt::Display, slice::Iter, rc::Rc};
 
 use crate::{parser::{Node, Literal, NodeKind, SendMessageComponents, SendMessageParameter, BlockParameters}, source::{Location, SourceFile}};
 
-use super::{Value, InterpreterError, TypeData, InterpreterErrorKind, MethodLocality, MethodVisibility};
+use super::{InterpreterError, TypeData, InterpreterErrorKind, MethodLocality, MethodVisibility};
 
 #[derive(Debug)]
 pub struct InstructionBlock(Vec<Instruction>);
@@ -410,7 +410,7 @@ impl Display for Instruction {
                     BlockParameters::Patterned { patterns, fatal } => {
                         // TODO: proper pattern formatting
                         if *fatal { prefix = "!" } else { prefix = "?" };
-                        params = patterns.iter().map(|x| "<pattern>".into()).collect();
+                        params = patterns.iter().map(|_| "<pattern>".into()).collect();
                     },
                 };
 

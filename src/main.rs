@@ -7,10 +7,10 @@
 #![feature(trait_upcasting)]
 #![feature(test)]
 
-use std::{fs::read_to_string, io::{stdin, stdout, Write}, rc::Rc};
+use std::{fs::read_to_string, io::{stdin, stdout, Write}};
 
 use clap::Parser;
-use interpreter::{Interpreter, InterpreterError, instruction::InstructionKind, InterpreterErrorKind};
+use interpreter::{Interpreter, InterpreterError, InterpreterErrorKind};
 use parser::ParserError;
 use source::{SourceFile, Location};
 use tokenizer::{Tokenizer, TokenizerError};

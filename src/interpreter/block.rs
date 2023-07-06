@@ -7,7 +7,7 @@ use std::{sync::atomic::AtomicUsize, collections::HashMap, hash::{Hasher, Hash}}
 
 use crate::parser::BlockParameters;
 
-use super::{ValueRef, InterpreterResult, Interpreter, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariableRef, LocalVariable, Value, instruction::{InstructionBlock, InstructionBlockRef}, pattern_match::{self, PatternMatchContext}};
+use super::{ValueRef, InterpreterResult, Interpreter, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariableRef, LocalVariable, Value, instruction::InstructionBlockRef, pattern_match::{self, PatternMatchContext}};
 
 static UNIQUE_BLOCK_ID: AtomicUsize = AtomicUsize::new(1);
 

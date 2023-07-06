@@ -2,7 +2,7 @@
 
 use std::fmt::Display;
 
-use crate::{source::Location, parser::{Node, Pattern, ParserError}, tokenizer::TokenizerError};
+use crate::{source::Location, parser::{Pattern, ParserError}, tokenizer::TokenizerError};
 
 use super::{ValueRef, StackFrame, Interpreter};
 
