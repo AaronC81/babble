@@ -321,6 +321,11 @@ pub fn desugar_simple(root: &mut Node) {
         }
     }
 
+    // Pattern blocks
+    if let NodeKind::Sugar(SugarNodeKind::PatternBlock { block, patterns, fatal }) = &root.kind {
+        todo!();
+    }
+
     root.walk_children(&mut desugar_simple);
 }
 

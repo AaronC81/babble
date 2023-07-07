@@ -431,7 +431,6 @@ impl Interpreter {
                 let block = value_stack.last().unwrap().clone().borrow().to_block()?.clone();
                 let internal_names = match block.parameters {
                     BlockParameters::Named(n) => n,
-                    BlockParameters::Patterned { .. } => unreachable!(),
                     BlockParameters::All(_) => unreachable!(),
                 };
                 

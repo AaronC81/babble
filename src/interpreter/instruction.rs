@@ -407,11 +407,6 @@ impl Display for Instruction {
                         prefix = "";
                         params = vec![format!("*{name}")];
                     }
-                    BlockParameters::Patterned { patterns, fatal } => {
-                        // TODO: proper pattern formatting
-                        if *fatal { prefix = "!" } else { prefix = "?" };
-                        params = patterns.iter().map(|_| "<pattern>".into()).collect();
-                    },
                 };
 
                 write!(f, "push block {}[ | {} |\n{}\n]", prefix, params.join(" "), indent(body.to_string()))

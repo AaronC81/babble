@@ -380,9 +380,9 @@ impl<'a> Parser<'a> {
             }
 
             // If the first token is a pipe, then parse parameters until the next pipe
+            let mut patterns = vec![];
             let parameters = if uses_pattern_params {
                 // Parse patterned parameters
-                let mut patterns = vec![];
                 if let Token { kind: TokenKind::Pipe, .. } = self.here() {
                     self.advance();
                     loop {
@@ -403,7 +403,11 @@ impl<'a> Parser<'a> {
                         patterns.push(pattern);
                     }
                 }
-                BlockParameters::Patterned { patterns, fatal }
+
+                // Create one block parameter for each pattern parameter to match against
+                BlockParameters::Named(
+                    (0..patterns.len()).map(|i| format!("___p{i}")).collect()
+                )
             } else {
                 // Parse named (or any) parameters
                 let parameters;
@@ -462,19 +466,34 @@ impl<'a> Parser<'a> {
             }
 
             let new_context = LexicalContext::new_with_parent(context).rc();
-            Ok(Node {
+            let block_node = Node {
                 location: location.clone(),
                 kind: NodeKind::Block {
                     body: Box::new(Node {
-                        location,
+                        location: location.clone(),
                         kind: NodeKind::StatementSequence(body),
                         context: new_context.clone(),
                     }),
                     parameters,
                     captures: vec![],
                 },
-                context: new_context,
-            })
+                context: new_context.clone(),
+            };
+
+            // If the block is pattern-matched, wrap in sugar
+            if uses_pattern_params {
+                Ok(Node {
+                    location: location,
+                    kind: NodeKind::Sugar(SugarNodeKind::PatternBlock {
+                        block: Box::new(block_node),
+                        patterns,
+                        fatal,
+                    }),
+                    context: new_context,
+                })
+            } else {
+                Ok(block_node)
+            }
         } else if let Token { kind: TokenKind::Keyword(TokenKeyword::Return), location } = self.here() {
             let location = location.clone();
             self.advance();

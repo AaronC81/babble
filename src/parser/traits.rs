@@ -63,6 +63,9 @@ impl NodeWalk for Node {
                     func(part);
                 }
             }
+            NodeKind::Sugar(SugarNodeKind::PatternBlock { block, patterns: _, fatal: _ }) => {
+                func(block);
+            }
 
             | NodeKind::SelfAccess
             | NodeKind::EnumDefinition { name: _, variants: _, documentation: _ }

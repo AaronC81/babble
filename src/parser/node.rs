@@ -106,14 +106,6 @@ pub enum BlockParameters {
 
     /// The block takes any number of simple parameters, and collects them into a named array.
     All(String),
-
-    /// The block takes patterns as parameters, and depending on `fatal`, will either wrap the
-    /// block's return value in a `Match` or cause a fatal error to indicate that the arguments did
-    /// not match a pattern.
-    Patterned {
-        patterns: Vec<Pattern>,
-        fatal: bool,
-    }
 }
 
 /// The kind of this node.
@@ -201,6 +193,14 @@ pub enum SugarNodeKind {
     /// The node is an interpolated string, which will be desugared into runtime string
     /// concatenation.
     StringInterpolation(Vec<Node>),
+
+    /// The node is a block with pattern-matched parameters, which will be desugared into a standard
+    /// block which tries to matches the pattern when called.
+    PatternBlock {
+        block: Box<Node>,
+        patterns: Vec<Pattern>,
+        fatal: bool,
+    }
 }
 
 /// The binary operation used by a [SugarNodeKind::BinaryMessage].

@@ -55,7 +55,6 @@ impl Block {
         match &self.parameters {
             BlockParameters::Named(n) => n.len() as isize,
             BlockParameters::All(_) => -1,
-            BlockParameters::Patterned { patterns, .. } => patterns.len() as isize,
         }
     }
 
@@ -95,36 +94,6 @@ impl Block {
                         value: Value::new_array(&arguments).rc(),
                     }.rc()
                 ]
-            }
-
-            // For patterned parameters, match each argument against the corresponding pattern, and
-            // deal with it according to the preference of the block if this fails
-            BlockParameters::Patterned { patterns, fatal } => {
-                let mut match_context = PatternMatchContext {
-                    interpreter,
-                    bindings: HashMap::new(),
-                    captured_self: self.captured_self.clone(),
-                };
-                if !fatal {
-                    wrap_result_in_match = true;
-                }
-                
-                for (pattern, value) in patterns.iter()
-                    .cloned()
-                    .zip(arguments)
-                {
-                    if !pattern_match::match_against(&pattern, value.clone(), &mut match_context)? {
-                        if *fatal {
-                            return Err(InterpreterErrorKind::PatternMatchFailed(value, pattern).into())
-                        } else {
-                            return Ok(Value::new_match(interpreter, None).rc())
-                        }
-                    }
-                }
-                
-                match_context.bindings.into_iter()
-                    .map(|(name, value)| LocalVariable { name, value }.rc())
-                    .collect::<Vec<_>>()
             }
         };
 

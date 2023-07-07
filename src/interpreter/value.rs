@@ -255,14 +255,7 @@ impl Value {
                 result
             }
 
-            TypeInstance::Block(b) => match b.parameters {
-                BlockParameters::Named(_) | BlockParameters::All(_) => "[ block ]".into(),
-                BlockParameters::Patterned { fatal, .. } => if fatal {
-                    "![ block ]".into()
-                } else {
-                    "?[ block ]".into()
-                },
-            }
+            TypeInstance::Block(b) => "[ block ]".into(),
             TypeInstance::Type(t) => t.borrow().id.clone(),
             TypeInstance::PrimitiveInteger(i) => i.to_string(),
             TypeInstance::PrimitiveString(s) => s.clone(),
