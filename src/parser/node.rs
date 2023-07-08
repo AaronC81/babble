@@ -257,3 +257,30 @@ pub enum MethodVisibility {
 impl Default for MethodVisibility {
     fn default() -> Self { Self::Public }
 }
+
+/// A helper for building up a large tree of nodes with the same location and context. Useful for
+/// large desugars.
+pub struct NodeFactory<'l, 'c> {
+    location: &'l Location,
+    context: &'c LexicalContextRef,
+}
+
+impl<'l, 'c> NodeFactory<'l, 'c> {
+    pub fn new(location: &'l Location, context: &'c LexicalContextRef) -> Self {
+        Self { location, context }
+    }
+
+    /// Creates a new [Node] with the given [NodeKind], by cloning the location and context
+    /// referenced by this factory.
+    pub fn build(&self, kind: NodeKind) -> Node {
+        Node {
+            kind,
+            location: self.location.clone(),
+            context: self.context.clone(),
+        }
+    }
+
+    pub fn build_boxed(&self, kind: NodeKind) -> Box<Node> {
+        Box::new(self.build(kind))
+    }
+}

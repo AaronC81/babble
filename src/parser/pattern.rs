@@ -9,7 +9,7 @@ use std::fmt::Display;
 
 use crate::{parser::{SendMessageComponents, SendMessageParameter, Node, NodeKind}, source::Location};
 
-use super::{Literal, SugarNodeKind, LexicalContextRef, BlockParameters};
+use super::{Literal, SugarNodeKind, LexicalContextRef, BlockParameters, NodeFactory};
 
 /// An error occurred when parsing a node tree into a pattern.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -167,51 +167,33 @@ impl Pattern {
     /// should generally be used where possible if calling a method on the candidate, rather than
     /// assuming that methods are idempotent.
     pub fn desugar(&self, candidate: &Node, prefix: &str, no_match: &NodeKind, location: &Location, context: &LexicalContextRef) -> Vec<Node> {
+        let factory = NodeFactory::new(location, context);
+
         match &self.kind {
             // For literals, call `equals:` on the *expected* value, in case the provided one 
             // doesn't implement `Equatable` (or does so in a broken way)
             PatternKind::Literal(l) => vec![
-                Node {
-                    // <check> $ ifFalse: [ <no_match> ]
-                    kind: NodeKind::SendMessage {
-                        receiver: Box::new(Node {
-                            // <expected> equals: <actual>
-                            kind: NodeKind::SendMessage {
-                                receiver: Box::new(Node {
-                                    kind: NodeKind::Literal(l.clone()),
-                                    location: location.clone(),
-                                    context: context.clone(),
-                                }),
-                                components: SendMessageComponents::Parameterised(vec![(
-                                    "equals".to_string(),
-                                    SendMessageParameter::CallArgument(Box::new(candidate.clone())),
-                                )])
-                            },
-                            location: location.clone(),
-                            context: context.clone(),
-                        }),
+                // <check> $ ifFalse: [ <no_match> ]
+                factory.build(NodeKind::SendMessage {
+                    // <expected> equals: <actual>
+                    receiver: factory.build_boxed(NodeKind::SendMessage {
+                        receiver: factory.build_boxed(NodeKind::Literal(l.clone())),
                         components: SendMessageComponents::Parameterised(vec![(
-                            "ifFalse".to_string(),
-                            SendMessageParameter::CallArgument(
-                                Box::new(Node {
-                                    kind: NodeKind::Block {
-                                        body: Box::new(Node {
-                                            kind: no_match.clone(),
-                                            location: location.clone(),
-                                            context: context.clone(),
-                                        }),
-                                        parameters: BlockParameters::Named(vec![]),
-                                        captures: vec![],
-                                    },
-                                    location: location.clone(),
-                                    context: context.clone(),
-                                })
-                            ),
+                            "equals".to_string(),
+                            SendMessageParameter::CallArgument(Box::new(candidate.clone())),
                         )])
-                    },
-                    location: location.clone(),
-                    context: context.clone(),
-                }
+                    }),
+                    components: SendMessageComponents::Parameterised(vec![(
+                        "ifFalse".to_string(),
+                        SendMessageParameter::CallArgument(
+                            factory.build_boxed(NodeKind::Block {
+                                body: factory.build_boxed(no_match.clone()),
+                                parameters: BlockParameters::Named(vec![]),
+                                captures: vec![],
+                            }),
+                        ),
+                    )])
+                }),
             ],
 
             PatternKind::Array(_) => todo!(),
@@ -221,18 +203,10 @@ impl Pattern {
 
             // This doesn't do any checking - just bind the candidate to the binding
             PatternKind::AnyBinding(binding_name) => vec![
-                Node {
-                    kind: NodeKind::Assignment {
-                        target: Box::new(Node {
-                            kind: NodeKind::Identifier(binding_name.clone()),
-                            location: location.clone(),
-                            context: context.clone(),
-                        }),
-                        value: Box::new(candidate.clone()),
-                    },
-                    location: location.clone(),
-                    context: context.clone(),
-                }
+                factory.build(NodeKind::Assignment {
+                    target: factory.build_boxed(NodeKind::Identifier(binding_name.clone())),
+                    value: Box::new(candidate.clone()),
+                }),
             ],
 
             PatternKind::PatternBinding(_, _) => todo!(),
