@@ -7,9 +7,9 @@
 use std::collections::HashMap;
 use std::fmt::Display;
 
-use crate::parser::{SendMessageComponents, SendMessageParameter, Node, NodeKind};
+use crate::{parser::{SendMessageComponents, SendMessageParameter, Node, NodeKind}, source::Location};
 
-use super::{Literal, SugarNodeKind};
+use super::{Literal, SugarNodeKind, LexicalContextRef, BlockParameters};
 
 /// An error occurred when parsing a node tree into a pattern.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -64,19 +64,6 @@ impl Pattern {
             variant_name,
             fields,
         })
-    }
-
-    /// Extracts the list of all bindings which could be bound when matching a pattern.
-    pub fn all_bindings(&self) -> Vec<String> {
-        match &self.kind {
-            PatternKind::Literal(_) => vec![],
-            PatternKind::Array(array) => array.iter().flat_map(|p| p.all_bindings()).collect(),
-            PatternKind::Fields { fields, .. } =>
-                fields.iter().flat_map(|(_, pattern)| pattern.all_bindings()).collect(),
-            PatternKind::PatternBinding(name, _) => vec![name.clone()],
-            PatternKind::AnyBinding(name) => vec![name.clone()],
-            PatternKind::Discard => vec![],
-        }
     }
 
     /// Parse a node tree into a pattern.
@@ -166,6 +153,92 @@ impl Pattern {
             | NodeKind::Sugar(_)
             | NodeKind::Use { .. }
                 => Err(PatternParseError::InvalidNode(node)),
+        }
+    }
+
+    /// Converts this pattern into a sequence of nodes. The nodes should check whether the pattern
+    /// is a match against the local variable described by `candidate`. If there is *not* a match,
+    /// execute the node described by `no_match`.
+    /// 
+    /// Nodes created for the desugar should use the `location` and `context` provided.
+    /// 
+    /// If intermediate local variables need to be created, a unique `prefix` is provided which can
+    /// be used to disambiguate them from any other variables in the scope. Intermediate locals
+    /// should generally be used where possible if calling a method on the candidate, rather than
+    /// assuming that methods are idempotent.
+    pub fn desugar(&self, candidate: &Node, prefix: &str, no_match: &NodeKind, location: &Location, context: &LexicalContextRef) -> Vec<Node> {
+        match &self.kind {
+            // For literals, call `equals:` on the *expected* value, in case the provided one 
+            // doesn't implement `Equatable` (or does so in a broken way)
+            PatternKind::Literal(l) => vec![
+                Node {
+                    // <check> $ ifFalse: [ <no_match> ]
+                    kind: NodeKind::SendMessage {
+                        receiver: Box::new(Node {
+                            // <expected> equals: <actual>
+                            kind: NodeKind::SendMessage {
+                                receiver: Box::new(Node {
+                                    kind: NodeKind::Literal(l.clone()),
+                                    location: location.clone(),
+                                    context: context.clone(),
+                                }),
+                                components: SendMessageComponents::Parameterised(vec![(
+                                    "equals".to_string(),
+                                    SendMessageParameter::CallArgument(Box::new(candidate.clone())),
+                                )])
+                            },
+                            location: location.clone(),
+                            context: context.clone(),
+                        }),
+                        components: SendMessageComponents::Parameterised(vec![(
+                            "ifFalse".to_string(),
+                            SendMessageParameter::CallArgument(
+                                Box::new(Node {
+                                    kind: NodeKind::Block {
+                                        body: Box::new(Node {
+                                            kind: no_match.clone(),
+                                            location: location.clone(),
+                                            context: context.clone(),
+                                        }),
+                                        parameters: BlockParameters::Named(vec![]),
+                                        captures: vec![],
+                                    },
+                                    location: location.clone(),
+                                    context: context.clone(),
+                                })
+                            ),
+                        )])
+                    },
+                    location: location.clone(),
+                    context: context.clone(),
+                }
+            ],
+
+            PatternKind::Array(_) => todo!(),
+
+            // TODO: behaviour on missing field... error, or match fail?
+            PatternKind::Fields { type_name, variant_name, fields } => todo!(),
+
+            // This doesn't do any checking - just bind the candidate to the binding
+            PatternKind::AnyBinding(binding_name) => vec![
+                Node {
+                    kind: NodeKind::Assignment {
+                        target: Box::new(Node {
+                            kind: NodeKind::Identifier(binding_name.clone()),
+                            location: location.clone(),
+                            context: context.clone(),
+                        }),
+                        value: Box::new(candidate.clone()),
+                    },
+                    location: location.clone(),
+                    context: context.clone(),
+                }
+            ],
+
+            PatternKind::PatternBinding(_, _) => todo!(),
+
+            // Nothing to do!
+            PatternKind::Discard => vec![],
         }
     }
 }
