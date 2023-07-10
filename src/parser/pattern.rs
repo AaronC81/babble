@@ -193,14 +193,57 @@ impl Pattern {
                 }),
             ],
 
-            PatternKind::Array(_) => {
-                // TODO
-                vec![
+            PatternKind::Array(patterns) => {
+                // Making this flexible so that it can be used to match things which quack like an
+                // array. Is this a good idea? Dunno!
+                let mut pattern_match_nodes = vec![];
+
+                // Length check
+                pattern_match_nodes.push(
+                    // <actual> length equals: <expected> $ ifFalse: [ <no_match> ]
                     factory.build(NodeKind::SendMessage {
-                        receiver: factory.build_boxed(NodeKind::Identifier("Program".into())),
-                        components: factory.build_args([("error", factory.build(NodeKind::Literal(Literal::String("array pattern nyi".into()))))])
+                        // <actual> length equals: <expected>
+                        receiver: factory.build_boxed(NodeKind::SendMessage {
+                            receiver: factory.build_boxed(NodeKind::SendMessage {
+                                // <actual> length
+                                receiver: Box::new(candidate.clone()),
+                                components: SendMessageComponents::Unary("length".into()),
+                            }),
+                            components: factory.build_args([
+                                ("equals", factory.build(NodeKind::Literal(Literal::Integer(patterns.len() as i64)))),
+                            ]),
+                        }),
+                        components: factory.build_args([
+                            ("ifFalse", factory.build(NodeKind::Block {
+                                body: factory.build_boxed(no_match.clone()),
+                                parameters: BlockParameters::Named(vec![]),
+                                captures: vec![],
+                            })),
+                        ]),
                     }),
-                ]
+                );
+
+                // Items check
+                for (i, pattern) in patterns.iter().enumerate() {
+                    let local = format!("{prefix}___index_{i}");
+
+                    // <prefix>___index_<i> = <actual> get: <i>
+                    pattern_match_nodes.push(factory.build(NodeKind::Assignment {
+                        target: factory.build_boxed(NodeKind::Identifier(local.clone())),
+                        value: factory.build_boxed(NodeKind::SendMessage {
+                            receiver: Box::new(candidate.clone()),
+                            components: factory.build_args([
+                                ("get", factory.build(NodeKind::Literal(Literal::Integer(i as i64)))),
+                            ]),
+                        }),
+                    }));
+
+                    // Recurse to pattern
+                    let candidate = &factory.build(NodeKind::Identifier(local.clone()));
+                    pattern_match_nodes.extend(pattern.desugar(candidate, &local, no_match, location, context));
+                }
+
+                pattern_match_nodes
             }
 
             PatternKind::Fields { type_name, variant_name, fields } => {
