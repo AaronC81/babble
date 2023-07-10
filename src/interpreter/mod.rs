@@ -143,7 +143,7 @@ impl Interpreter {
     }
 
     /// Evaluate a single instruction block within this interpreter.
-    pub fn evaluate(&mut self, instructions: &InstructionBlock) -> InterpreterResult {
+    fn evaluate(&mut self, instructions: &InstructionBlock) -> InterpreterResult {
         let mut value_stack = vec![];
 
         for instruction in instructions {
@@ -165,7 +165,7 @@ impl Interpreter {
 
     /// Evaluate a single instruction within this interpreter, modifying the given stack of values.
     #[inline(always)]
-    pub fn evaluate_inner(&mut self, instruction: &Instruction, value_stack: &mut Vec<ValueRef>) -> Result<(), InterpreterError> {
+    fn evaluate_inner(&mut self, instruction: &Instruction, value_stack: &mut Vec<ValueRef>) -> Result<(), InterpreterError> {
         match &instruction.kind {
             InstructionKind::Get(id) => {
                 // Push value of local
@@ -533,7 +533,7 @@ impl Interpreter {
 
             // Call the method
             // (This creates a frame if necessary)
-            method.call(self, receiver, args)
+            self.call_method(method, receiver, args)
         } else {
             Err(InterpreterErrorKind::MissingMethod(receiver.clone(), method_name.into()).into())
         }
@@ -599,6 +599,69 @@ impl Interpreter {
         self.stack.pop();
 
         result
+    }
+
+    /// Call a method, passing a receiver and a set of arguments.
+    /// 
+    /// If the method is implemented from parsed nodes, the method body is evaluated within a new
+    /// stack frame. Intrinsic methods do not create a stack frame. Arguments are created as locals.
+    /// 
+    /// Returns an error if the number of arguments does not match the expected arity.
+    #[inline(always)]
+    pub fn call_method(&mut self, method: Rc<Method>, receiver: ValueRef, arguments: &[ValueRef]) -> InterpreterResult {        
+        if method.arity != arguments.len() {
+            return Err(InterpreterErrorKind::IncorrectArity {
+                name: method.name.clone(),
+                expected: method.arity,
+                got: arguments.len(),
+            }.into())
+        }
+
+        match &method.implementation {
+            // Internal methods don't need a stack frame, since we control their behaviour
+            MethodImplementation::Internal(func) =>
+                (func)(self, receiver, arguments),
+            
+            MethodImplementation::Compiled { instructions, internal_names } => {
+                // Create a new stack frame with the relevant parameters
+                self.stack.push(StackFrame {
+                    locals: internal_names.iter()
+                        .cloned()
+                        .zip(arguments)
+                        .map(|(name, value)| LocalVariable { name, value: value.clone() }.rc())
+                        .collect(),
+                    self_value: receiver.clone(),
+                    context: StackFrameContext::Method {
+                        method: method.clone(),
+                        receiver,
+                    },
+                    source_file: Some(instructions.source_file()),
+                });
+
+                // Run the body, bail if it fatally errored, and then pop the stack frame
+                // This order may seem unintuitive - but when an error is fatal, then we want the
+                // stack trace from the error to be as correct as possible, so we leave the frames
+                // which errored on the stack
+                let result = self.evaluate(instructions);
+                if let Err(error) = &result && error.kind.is_fatal() {
+                    return Err(error.clone());
+                }
+                self.stack.pop();
+                Ok(result?)
+            },
+
+            MethodImplementation::Magic => Err(InterpreterErrorKind::Magic.into()),
+
+            MethodImplementation::UnorderedProxy { target, argument_order } => {
+                // Reorder the arguments which we were passed to match the order of the target
+                let mut reordered_arguments = vec![];
+                for i in argument_order {
+                    reordered_arguments.push(arguments[*i].clone());
+                }
+
+                self.call_method(target.clone(), receiver, &reordered_arguments)
+            }
+        }
     }
 
     /// Returns a reference to the current top-most stack frame.

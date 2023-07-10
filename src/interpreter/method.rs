@@ -86,69 +86,6 @@ impl Method {
     pub fn arity_from_name(name: &str) -> usize {
         name.matches(':').count()
     }
-
-    /// Calls this method, passing a receiver and a set of arguments.
-    /// 
-    /// If the method is implemented from parsed nodes, the method body is evaluated within a new
-    /// stack frame. Intrinsic methods do not create a stack frame. Arguments are created as locals.
-    /// 
-    /// Returns an error if the number of arguments does not match the expected arity.
-    #[inline(always)]
-    pub fn call(self: Rc<Self>, interpreter: &mut Interpreter, receiver: ValueRef, arguments: &[ValueRef]) -> InterpreterResult {        
-        if self.arity != arguments.len() {
-            return Err(InterpreterErrorKind::IncorrectArity {
-                name: self.name.clone(),
-                expected: self.arity,
-                got: arguments.len(),
-            }.into())
-        }
-
-        match &self.implementation {
-            // Internal methods don't need a stack frame, since we control their behaviour
-            MethodImplementation::Internal(func) =>
-                (func)(interpreter, receiver, arguments),
-            
-            MethodImplementation::Compiled { instructions, internal_names } => {
-                // Create a new stack frame with the relevant parameters
-                interpreter.stack.push(StackFrame {
-                    locals: internal_names.iter()
-                        .cloned()
-                        .zip(arguments)
-                        .map(|(name, value)| LocalVariable { name, value: value.clone() }.rc())
-                        .collect(),
-                    self_value: receiver.clone(),
-                    context: StackFrameContext::Method {
-                        method: self.clone(),
-                        receiver,
-                    },
-                    source_file: Some(instructions.source_file()),
-                });
-
-                // Run the body, bail if it fatally errored, and then pop the stack frame
-                // This order may seem unintuitive - but when an error is fatal, then we want the
-                // stack trace from the error to be as correct as possible, so we leave the frames
-                // which errored on the stack
-                let result = interpreter.evaluate(instructions);
-                if let Err(error) = &result && error.kind.is_fatal() {
-                    return Err(error.clone());
-                }
-                interpreter.stack.pop();
-                Ok(result?)
-            },
-
-            MethodImplementation::Magic => Err(InterpreterErrorKind::Magic.into()),
-
-            MethodImplementation::UnorderedProxy { target, argument_order } => {
-                // Reorder the arguments which we were passed to match the order of the target
-                let mut reordered_arguments = vec![];
-                for i in argument_order {
-                    reordered_arguments.push(arguments[*i].clone());
-                }
-
-                target.clone().call(interpreter, receiver, &reordered_arguments)
-            }
-        }
-    }
 }
 
 type InternalMethod = dyn Fn(&mut Interpreter, ValueRef, &[ValueRef]) -> InterpreterResult;
