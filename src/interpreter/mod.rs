@@ -33,8 +33,6 @@ pub mod mixin_derive;
 
 pub mod instruction;
 
-pub mod pattern_match;
-
 #[cfg(test)]
 pub mod tests;
 

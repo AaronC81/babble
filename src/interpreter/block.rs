@@ -7,7 +7,7 @@ use std::{sync::atomic::AtomicUsize, collections::HashMap, hash::{Hasher, Hash}}
 
 use crate::parser::BlockParameters;
 
-use super::{ValueRef, InterpreterResult, Interpreter, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariableRef, LocalVariable, Value, instruction::InstructionBlockRef, pattern_match::{self, PatternMatchContext}};
+use super::{ValueRef, InterpreterResult, Interpreter, InterpreterErrorKind, StackFrame, StackFrameContext, LocalVariableRef, LocalVariable, Value, instruction::InstructionBlockRef};
 
 static UNIQUE_BLOCK_ID: AtomicUsize = AtomicUsize::new(1);
 
@@ -75,7 +75,6 @@ impl Block {
             }.into())
         }
 
-        let mut wrap_result_in_match = false;
         let parameter_locals = match &self.parameters {
             // For named parameters, simply map arguments to parameters one-to-one
             BlockParameters::Named(ref parameters) => {
@@ -117,10 +116,6 @@ impl Block {
             return Err(error.clone());
         }
         interpreter.stack.pop();
-
-        if wrap_result_in_match {
-            result = result.map(|value| Value::new_match(interpreter, Some(value)).rc());
-        }
 
         result
     }
