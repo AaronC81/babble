@@ -49,7 +49,7 @@ pub fn instantiate(interpreter: &mut Interpreter) -> Result<(), InterpreterError
     let deferred_tests = interpreter.resolve_stdlib_type("InternalTest").borrow()
         .static_fields[0].borrow_mut().as_array()?.to_vec();
     for test in deferred_tests {
-        test.borrow().to_block()?.call(interpreter, vec![])?;
+        interpreter.call_block(test.borrow().to_block()?, vec![])?;
     }
 
     Ok(())
@@ -571,7 +571,7 @@ fn block(interpreter: &mut Interpreter) -> Type {
             Method::new_internal("callWith:", |i, r, a| {
                 let r = r.borrow();
                 let b = r.to_block()?;
-                b.call(i, a[0].borrow_mut().as_array()?.clone())
+                i.call_block(&b, a[0].borrow_mut().as_array()?.clone())
             }).with_documentation("
                 Calls this block with the given array of arguments.
 
@@ -591,10 +591,10 @@ fn block(interpreter: &mut Interpreter) -> Type {
                 let r = r.borrow();
                 let condition_block = r.to_block()?;
 
-                while condition_block.call(i, vec![])?.borrow().to_boolean()? {
+                while i.call_block(&condition_block, vec![])?.borrow().to_boolean()? {
                     let arg = a[0].borrow();
                     let block = arg.to_block()?;
-                    block.call(i, vec![])?;
+                    i.call_block(&block, vec![])?;
                 }
 
                 Ok(Value::new_null().rc())
@@ -637,7 +637,7 @@ fn boolean(interpreter: &mut Interpreter) -> Type {
                 if r.borrow().to_boolean()? {
                     let arg = a[0].borrow();
                     let block = arg.to_block()?;
-                    block.call(i, vec![])?;
+                    i.call_block(&block, vec![])?;
                 }
 
                 Ok(r)
@@ -742,10 +742,10 @@ fn program(_: &mut Interpreter) -> Type {
             Method::new_internal("catchIfTrue:in:", |i, _, a| {
                 let predicate = a[0].borrow().to_block()?.clone();
                 let block = a[1].borrow().to_block()?.clone();
-                let result = block.call(i, vec![]);
+                let result = i.call_block(&block, vec![]);
                 match result {
                     Err(InterpreterError { kind: InterpreterErrorKind::Throw(ref v), .. }) => {
-                        if predicate.call(i, vec![v.clone()])?.borrow().to_boolean()? {
+                        if i.call_block(&predicate, vec![v.clone()])?.borrow().to_boolean()? {
                             Ok(v.clone())
                         } else {
                             Err(InterpreterErrorKind::Throw(v.clone()).into())

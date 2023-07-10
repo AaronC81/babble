@@ -539,6 +539,68 @@ impl Interpreter {
         }
     }
 
+    /// Call a block, passing it a given set of arguments, and returning the result of executing
+    /// the block's body.
+    /// 
+    /// The block is evaluated within a new stack frame, with captured locals referenced as locals
+    /// within that frame. Arguments are also created as locals.
+    /// 
+    /// Returns an error if the number of arguments does not match the expected arity.
+    #[inline(always)]
+    pub fn call_block(&mut self, block: &Block, arguments: Vec<ValueRef>) -> InterpreterResult {
+        if block.arity() >= 0 && block.arity() as usize != arguments.len() {
+            return Err(InterpreterErrorKind::IncorrectArity {
+                name: "anonymous block".into(),
+                expected: arguments.len(),
+                got: block.arity() as usize,
+            }.into())
+        }
+
+        let parameter_locals = match &block.parameters {
+            // For named parameters, simply map arguments to parameters one-to-one
+            BlockParameters::Named(ref parameters) => {
+                parameters.iter()
+                    .cloned()
+                    .zip(arguments)
+                    .map(|(name, value)| LocalVariable { name, value }.rc())
+                    .collect::<Vec<_>>()
+            },
+
+            // For all parameter, just use the array
+            BlockParameters::All(name) => {
+                vec![
+                    LocalVariable {
+                        name: name.into(),
+                        value: Value::new_array(&arguments).rc(),
+                    }.rc()
+                ]
+            }
+        };
+
+        // Create a new stack frame with the relevant locals - that is, parameters and captures
+        self.stack.push(StackFrame {
+            locals: parameter_locals
+                .into_iter()
+                .chain(block.captured_locals.iter().cloned())
+                .collect(),
+            self_value: block.captured_self.clone(),
+            context: StackFrameContext::Block,
+            source_file: Some(block.body.source_file()),
+        });
+
+        // Run the body, bail if it fatally errored, and then pop the stack frame
+        // This order may seem unintuitive - but when an error is fatal, then we want the stack
+        // trace from the error to be as correct as possible, so we leave the frames which errored
+        // on the stack
+        let mut result = self.evaluate(&block.body);
+        if let Err(error) = &result && error.kind.is_fatal() {
+            return Err(error.clone());
+        }
+        self.stack.pop();
+
+        result
+    }
+
     /// Returns a reference to the current top-most stack frame.
     pub fn current_stack_frame(&self) -> &StackFrame {
         self.stack.last().unwrap()
