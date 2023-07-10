@@ -261,8 +261,8 @@ impl Default for MethodVisibility {
 /// A helper for building up a large tree of nodes with the same location and context. Useful for
 /// large desugars.
 pub struct NodeFactory<'l, 'c> {
-    location: &'l Location,
-    context: &'c LexicalContextRef,
+    pub location: &'l Location,
+    pub context: &'c LexicalContextRef,
 }
 
 impl<'l, 'c> NodeFactory<'l, 'c> {
@@ -282,5 +282,13 @@ impl<'l, 'c> NodeFactory<'l, 'c> {
 
     pub fn build_boxed(&self, kind: NodeKind) -> Box<Node> {
         Box::new(self.build(kind))
+    }
+
+    pub fn build_args<const N: usize>(&self, args: [(&str, Node); N]) -> SendMessageComponents {
+        SendMessageComponents::Parameterised(
+            args.into_iter()
+                .map(|(name, arg)| (name.to_string(), SendMessageParameter::CallArgument(Box::new(arg))))
+                .collect()
+        )
     }
 }

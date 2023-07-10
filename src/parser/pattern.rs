@@ -183,23 +183,119 @@ impl Pattern {
                             SendMessageParameter::CallArgument(Box::new(candidate.clone())),
                         )])
                     }),
-                    components: SendMessageComponents::Parameterised(vec![(
-                        "ifFalse".to_string(),
-                        SendMessageParameter::CallArgument(
-                            factory.build_boxed(NodeKind::Block {
-                                body: factory.build_boxed(no_match.clone()),
-                                parameters: BlockParameters::Named(vec![]),
-                                captures: vec![],
-                            }),
-                        ),
-                    )])
+                    components: factory.build_args([
+                        ("ifFalse", factory.build(NodeKind::Block {
+                            body: factory.build_boxed(no_match.clone()),
+                            parameters: BlockParameters::Named(vec![]),
+                            captures: vec![],
+                        })),
+                    ]),
                 }),
             ],
 
-            PatternKind::Array(_) => todo!(),
+            PatternKind::Array(_) => {
+                // TODO
+                vec![
+                    factory.build(NodeKind::SendMessage {
+                        receiver: factory.build_boxed(NodeKind::Identifier("Program".into())),
+                        components: factory.build_args([("error", factory.build(NodeKind::Literal(Literal::String("array pattern nyi".into()))))])
+                    }),
+                ]
+            }
 
-            // TODO: behaviour on missing field... error, or match fail?
-            PatternKind::Fields { type_name, variant_name, fields } => todo!(),
+            PatternKind::Fields { type_name, variant_name, fields } => {
+                // If a type is specified, generate type check
+                let mut type_check = 
+                    type_name.as_ref().map(|type_name|
+                        // Reflection type: <actual> $ equals: <expected>
+                        factory.build(NodeKind::SendMessage {
+                            // Reflection type: <actual>
+                            receiver: factory.build_boxed(NodeKind::SendMessage {
+                                receiver: factory.build_boxed(NodeKind::Identifier("Reflection".into())),
+                                components: factory.build_args([("type", candidate.clone())])
+                            }),
+                            components: factory.build_args([
+                                ("equals", factory.build(NodeKind::Identifier(type_name.into())))
+                            ]),
+                        })
+                    );
+
+                // If a variant is specified, generate variant check
+                let variant_check =
+                    variant_name.as_ref().map(|variant_name|
+                        // Reflection variant: <actual> $ equals: <expected>
+                        factory.build(NodeKind::SendMessage {
+                            // Reflection variant: <actual>
+                            receiver: factory.build_boxed(NodeKind::SendMessage {
+                                receiver: factory.build_boxed(NodeKind::Identifier("Reflection".into())),
+                                components: factory.build_args([("variant", candidate.clone())])
+                            }),
+                            components: factory.build_args([
+                                ("equals", factory.build(NodeKind::Literal(Literal::String(variant_name.into()))))
+                            ]),
+                        })
+                    );
+
+                // If a variant is specified, but a type isn't, then we're using implicit variants.
+                // Check type of actual value matches `instanceType` of `self`
+                if variant_check.is_some() && type_check.is_none() {
+                    type_check = Some(
+                        // (Reflection instanceType: self) equals: (Reflection type: <actual>)
+                        factory.build(NodeKind::SendMessage {
+                            // Reflection instanceType: self
+                            receiver: factory.build_boxed(NodeKind::SendMessage {
+                                receiver: factory.build_boxed(NodeKind::Identifier("Reflection".into())),
+                                components: factory.build_args([("instanceType", factory.build(NodeKind::SelfAccess))])
+                            }),
+                            components: factory.build_args([
+                                // Reflection type: <actual>
+                                ("equals", factory.build(NodeKind::SendMessage {
+                                    receiver: factory.build_boxed(NodeKind::Identifier("Reflection".into())),
+                                    components: factory.build_args([("type", candidate.clone())])
+                                }))
+                            ]),
+                        })
+                    )
+                }
+
+                // Start putting these checks into a vec, running `no_match` if they fail
+                let mut all_checks = vec![];
+                for check in [type_check, variant_check] {
+                    if let Some(check) = check {
+                        all_checks.push(
+                            factory.build(NodeKind::SendMessage {
+                                // <check> ifFalse: [ <no_match> ]
+                                receiver: Box::new(check),
+                                components: factory.build_args([
+                                    ("ifFalse", factory.build(NodeKind::Block {
+                                        body: factory.build_boxed(no_match.clone()),
+                                        parameters: BlockParameters::Named(vec![]),
+                                        captures: vec![],
+                                    })),
+                                ]),
+                            }),
+                        )
+                    }
+                }
+
+                // Generate field sub-matches
+                for (name, pattern) in fields {
+                    // Assign unique local
+                    let local = format!("{prefix}___{name}");
+                    all_checks.push(factory.build(NodeKind::Assignment {
+                        target: factory.build_boxed(NodeKind::Identifier(local.clone())),
+                        value: factory.build_boxed(NodeKind::SendMessage {
+                            receiver: Box::new(candidate.clone()),
+                            components: SendMessageComponents::Unary(name.clone()),
+                        }),
+                    }));
+
+                    // Recurse match desugaring on that local
+                    all_checks.extend(pattern.desugar(candidate, &local, no_match, location, context));
+                }
+
+                all_checks
+            },
 
             // This doesn't do any checking - just bind the candidate to the binding
             PatternKind::AnyBinding(binding_name) => vec![
@@ -209,7 +305,21 @@ impl Pattern {
                 }),
             ],
 
-            PatternKind::PatternBinding(_, _) => todo!(),
+            PatternKind::PatternBinding(binding_name, pattern) => {
+                // Recurse matching on the pattern
+                let prefix = format!("{prefix}___{binding_name}");
+                let mut pattern_match_nodes = pattern.desugar(candidate, &prefix, no_match, location, context);
+
+                // If we got here, it succeeded - bind pattern
+                pattern_match_nodes.push(
+                    factory.build(NodeKind::Assignment {
+                        target: factory.build_boxed(NodeKind::Identifier(binding_name.clone())),
+                        value: Box::new(candidate.clone()),
+                    })
+                );
+
+                pattern_match_nodes
+            },
 
             // Nothing to do!
             PatternKind::Discard => vec![],

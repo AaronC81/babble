@@ -1,6 +1,6 @@
 //! Provides methods for translating [`NodeKind::Sugar`] instances into desugared code.
 
-use super::{Node, NodeWalk, NodeKind, SugarNodeKind, SendMessageComponents, SendMessageParameter, BlockParameters};
+use super::{Node, NodeWalk, NodeKind, SugarNodeKind, SendMessageComponents, SendMessageParameter, BlockParameters, NodeFactory, Literal};
 
 /// Desugars all child sugar nodes of the given node.
 pub fn desugar_all(root: &mut Node) {
@@ -323,7 +323,65 @@ pub fn desugar_simple(root: &mut Node) {
 
     // Pattern blocks
     if let NodeKind::Sugar(SugarNodeKind::PatternBlock { block, patterns, fatal }) = &root.kind {
-        todo!();
+        let NodeKind::Block { body, parameters, captures } = &block.kind else {
+            unreachable!("PatternBlock constructed from non-block node")
+        };
+
+        // The block should have the same number of parameters as patterns
+        let BlockParameters::Named(parameter_names) = parameters else {
+            unreachable!("non-named parameters in PatternBlock")
+        };
+        if parameter_names.len() != patterns.len() {
+            unreachable!("mismatch in PatternBlock parameters vs patterns len")
+        }
+    
+        // Generate something to do if the patterns don't match, based on whether the block is
+        // fatal (![...]) or returns a `Match` (?[...])
+        let factory = NodeFactory::new(&root.location, &root.context);
+        let no_match = if *fatal {
+            NodeKind::SendMessage {
+                receiver: factory.build_boxed(NodeKind::Identifier("Program".into())),
+                components: factory.build_args([
+                    ("error:", factory.build(NodeKind::Literal(Literal::String("pattern did not match".into()))))
+                ]),
+            }
+        } else {
+            // TODO - Probably need a tag jump?
+            todo!()
+        };
+
+        // Generate pattern matching code
+        let mut nodes = parameter_names.iter()
+            .zip(patterns.iter())
+            .map(|(param, pattern)| {
+                let candidate = factory.build(NodeKind::Identifier(param.into()));
+                pattern.desugar(&candidate, &param, &no_match, factory.location, factory.context)
+            })
+            .flatten()
+            .collect::<Vec<_>>();
+
+        // Add all other nodes from the definition of the block
+        let NodeKind::StatementSequence(seq) = &body.kind else {
+            unreachable!("block body is not a statement sequence");
+        };
+        nodes.extend(seq.iter().cloned());
+
+        // If generating a non-fatal pattern, modify the final node to wrap its result in a
+        // `Match#Hit`
+        if let Some(last) = nodes.last_mut() {
+            *last = factory.build(NodeKind::EnumVariant {
+                enum_type: factory.build_boxed(NodeKind::Identifier("Match".into())), 
+                variant_name: "Hit".into(),
+                components: factory.build_args([("value", last.clone())]),
+            })
+        }
+
+        // Finally, assign new block
+        root.kind = NodeKind::Block {
+            body: factory.build_boxed(NodeKind::StatementSequence(nodes)),
+            parameters: parameters.clone(),
+            captures: captures.clone(),
+        }
     }
 
     root.walk_children(&mut desugar_simple);
