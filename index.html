@@ -4189,6 +4189,42 @@ pattern did not match.</p>
                                     
                                 
                             
+                                <code><i>static</i> </code>
+                            
+                            
+                            <code>byThrowing:</code>
+                        </h2>
+
+                        
+                                <p>Calls a block, which should take one argument. It it throws, returns a miss. If it doesn't,
+returns a hit with the block's value.</p>
+
+
+                                
+
+                                <blockquote>
+                                    
+                                        <p><b><code>byThrowing:</code></b></p>
+                                        <blockquote>
+                                            <p>A one-argument block, taking a tag to throw.</p>
+
+                                        </blockquote>
+                                    
+                                    
+                                            <p><b><i>Returns:</i></b></p>
+                                            <blockquote>
+                                                <p>A miss if the block throws the tag, or a hit with the block's value if it doesn't.</p>
+
+                                            </blockquote>
+                                        
+                                </blockquote>
+                            
+                    
+                        <h2>
+                            
+                                    
+                                
+                            
                             
                             <code>flatten</code>
                         </h2>
@@ -4226,7 +4262,7 @@ either match was a miss, returns a miss.</p>
                         </h2>
 
                         
-                                <p>A shorthand constructror for <code>Match#Hit</code>.</p>
+                                <p>A shorthand constructor for <code>Match#Hit</code>.</p>
 
 
                                 
