@@ -291,6 +291,7 @@ impl Pattern {
                     }));
 
                     // Recurse match desugaring on that local
+                    let candidate = &factory.build(NodeKind::Identifier(local.clone()));
                     all_checks.extend(pattern.desugar(candidate, &local, no_match, location, context));
                 }
 

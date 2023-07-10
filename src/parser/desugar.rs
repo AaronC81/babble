@@ -323,6 +323,8 @@ pub fn desugar_simple(root: &mut Node) {
 
     // Pattern blocks
     if let NodeKind::Sugar(SugarNodeKind::PatternBlock { block, patterns, fatal }) = &root.kind {
+        const MATCH_FAIL_TAG: &str = "___desugarMatchFailTag";
+
         let NodeKind::Block { body, parameters, captures } = &block.kind else {
             unreachable!("PatternBlock constructed from non-block node")
         };
@@ -342,12 +344,16 @@ pub fn desugar_simple(root: &mut Node) {
             NodeKind::SendMessage {
                 receiver: factory.build_boxed(NodeKind::Identifier("Program".into())),
                 components: factory.build_args([
-                    ("error:", factory.build(NodeKind::Literal(Literal::String("pattern did not match".into()))))
+                    ("error", factory.build(NodeKind::Literal(Literal::String("pattern did not match".into()))))
                 ]),
             }
         } else {
-            // TODO - Probably need a tag jump?
-            todo!()
+            NodeKind::SendMessage {
+                receiver: factory.build_boxed(NodeKind::Identifier("Program".into())),
+                components: factory.build_args([
+                    ("throw", factory.build(NodeKind::Identifier(MATCH_FAIL_TAG.into())))
+                ]),
+            }
         };
 
         // Generate pattern matching code
@@ -366,14 +372,20 @@ pub fn desugar_simple(root: &mut Node) {
         };
         nodes.extend(seq.iter().cloned());
 
-        // If generating a non-fatal pattern, modify the final node to wrap its result in a
-        // `Match#Hit`
-        if let Some(last) = nodes.last_mut() {
-            *last = factory.build(NodeKind::EnumVariant {
-                enum_type: factory.build_boxed(NodeKind::Identifier("Match".into())), 
-                variant_name: "Hit".into(),
-                components: factory.build_args([("value", last.clone())]),
-            })
+        // If generating a non-fatal pattern, wrap all of the nodes in a call to `Match byThrowing:`
+        if !fatal {
+            nodes = vec![
+                factory.build(NodeKind::SendMessage {
+                    receiver: factory.build_boxed(NodeKind::Identifier("Match".into())),
+                    components: factory.build_args([
+                        ("byThrowing", factory.build(NodeKind::Block {
+                            body: factory.build_boxed(NodeKind::StatementSequence(nodes)),
+                            parameters: BlockParameters::Named(vec![MATCH_FAIL_TAG.into()]),
+                            captures: vec![],
+                        }))
+                    ]),
+                })
+            ]
         }
 
         // Finally, assign new block

@@ -6,15 +6,29 @@ enum Match {
     Miss.
 }
 
-InternalTest case: "match block call pos" that: (?[ | 1 | 25 ] call: 1) equals: (Match#Hit value: 25).
-InternalTest case: "match block call neg" that: (?[ | 1 | 25 ] call: 2) equals: Match#Miss.
-
-InternalTest case: "match block bindings"
-             that: (?[ | Match#Hit value: value | value ] call: (Match#Hit value: 1)) 
-             equals: (Match#Hit value: 1). 
-
 impl Match {
-    /// A shorthand constructror for `Match#Hit`.
+    /// Calls a block, which should take one argument. It it throws, returns a miss. If it doesn't,
+    /// returns a hit with the block's value.
+    ///
+    /// @param byThrowing: A one-argument block, taking a tag to throw.
+    /// @returns A miss if the block throws the tag, or a hit with the block's value if it doesn't.
+    static func byThrowing: fn {
+        returnValue = #Miss.
+        Program catchTag: [ |tag|
+            returnValue = #Hit value: (fn call: tag).
+        ].
+        returnValue
+    }
+
+    // Tests come after `byThrowing:` definition, as pattern matching desugars into it
+    InternalTest case: "match block call pos" that: (?[ | 1 | 25 ] call: 1) equals: (Match#Hit value: 25).
+    InternalTest case: "match block call neg" that: (?[ | 1 | 25 ] call: 2) equals: Match#Miss.
+
+    InternalTest case: "match block bindings"
+                that: (?[ | Match#Hit value: value | value ] call: (Match#Hit value: 1)) 
+                equals: (Match#Hit value: 1). 
+
+    /// A shorthand constructor for `Match#Hit`.
     ///
     /// @param hit: The value to use.
     /// @returns The new `Match#Hit` instance.
