@@ -240,7 +240,16 @@ impl Interpreter {
             // optimisations.
             // 
             // There's evidently an optimisation which resolves this in release mode, because it's
-            // not a problem there.
+            // nowhere near as much of a problem there. This actually produces *slightly worse*
+            // results in release mode, but I think it's worth it.
+            //
+            // Here's how this optimisation influences the number of Babble recursions before
+            // overflow (rustc 1.71.0-nightly c609da59d 2023-04-18, Apple M1 Pro, ulimit -s = 8176):
+            //   
+            //             Without   With
+            //   - Debug:    344  -> 717
+            //   - Release:  4136 -> 3832
+            //
             InstructionKind::SetField   (_)    => self.instruction_set_field  (&instruction.kind, value_stack),
             InstructionKind::PushBlock  { .. } => self.instruction_push_block (&instruction.kind, value_stack),
             InstructionKind::Call       { .. } => self.instruction_call       (&instruction.kind, value_stack),
